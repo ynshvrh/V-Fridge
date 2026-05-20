@@ -5,54 +5,149 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+  CardDescription,
+} from "@/components/ui/card";
+import { Loader2, Refrigerator, UserPlus } from "lucide-react";
+import Link from "next/link";
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
-    const res = await fetch("/api/auth/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    const data = await res.json();
-    if (!res.ok) return setError(data.error || "Помилка");
+      const data = await res.json();
+      if (!res.ok) {
+        setError(typeof data.error === "string" ? data.error : "Помилка реєстрації");
+        return;
+      }
 
-    // Авто-логін
-    const loginResult = await signIn("credentials", {
-      email: formData.email,
-      password: formData.password,
-      redirect: false,
-    });
+      const loginResult = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
 
-    if (loginResult?.error) router.push("/signin");
-    else {
-      router.push("/");
-      router.refresh();
+      if (loginResult?.error) router.push("/signin");
+      else {
+        router.push("/");
+        router.refresh();
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-secondary/10">
-      <Card className="w-full max-w-md">
-        <CardHeader><CardTitle className="text-center">Реєстрація</CardTitle></CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && <p className="text-destructive text-center text-sm">{error}</p>}
-            <Input placeholder="Username" onChange={e => setFormData({...formData, username: e.target.value})} required />
-            <Input type="email" placeholder="Email" onChange={e => setFormData({...formData, email: e.target.value})} required />
-            <Input type="password" placeholder="Password" onChange={e => setFormData({...formData, password: e.target.value})} required />
-          </CardContent>
-          <CardFooter><Button type="submit" className="w-full">Створити і увійти</Button></CardFooter>
-        </form>
-      </Card>
+    <div className="flex min-h-screen items-center justify-center bg-ambient px-4 py-10">
+      <div className="w-full max-w-md space-y-6">
+        <Link href="/" className="flex items-center justify-center gap-3 group">
+          <div className="h-12 w-12 rounded-2xl bg-primary text-primary-foreground grid place-items-center shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
+            <Refrigerator className="h-6 w-6" />
+          </div>
+          <div className="leading-tight">
+            <h2 className="text-2xl font-black text-primary tracking-tight">V-Fridge</h2>
+            <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Smart Kitchen</p>
+          </div>
+        </Link>
+
+        <Card className="rounded-3xl border-border/60 shadow-2xl shadow-primary/5">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-2xl font-black tracking-tight">Створити акаунт</CardTitle>
+            <CardDescription>Кілька секунд — і ваш розумний холодильник готовий</CardDescription>
+          </CardHeader>
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4 pt-4">
+              {error && (
+                <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-xl text-center font-medium">
+                  {error}
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="username" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  Ім'я користувача
+                </Label>
+                <Input
+                  id="username"
+                  placeholder="Як до вас звертатись?"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  className="h-11 rounded-xl"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="h-11 rounded-xl"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  Пароль
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="мінімум 6 символів"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="h-11 rounded-xl"
+                  required
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4 pt-2">
+              <Button type="submit" className="w-full h-11 rounded-xl font-bold shadow-md shadow-primary/20" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Створюємо акаунт…
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Створити акаунт
+                  </>
+                )}
+              </Button>
+              <p className="text-sm text-center text-muted-foreground">
+                Вже маєте акаунт?{" "}
+                <Link href="/signin" className="text-primary hover:underline font-semibold">
+                  Увійти
+                </Link>
+              </p>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 }
