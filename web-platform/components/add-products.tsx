@@ -2,12 +2,26 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import { useProductStore } from "@/store/useVFridgeStore";
 import { productSchema } from "@/interfaces/schemas";
 import { getErrorMessage } from "@/lib/utils";
@@ -15,39 +29,44 @@ import { getErrorMessage } from "@/lib/utils";
 export function AddProducts() {
   const { data: session } = useSession();
   const addProductToStore = useProductStore((state) => state.addProduct);
-  
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     quantity: "1",
     unit: "шт",
-    expiryDate: ""
+    expiryDate: "",
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  const reset = () => setFormData({ name: "", description: "", quantity: "1", unit: "шт", expiryDate: "" });
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!session?.user?.id) {
-      alert("Ви не авторизовані. Спробуйте перелогінитись.");
+      toast.error("Ви не авторизовані. Спробуйте перелогінитись.");
       return;
     }
-    const selectedDate = new Date(formData.expiryDate);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
-    if (selectedDate < today) {
-      const confirmAdd = confirm("⚠️ Продукт вже протермінований. Ти впевнений, що хочеш його додати?");
-      if (!confirmAdd) return;
+    if (formData.expiryDate) {
+      const selectedDate = new Date(formData.expiryDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (selectedDate < today) {
+        const confirmAdd = confirm("⚠️ Продукт вже протермінований. Додати все одно?");
+        if (!confirmAdd) return;
+      }
     }
-    
+
     setIsLoading(true);
 
     const payload = {
-      name: formData.name,
-      description: formData.description || null,
+      name: formData.name.trim(),
+      description: formData.description.trim() || null,
       quantity: Number(formData.quantity),
       unit: formData.unit,
       expiryDate: formData.expiryDate,
@@ -55,10 +74,8 @@ export function AddProducts() {
     };
 
     const validation = productSchema.safeParse(payload);
-    
     if (!validation.success) {
-      const firstError = validation.error.issues[0]?.message || "Помилка валідації";
-      alert(firstError);
+      toast.error(validation.error.issues[0]?.message || "Помилка валідації");
       setIsLoading(false);
       return;
     }
@@ -77,55 +94,126 @@ export function AddProducts() {
 
       const savedProduct = await response.json();
       addProductToStore(savedProduct);
+      toast.success(`«${savedProduct.name}» додано`);
       setIsOpen(false);
-      setFormData({ name: "", description: "", quantity: "1", unit: "шт", expiryDate: "" });
-    } 
-    catch (error) {
-  alert(getErrorMessage(error) || "Не вдалося додати продукт");
-}
-    finally {
+      reset();
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Не вдалося додати продукт"));
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(o) => { setIsOpen(o); if (!o) reset(); }}>
       <DialogTrigger asChild>
-        <Button>Add Product</Button>
+        <Button size="lg" className="rounded-xl font-bold gap-2 shadow-md shadow-primary/20">
+          <Plus className="h-4 w-4" />
+          Додати продукт
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
+          <div className="h-11 w-11 rounded-xl bg-secondary text-secondary-foreground grid place-items-center mb-2">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <DialogTitle className="text-xl tracking-tight">Новий продукт у холодильник</DialogTitle>
+          <DialogDescription>Додайте назву, кількість і дату придатності.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleAdd}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">Name</Label>
-              <Input id="name" className="col-span-3" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} required />
+        <form onSubmit={handleAdd} className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Назва
+            </Label>
+            <Input
+              id="name"
+              placeholder="Наприклад: Молоко"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              autoFocus
+              className="h-11 rounded-xl"
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="quantity" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                Кількість
+              </Label>
+              <Input
+                id="quantity"
+                type="number"
+                step="0.1"
+                min="0"
+                className="h-11 rounded-xl"
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                required
+              />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="quantity" className="text-right">Quantity</Label>
-              <div className="col-span-3 flex gap-2">
-                <Input id="quantity" type="number" step="0.1" className="flex-1" value={formData.quantity} onChange={(e) => setFormData({...formData, quantity: e.target.value})} required />
-                <Select value={formData.unit} onValueChange={(v) => setFormData({...formData, unit: v})}>
-                  <SelectTrigger className="w-25"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="шт">шт</SelectItem>
-                    <SelectItem value="кг">кг</SelectItem>
-                    <SelectItem value="л">л</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="expiryDate" className="text-right">Expiry</Label>
-              <Input id="expiryDate" type="date" className="col-span-3" value={formData.expiryDate} onChange={(e) => setFormData({...formData, expiryDate: e.target.value})} required />
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                Од.
+              </Label>
+              <Select
+                value={formData.unit}
+                onValueChange={(v) => setFormData({ ...formData, unit: v })}
+              >
+                <SelectTrigger className="h-11 rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="шт">шт</SelectItem>
+                  <SelectItem value="кг">кг</SelectItem>
+                  <SelectItem value="г">г</SelectItem>
+                  <SelectItem value="л">л</SelectItem>
+                  <SelectItem value="мл">мл</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          <div className="flex justify-end space-x-2">
-            <Button type="submit" disabled={isLoading}>
+
+          <div className="space-y-2">
+            <Label htmlFor="expiryDate" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Термін придатності
+            </Label>
+            <Input
+              id="expiryDate"
+              type="date"
+              className="h-11 rounded-xl"
+              value={formData.expiryDate}
+              onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Опис (необов'язково)
+            </Label>
+            <Input
+              id="description"
+              placeholder="Наприклад: 2.5% жирності"
+              className="h-11 rounded-xl"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setIsOpen(false)}
+              className="rounded-xl"
+              disabled={isLoading}
+            >
+              Скасувати
+            </Button>
+            <Button type="submit" disabled={isLoading} className="rounded-xl font-bold">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Add Product
+              Додати
             </Button>
           </div>
         </form>
