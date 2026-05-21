@@ -7,6 +7,7 @@ import { useProductStore } from "@/store/useVFridgeStore";
 import { useMemo } from "react";
 import { Refrigerator, AlertTriangle, Sparkles, ArrowRight, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AnalyticsTile } from "@/components/analytics-tile";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -75,6 +76,8 @@ export default function Dashboard() {
             icon={<AlertTriangle className="h-5 w-5" />}
           />
         </section>
+
+        <AnalyticsTile />
 
         <section className="rounded-3xl border border-border/60 bg-gradient-to-br from-primary/8 via-secondary/30 to-transparent p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-5 justify-between">
           <div className="flex items-start gap-4">
