@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { useProductStore } from "@/store/useVFridgeStore";
 import { productSchema } from "@/interfaces/schemas";
 import { getErrorMessage } from "@/lib/utils";
+import { PRODUCT_CATEGORIES } from "@/interfaces/categories";
 
 type ProductResponse = {
   id: number;
@@ -34,6 +35,7 @@ type ProductResponse = {
   quantity: number;
   unit: string;
   expiryDate: string | null;
+  category: string;
   ownerId: number;
   createdAt: string;
 };
@@ -48,12 +50,13 @@ export function AddProducts() {
     quantity: "1",
     unit: "pcs",
     expiryDate: "",
+    category: "other",
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const reset = () => setFormData({ name: "", description: "", quantity: "1", unit: "pcs", expiryDate: "" });
+  const reset = () => setFormData({ name: "", description: "", quantity: "1", unit: "pcs", expiryDate: "", category: "other" });
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +85,7 @@ export function AddProducts() {
       quantity: Number(formData.quantity),
       unit: formData.unit,
       expiryDate: formData.expiryDate,
+      category: formData.category,
       ownerId: String(user.id),
     };
 
@@ -101,6 +105,7 @@ export function AddProducts() {
           quantity: payload.quantity,
           unit: payload.unit,
           expiryDate: payload.expiryDate || null,
+          category: payload.category,
         },
       });
       addProductToStore({ ...savedProduct, ownerId: String(savedProduct.ownerId) });
@@ -182,6 +187,25 @@ export function AddProducts() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Category
+            </Label>
+            <Select
+              value={formData.category}
+              onValueChange={(v) => setFormData({ ...formData, category: v })}
+            >
+              <SelectTrigger className="h-11 rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PRODUCT_CATEGORIES.map((c) => (
+                  <SelectItem key={c.slug} value={c.slug}>{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

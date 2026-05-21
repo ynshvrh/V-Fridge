@@ -19,6 +19,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { getErrorMessage } from "@/lib/utils";
+import { categoryLabel } from "@/interfaces/categories";
 
 type FreshnessState = {
   label: string;
@@ -145,12 +146,17 @@ export function ProductList() {
                 <div className="flex justify-between items-start gap-2">
                   <div className="space-y-1.5 min-w-0">
                     <h3 className="font-black text-lg tracking-tight line-clamp-1">{product.name}</h3>
-                    <Badge
-                      className={`rounded-full px-2.5 py-0 h-5 text-[10px] uppercase font-black tracking-widest gap-1 border ${fresh.className}`}
-                    >
-                      {fresh.icon}
-                      {fresh.label}
-                    </Badge>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <Badge
+                        className={`rounded-full px-2.5 py-0 h-5 text-[10px] uppercase font-black tracking-widest gap-1 border ${fresh.className}`}
+                      >
+                        {fresh.icon}
+                        {fresh.label}
+                      </Badge>
+                      <Badge className="rounded-full px-2.5 py-0 h-5 text-[10px] font-bold tracking-wide gap-1 border bg-muted/60 text-muted-foreground border-border">
+                        {categoryLabel(product.category)}
+                      </Badge>
+                    </div>
                   </div>
 
                   <Button
