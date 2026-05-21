@@ -21,12 +21,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Sparkles } from "lucide-react";
+import { Loader2, Plus, ScanBarcode, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useProductStore } from "@/store/useVFridgeStore";
 import { productSchema } from "@/interfaces/schemas";
 import { getErrorMessage } from "@/lib/utils";
 import { PRODUCT_CATEGORIES } from "@/interfaces/categories";
+import { BarcodeScanner, type ScannedProduct } from "@/components/barcode-scanner";
 
 type ProductResponse = {
   id: number;
@@ -55,8 +56,20 @@ export function AddProducts() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const reset = () => setFormData({ name: "", description: "", quantity: "1", unit: "pcs", expiryDate: "", category: "other" });
+
+  const applyScanned = (p: ScannedProduct) => {
+    setFormData((prev) => ({
+      ...prev,
+      name: p.name,
+      quantity: p.quantity,
+      unit: p.unit,
+      category: p.category,
+    }));
+    toast.success(`Filled from barcode ${p.barcode}`);
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,6 +148,20 @@ export function AddProducts() {
           <DialogTitle className="text-xl tracking-tight">New product in the fridge</DialogTitle>
           <DialogDescription>Add a name, quantity, and expiry date.</DialogDescription>
         </DialogHeader>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setScannerOpen(true)}
+          className="w-full rounded-xl gap-2 mt-1"
+        >
+          <ScanBarcode className="h-4 w-4" />
+          Scan barcode
+        </Button>
+        <BarcodeScanner
+          open={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          onResolved={applyScanned}
+        />
         <form onSubmit={handleAdd} className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
