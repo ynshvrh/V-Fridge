@@ -12,9 +12,9 @@ export interface Product {
   description: string | null;
   quantity: number;
   unit: string;
-  expiryDate: string | Date; 
+  expiryDate: string | Date | null;
   ownerId: string;
-  createdAt?: Date;
+  createdAt?: string | Date;
 }
 
 export interface Message {

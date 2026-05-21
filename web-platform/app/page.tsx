@@ -2,14 +2,14 @@
 import { AddProducts } from "@/components/add-products";
 import { ProductList } from "@/components/ProductList";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/providers/auth-provider";
 import { useProductStore } from "@/store/useVFridgeStore";
 import { useMemo } from "react";
 import { Refrigerator, AlertTriangle, Sparkles, ArrowRight, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const products = useProductStore((state) => state.products);
 
   const stats = useMemo(() => {
@@ -38,8 +38,8 @@ export default function Dashboard() {
               Ваш холодильник
             </div>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight">
-              {session?.user?.username ? (
-                <>Вітаємо, <span className="text-primary">{session.user.username}</span>!</>
+              {user?.username ? (
+                <>Вітаємо, <span className="text-primary">{user.username}</span>!</>
               ) : (
                 "Дашборд"
               )}

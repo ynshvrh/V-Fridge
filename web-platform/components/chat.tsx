@@ -8,6 +8,7 @@ import { Loader2, Send, ChefHat, User, Trash2, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { Message } from "@/interfaces/type";
+import { apiFetch, ApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
 
 const QUICK_PROMPTS = [
@@ -25,11 +26,8 @@ export default function Chat() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/api/chat")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setMessages(data.slice(-20));
-      })
+    apiFetch<Message[]>("/chat")
+      .then((data) => { if (Array.isArray(data)) setMessages(data.slice(-20)); })
       .catch((err) => console.error("Помилка завантаження історії:", err));
   }, []);
 
@@ -51,14 +49,14 @@ export default function Chat() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        body: JSON.stringify({ content: text }),
-      });
-      const data = await res.json();
+      const data = await apiFetch<Message>("/chat", { method: "POST", body: { content: text } });
       setMessages((prev) => [...prev, data].slice(-20));
     } catch (err) {
-      toast.error(getErrorMessage(err, "Не вдалося надіслати повідомлення"));
+      if (err instanceof ApiError && err.status === 429) {
+        toast.warning("Забагато запитів. Спробуйте через хвилину.");
+      } else {
+        toast.error(getErrorMessage(err, "Не вдалося надіслати повідомлення"));
+      }
     } finally {
       setLoading(false);
     }
@@ -72,8 +70,7 @@ export default function Chat() {
   const clearHistory = async () => {
     if (!confirm("Видалити всю історію переписки?")) return;
     try {
-      const res = await fetch("/api/chat", { method: "DELETE" });
-      if (!res.ok) throw new Error("DELETE failed");
+      await apiFetch("/chat", { method: "DELETE" });
       setMessages([]);
       toast.success("Історію очищено");
     } catch (err) {

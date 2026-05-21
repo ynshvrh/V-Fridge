@@ -8,26 +8,37 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { useSession, signOut } from "next-auth/react";
-import { Trash2, LogOut, ShieldCheck, User, MailCheck } from "lucide-react";
+import { useAuth } from "@/providers/auth-provider";
+import { apiFetch } from "@/lib/api-client";
+import { Trash2, LogOut, ShieldCheck, User, MailCheck, MailWarning } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Settings() {
-  const { data: session } = useSession();
+  const { user, logout } = useAuth();
 
   const clearData = async (type: "chat" | "products") => {
     const labels = { chat: "повідомлення", products: "продукти" };
     if (!confirm(`Видалити всі ${labels[type]}?`)) return;
 
     try {
-      const res = await fetch(`/api/${type}`, { method: "DELETE" });
-      if (res.ok) {
-        toast.success(`${type === "chat" ? "Чат" : "Холодильник"} очищено`);
-      } else {
-        throw new Error();
-      }
+      await apiFetch(`/${type}`, { method: "DELETE" });
+      toast.success(`${type === "chat" ? "Чат" : "Холодильник"} очищено`);
     } catch {
       toast.error("Не вдалося виконати дію");
+    }
+  };
+
+  const resendVerification = async () => {
+    if (!user?.email) return;
+    try {
+      await apiFetch("/auth/resend-verification", {
+        method: "POST",
+        body: { email: user.email },
+        skipAuth: true,
+      });
+      toast.success("Лист підтвердження надіслано");
+    } catch {
+      toast.error("Не вдалося надіслати лист");
     }
   };
 
@@ -51,20 +62,31 @@ export default function Settings() {
           <section className="md:col-span-4 space-y-4">
             <div className="p-6 rounded-3xl bg-card border border-border/60 shadow-sm flex flex-col items-center text-center space-y-4">
               <div className="h-20 w-20 rounded-2xl bg-primary text-primary-foreground grid place-items-center shadow-md shadow-primary/20 text-2xl font-black">
-                {(session?.user?.username || session?.user?.email || "?").slice(0, 1).toUpperCase()}
+                {(user?.username || user?.email || "?").slice(0, 1).toUpperCase()}
               </div>
               <div>
                 <h3 className="font-black text-xl tracking-tight">
-                  {session?.user?.username || "Гість"}
+                  {user?.username || "Гість"}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {session?.user?.email || "Email не вказано"}
+                  {user?.email || "Email не вказано"}
                 </p>
               </div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary/60 text-secondary-foreground text-[10px] font-bold uppercase tracking-widest">
-                <MailCheck className="h-3 w-3" />
-                Email верифіковано
-              </div>
+              {user?.emailVerified ? (
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/15 text-success text-[10px] font-bold uppercase tracking-widest">
+                  <MailCheck className="h-3 w-3" />
+                  Email підтверджено
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={resendVerification}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-100 text-[11px] font-bold uppercase tracking-widest hover:bg-yellow-200 transition-colors"
+                >
+                  <MailWarning className="h-3.5 w-3.5" />
+                  Підтвердити email
+                </button>
+              )}
             </div>
           </section>
 
@@ -80,14 +102,14 @@ export default function Settings() {
                     Юзернейм
                   </p>
                   <p className="text-base font-bold truncate">
-                    {session?.user?.username || "Гість"}
+                    {user?.username || "Гість"}
                   </p>
                 </div>
                 <div className="space-y-1 p-4 rounded-2xl bg-secondary/30 border border-secondary">
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                     Email
                   </p>
-                  <p className="text-base font-bold truncate">{session?.user?.email || "—"}</p>
+                  <p className="text-base font-bold truncate">{user?.email || "—"}</p>
                 </div>
               </CardContent>
             </Card>
@@ -124,13 +146,13 @@ export default function Settings() {
                     <ShieldCheck className="h-5 w-5 text-success" />
                   </div>
                   <p className="font-semibold text-sm">
-                    {session ? "Сесія активна та захищена" : "Авторизація відсутня"}
+                    {user ? "Сесія активна та захищена" : "Авторизація відсутня"}
                   </p>
                 </div>
                 <Button
                   variant="destructive"
                   className="w-full sm:w-auto px-6 h-11 font-bold rounded-xl shadow-md shadow-destructive/20"
-                  onClick={() => signOut({ callbackUrl: "/signin" })}
+                  onClick={logout}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Вийти з акаунту

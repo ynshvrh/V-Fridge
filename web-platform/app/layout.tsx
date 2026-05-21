@@ -1,9 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
-import SessionProvider from "@/providers/session-provider";
+import { AuthProvider } from "@/providers/auth-provider";
 import { Toaster } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { Refrigerator } from "lucide-react";
@@ -13,7 +13,10 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   title: "V-Fridge — Розумний холодильник з AI-кухарем",
-  description: "Керуйте продуктами, відстежуйте терміни придатності та отримуйте персональні рецепти від AI-кухаря Gemini.",
+  description: "Керуйте продуктами, відстежуйте терміни придатності та отримуйте персональні рецепти від AI-кухаря.",
+};
+
+export const viewport: Viewport = {
   themeColor: "#8C5383",
 };
 
@@ -21,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="uk" className="h-full">
       <body className={`${geistSans.variable} ${geistMono.variable} h-full bg-ambient`}>
-        <SessionProvider>
+        <AuthProvider>
           <SidebarProvider className="h-full">
             <AppSidebar />
             <SidebarInset className="h-full flex flex-col">
@@ -41,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </main>
             </SidebarInset>
           </SidebarProvider>
-        </SessionProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useProductStore } from "@/store/useVFridgeStore";
+import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,11 +65,8 @@ export function ProductList() {
   useEffect(() => {
     async function loadProducts() {
       try {
-        const res = await fetch("/api/products");
-        if (res.ok) {
-          const data = await res.json();
-          setProducts(data);
-        }
+        const data = await apiFetch<Array<{ id: number; ownerId: number } & Record<string, unknown>>>("/products");
+        setProducts(data.map((p) => ({ ...p, ownerId: String(p.ownerId) })) as never);
       } catch (error) {
         console.error("Помилка завантаження продуктів:", error);
       } finally {
@@ -82,32 +80,23 @@ export function ProductList() {
     if (!confirm("Видалити цей продукт?")) return;
 
     try {
-      const res = await fetch(`/api/products?id=${id}`, { method: "DELETE" });
-      if (res.ok) {
-        removeProduct(id);
-        toast.success("Продукт видалено");
-      } else {
-        toast.error("Не вдалося видалити продукт");
-      }
+      await apiFetch(`/products/${id}`, { method: "DELETE" });
+      removeProduct(id);
+      toast.success("Продукт видалено");
     } catch (err) {
-      toast.error(getErrorMessage(err));
+      toast.error(getErrorMessage(err, "Не вдалося видалити продукт"));
     }
   };
 
   const handleSaveQty = async (id: number) => {
     try {
-      const res = await fetch("/api/products", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, quantity: Number(editValue) }),
-      });
-
-      if (res.ok) {
-        const updated = await res.json();
-        updateProduct(updated);
-        setEditingId(null);
-        toast.success("Кількість оновлено");
-      }
+      const updated = await apiFetch<{ id: number; ownerId: number } & Record<string, unknown>>(
+        `/products/${id}`,
+        { method: "PATCH", body: { quantity: Number(editValue) } }
+      );
+      updateProduct({ ...updated, ownerId: String(updated.ownerId) } as never);
+      setEditingId(null);
+      toast.success("Кількість оновлено");
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
