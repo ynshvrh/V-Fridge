@@ -10,9 +10,10 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/providers/auth-provider";
 import { apiFetch } from "@/lib/api-client";
-import { Trash2, LogOut, ShieldCheck, User, MailCheck, MailWarning } from "lucide-react";
+import { Trash2, LogOut, ShieldCheck, User, MailCheck, MailWarning, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -112,6 +113,22 @@ export default function Settings() {
                   </p>
                   <p className="text-base font-bold truncate">{user?.email || "—"}</p>
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
+              <CardHeader className="bg-muted/40 pb-4">
+                <CardTitle className="text-lg inline-flex items-center gap-2">
+                  <Palette className="h-4 w-4" />
+                  Appearance
+                </CardTitle>
+                <CardDescription>Light, dark, or follow your operating system.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-5 flex items-center justify-between gap-4">
+                <p className="text-sm text-muted-foreground">
+                  Affects the whole app and is remembered on this device.
+                </p>
+                <ThemeToggle />
               </CardContent>
             </Card>
 

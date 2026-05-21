@@ -23,6 +23,7 @@ import {
   Refrigerator,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, desc: "Inventory and stats" },
@@ -97,6 +98,12 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-3 border-t border-sidebar-border/60">
+        <div className="flex items-center justify-between gap-2 px-1 pb-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
+            Theme
+          </span>
+          <ThemeToggle />
+        </div>
         <SidebarMenu>
           {status === "authenticated" && user ? (
             <SidebarMenuItem className="flex flex-col gap-2">
