@@ -14,6 +14,7 @@ import { Trash2, LogOut, ShieldCheck, User, MailCheck, MailWarning, Palette } fr
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { FridgesCard } from "@/components/fridges-card";
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -115,6 +116,8 @@ export default function Settings() {
                 </div>
               </CardContent>
             </Card>
+
+            <FridgesCard />
 
             <Card className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
               <CardHeader className="bg-muted/40 pb-4">
