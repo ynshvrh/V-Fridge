@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/providers/auth-provider";
+import { apiFetch } from "@/lib/api-client";
 import {
   Dialog,
   DialogContent,
@@ -26,8 +27,19 @@ import { useProductStore } from "@/store/useVFridgeStore";
 import { productSchema } from "@/interfaces/schemas";
 import { getErrorMessage } from "@/lib/utils";
 
+type ProductResponse = {
+  id: number;
+  name: string;
+  description: string | null;
+  quantity: number;
+  unit: string;
+  expiryDate: string | null;
+  ownerId: number;
+  createdAt: string;
+};
+
 export function AddProducts() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
   const addProductToStore = useProductStore((state) => state.addProduct);
 
   const [formData, setFormData] = useState({
@@ -46,7 +58,7 @@ export function AddProducts() {
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!session?.user?.id) {
+    if (!user) {
       toast.error("Ви не авторизовані. Спробуйте перелогінитись.");
       return;
     }
@@ -70,7 +82,7 @@ export function AddProducts() {
       quantity: Number(formData.quantity),
       unit: formData.unit,
       expiryDate: formData.expiryDate,
-      ownerId: String(session.user.id),
+      ownerId: String(user.id),
     };
 
     const validation = productSchema.safeParse(payload);
@@ -81,19 +93,17 @@ export function AddProducts() {
     }
 
     try {
-      const response = await fetch("/api/products", {
+      const savedProduct = await apiFetch<ProductResponse>("/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: {
+          name: payload.name,
+          description: payload.description,
+          quantity: payload.quantity,
+          unit: payload.unit,
+          expiryDate: payload.expiryDate || null,
+        },
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Server error");
-      }
-
-      const savedProduct = await response.json();
-      addProductToStore(savedProduct);
+      addProductToStore({ ...savedProduct, ownerId: String(savedProduct.ownerId) });
       toast.success(`«${savedProduct.name}» додано`);
       setIsOpen(false);
       reset();

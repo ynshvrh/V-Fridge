@@ -22,7 +22,7 @@ import {
   LogOut,
   Refrigerator,
 } from "lucide-react";
-import { useSession, signOut } from "next-auth/react";
+import { useAuth } from "@/providers/auth-provider";
 
 const NAV = [
   { href: "/", label: "Дашборд", icon: LayoutDashboard, desc: "Інвентар і статистика" },
@@ -30,7 +30,7 @@ const NAV = [
 ];
 
 export function AppSidebar() {
-  const { data: session, status } = useSession();
+  const { user, status, logout } = useAuth();
   const pathname = usePathname();
 
   return (
@@ -98,19 +98,19 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-3 border-t border-sidebar-border/60">
         <SidebarMenu>
-          {status === "authenticated" ? (
+          {status === "authenticated" && user ? (
             <SidebarMenuItem className="flex flex-col gap-2">
               <div className="flex items-center gap-3 px-2 py-2 rounded-lg bg-sidebar-accent/40">
                 <div className="h-9 w-9 rounded-full bg-primary text-primary-foreground grid place-items-center font-bold shrink-0">
-                  {(session.user?.username || session.user?.email || "U").slice(0, 1).toUpperCase()}
+                  {(user.username || user.email || "U").slice(0, 1).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold truncate">{session.user?.username || "Гість"}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{session.user?.email}</p>
+                  <p className="text-sm font-semibold truncate">{user.username || "Гість"}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
                 </div>
               </div>
               <SidebarMenuButton
-                onClick={() => signOut({ callbackUrl: "/signin" })}
+                onClick={logout}
                 className="w-full justify-center bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors rounded-lg"
               >
                 <LogOut className="mr-2 h-4 w-4" /> Вийти

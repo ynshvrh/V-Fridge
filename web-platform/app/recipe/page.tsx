@@ -1,10 +1,10 @@
 "use client";
 import Chat from "@/components/chat";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/providers/auth-provider";
 import { ChefHat } from "lucide-react";
 
 export default function RecipePage() {
-  const { data: session } = useSession();
+  const { user } = useAuth();
 
   return (
     <div className="h-full w-full flex flex-col p-4 md:p-6 lg:p-8">
@@ -18,7 +18,7 @@ export default function RecipePage() {
             Що приготуємо сьогодні?
           </h1>
           <p className="text-base md:text-lg text-muted-foreground font-medium max-w-xl">
-            Шукаємо ідеї для {session?.user?.username || "вашого обіду"} — на базі продуктів у холодильнику.
+            Шукаємо ідеї для {user?.username || "вашого обіду"} — на базі продуктів у холодильнику.
           </p>
         </header>
 

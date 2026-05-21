@@ -1,8 +1,7 @@
 "use client";
 
-import { signIn } from "next-auth/react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,14 +13,29 @@ import {
   CardFooter,
   CardDescription,
 } from "@/components/ui/card";
-import { Loader2, Refrigerator, LogIn } from "lucide-react";
+import { Loader2, Refrigerator, LogIn, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { z } from "zod";
+import { toast } from "sonner";
+import { useAuth } from "@/providers/auth-provider";
 
 const signInSchema = z.object({
   email: z.string().email("Некоректний формат email"),
   password: z.string().min(1, "Пароль обов'язковий"),
 });
+
+function VerificationBanner() {
+  const params = useSearchParams();
+  const verified = params.get("verified");
+  const reason = params.get("reason");
+
+  useEffect(() => {
+    if (verified === "1") toast.success("Email успішно підтверджено!");
+    else if (verified === "0") toast.error(reason || "Не вдалось підтвердити email");
+  }, [verified, reason]);
+
+  return null;
+}
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -29,6 +43,7 @@ export default function SignInPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,19 +57,22 @@ export default function SignInPage() {
       return;
     }
 
-    const result = await signIn("credentials", { email, password, redirect: false });
-
-    if (result?.error) {
-      setError("Невірний email або пароль");
-      setLoading(false);
-    } else {
+    try {
+      await login(email, password);
       router.push("/");
-      router.refresh();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Невірний email або пароль";
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-ambient px-4 py-10">
+      <Suspense fallback={null}>
+        <VerificationBanner />
+      </Suspense>
       <div className="w-full max-w-md space-y-6">
         <Link href="/" className="flex items-center justify-center gap-3 group">
           <div className="h-12 w-12 rounded-2xl bg-primary text-primary-foreground grid place-items-center shadow-md shadow-primary/20 group-hover:scale-105 transition-transform">
@@ -132,6 +150,11 @@ export default function SignInPage() {
             </CardFooter>
           </form>
         </Card>
+
+        <p className="text-[11px] text-center text-muted-foreground/70 leading-relaxed px-6">
+          <CheckCircle2 className="inline h-3.5 w-3.5 mr-1 text-success" />
+          Ваш email буде підтверджено після першого входу. Перевірте поштову скриньку.
+        </p>
       </div>
     </div>
   );

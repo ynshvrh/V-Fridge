@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,14 +13,18 @@ import {
   CardFooter,
   CardDescription,
 } from "@/components/ui/card";
-import { Loader2, Refrigerator, UserPlus } from "lucide-react";
+import { Loader2, Refrigerator, UserPlus, MailCheck } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { useAuth } from "@/providers/auth-provider";
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
   const router = useRouter();
+  const { signup, login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,29 +32,18 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setError(typeof data.error === "string" ? data.error : "Помилка реєстрації");
-        return;
-      }
-
-      const loginResult = await signIn("credentials", {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      });
-
-      if (loginResult?.error) router.push("/signin");
-      else {
+      const { message } = await signup(formData.username, formData.email, formData.password);
+      toast.success(message ?? "Акаунт створено. Перевірте пошту для підтвердження.");
+      setDone(true);
+      try {
+        await login(formData.email, formData.password);
         router.push("/");
-        router.refresh();
+      } catch {
+        // Login may legitimately fail if you decide later to gate it behind verified email.
+        router.push("/signin");
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не вдалося створити акаунт");
     } finally {
       setLoading(false);
     }
@@ -80,6 +72,12 @@ export default function SignUpPage() {
               {error && (
                 <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-xl text-center font-medium">
                   {error}
+                </div>
+              )}
+              {done && (
+                <div className="p-3 text-sm bg-secondary text-secondary-foreground border border-secondary rounded-xl text-center font-medium inline-flex items-center justify-center gap-2 w-full">
+                  <MailCheck className="h-4 w-4" />
+                  Перевірте пошту — ми надіслали лист підтвердження
                 </div>
               )}
               <div className="space-y-2">
