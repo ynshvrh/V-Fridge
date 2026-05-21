@@ -21,12 +21,14 @@ import {
   UserPlus,
   LogOut,
   Refrigerator,
+  ShoppingBasket,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, desc: "Inventory and stats" },
+  { href: "/shopping", label: "Shopping list", icon: ShoppingBasket, desc: "Plan what to buy" },
   { href: "/recipe", label: "AI chef", icon: UtensilsCrossed, desc: "Recipes from your fridge" },
 ];
 
