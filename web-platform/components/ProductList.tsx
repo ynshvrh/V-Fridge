@@ -5,14 +5,11 @@ import { useProductStore } from "@/store/useVFridgeStore";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Trash2,
   Edit2,
-  Check,
-  X,
   Loader2,
   Refrigerator,
   CalendarDays,
@@ -20,6 +17,8 @@ import {
 } from "lucide-react";
 import { getErrorMessage } from "@/lib/utils";
 import { categoryLabel } from "@/interfaces/categories";
+import { EditProductDialog } from "@/components/edit-product-dialog";
+import type { Product } from "@/interfaces/type";
 
 type FreshnessState = {
   label: string;
@@ -58,10 +57,9 @@ function getFreshness(date: string | Date | null | undefined): FreshnessState {
 }
 
 export function ProductList() {
-  const { products, setProducts, removeProduct, updateProduct } = useProductStore();
+  const { products, setProducts, removeProduct } = useProductStore();
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editValue, setEditValue] = useState("");
+  const [editing, setEditing] = useState<Product | null>(null);
 
   useEffect(() => {
     async function loadProducts() {
@@ -86,20 +84,6 @@ export function ProductList() {
       toast.success("Product deleted");
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to delete the product"));
-    }
-  };
-
-  const handleSaveQty = async (id: number) => {
-    try {
-      const updated = await apiFetch<{ id: number; ownerId: number } & Record<string, unknown>>(
-        `/products/${id}`,
-        { method: "PATCH", body: { quantity: Number(editValue) } }
-      );
-      updateProduct({ ...updated, ownerId: String(updated.ownerId) } as never);
-      setEditingId(null);
-      toast.success("Quantity updated");
-    } catch (err) {
-      toast.error(getErrorMessage(err));
     }
   };
 
@@ -132,117 +116,98 @@ export function ProductList() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
-      {products.map((product) => {
-        const fresh = getFreshness(product.expiryDate);
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
+        {products.map((product) => {
+          const fresh = getFreshness(product.expiryDate);
 
-        return (
-          <Card
-            key={product.id}
-            className={`group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 border border-border/70 bg-card shadow-sm rounded-2xl ${fresh.ringClass ?? ""}`}
-          >
-            <CardContent className="p-5 flex flex-col h-full justify-between gap-5">
-              <div className="space-y-3">
-                <div className="flex justify-between items-start gap-2">
-                  <div className="space-y-1.5 min-w-0">
-                    <h3 className="font-black text-lg tracking-tight line-clamp-1">{product.name}</h3>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <Badge
-                        className={`rounded-full px-2.5 py-0 h-5 text-[10px] uppercase font-black tracking-widest gap-1 border ${fresh.className}`}
-                      >
-                        {fresh.icon}
-                        {fresh.label}
-                      </Badge>
-                      <Badge className="rounded-full px-2.5 py-0 h-5 text-[10px] font-bold tracking-wide gap-1 border bg-muted/60 text-muted-foreground border-border">
-                        {categoryLabel(product.category)}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive shrink-0"
-                    onClick={() => handleDelete(product.id)}
-                    title="Delete"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-                  <p className="text-xs font-semibold">
-                    {product.expiryDate
-                      ? new Date(product.expiryDate).toLocaleDateString("en-US", {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })
-                      : "No date"}
-                  </p>
-                </div>
-
-                {product.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed bg-muted/40 p-2.5 rounded-lg italic">
-                    {product.description}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between mt-auto pt-4 border-t border-border/60">
-                {editingId === product.id ? (
-                  <div className="flex items-center gap-2 w-full">
-                    <Input
-                      type="number"
-                      step="0.1"
-                      className="h-10 border-primary/40 focus-visible:ring-primary font-bold"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      autoFocus
-                    />
-                    <Button size="icon" className="h-10 w-10 shrink-0" onClick={() => handleSaveQty(product.id)}>
-                      <Check className="h-5 w-5" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      className="h-10 w-10 shrink-0"
-                      onClick={() => setEditingId(null)}
-                    >
-                      <X className="h-5 w-5" />
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">
-                        Quantity
-                      </span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-2xl font-black tracking-tight">{product.quantity}</span>
-                        <span className="text-xs font-bold text-muted-foreground uppercase">{product.unit}</span>
+          return (
+            <Card
+              key={product.id}
+              className={`group relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 border border-border/70 bg-card shadow-sm rounded-2xl ${fresh.ringClass ?? ""}`}
+            >
+              <CardContent className="p-5 flex flex-col h-full justify-between gap-5">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="space-y-1.5 min-w-0">
+                      <h3 className="font-black text-lg tracking-tight line-clamp-1">{product.name}</h3>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge
+                          className={`rounded-full px-2.5 py-0 h-5 text-[10px] uppercase font-black tracking-widest gap-1 border ${fresh.className}`}
+                        >
+                          {fresh.icon}
+                          {fresh.label}
+                        </Badge>
+                        <Badge className="rounded-full px-2.5 py-0 h-5 text-[10px] font-bold tracking-wide gap-1 border bg-muted/60 text-muted-foreground border-border">
+                          {categoryLabel(product.category)}
+                        </Badge>
                       </div>
                     </div>
+
                     <Button
-                      variant="secondary"
-                      size="sm"
-                      className="rounded-xl font-semibold h-10 px-4 gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
-                      onClick={() => {
-                        setEditingId(product.id);
-                        setEditValue(String(product.quantity));
-                      }}
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive shrink-0"
+                      onClick={() => handleDelete(product.id)}
+                      title="Delete"
                     >
-                      <Edit2 className="h-3.5 w-3.5" />
-                      Edit
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                    <p className="text-xs font-semibold">
+                      {product.expiryDate
+                        ? new Date(product.expiryDate).toLocaleDateString("en-US", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })
+                        : "No date"}
+                    </p>
+                  </div>
+
+                  {product.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed bg-muted/40 p-2.5 rounded-lg italic">
+                      {product.description}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-border/60">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">
+                      Quantity
+                    </span>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-black tracking-tight">{product.quantity}</span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase">{product.unit}</span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="rounded-xl font-semibold h-10 px-4 gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                    onClick={() => setEditing(product)}
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                    Edit
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {editing && (
+        <EditProductDialog
+          product={editing}
+          open={!!editing}
+          onOpenChange={(open) => { if (!open) setEditing(null); }}
+        />
+      )}
+    </>
   );
 }
