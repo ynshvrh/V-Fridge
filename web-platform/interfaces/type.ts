@@ -13,6 +13,7 @@ export interface Product {
   quantity: number;
   unit: string;
   expiryDate: string | Date | null;
+  category: string;
   ownerId: string;
   createdAt?: string | Date;
 }
