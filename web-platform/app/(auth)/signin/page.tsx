@@ -13,11 +13,12 @@ import {
   CardFooter,
   CardDescription,
 } from "@/components/ui/card";
-import { Loader2, Refrigerator, LogIn, CheckCircle2 } from "lucide-react";
+import { Loader2, Refrigerator, LogIn, MailWarning } from "lucide-react";
 import Link from "next/link";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-provider";
+import { ApiError, apiFetch } from "@/lib/api-client";
 
 const signInSchema = z.object({
   email: z.string().email("Некоректний формат email"),
@@ -41,6 +42,8 @@ export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resending, setResending] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
@@ -49,6 +52,7 @@ export default function SignInPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setNeedsVerification(false);
 
     const validation = signInSchema.safeParse({ email, password });
     if (!validation.success) {
@@ -61,10 +65,32 @@ export default function SignInPage() {
       await login(email, password);
       router.push("/");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Невірний email або пароль";
-      setError(msg);
+      if (err instanceof ApiError && (err.payload as { code?: string })?.code === "EMAIL_NOT_VERIFIED") {
+        setNeedsVerification(true);
+        setError("");
+      } else {
+        const msg = err instanceof Error ? err.message : "Невірний email або пароль";
+        setError(msg);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) return;
+    setResending(true);
+    try {
+      await apiFetch("/auth/resend-verification", {
+        method: "POST",
+        body: { email },
+        skipAuth: true,
+      });
+      toast.success("Лист підтвердження надіслано");
+    } catch {
+      toast.error("Не вдалося надіслати лист");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -94,6 +120,28 @@ export default function SignInPage() {
               {error && (
                 <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-xl text-center font-medium">
                   {error}
+                </div>
+              )}
+              {needsVerification && (
+                <div className="p-4 rounded-xl bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-900/40 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <MailWarning className="h-5 w-5 text-yellow-900 dark:text-yellow-200 shrink-0 mt-0.5" />
+                    <div className="text-sm text-yellow-900 dark:text-yellow-200">
+                      <p className="font-bold mb-1">Email ще не підтверджено</p>
+                      <p>Перевірте поштову скриньку — ми надсилали лист з посиланням підтвердження.</p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resending}
+                    variant="outline"
+                    className="w-full h-10 rounded-lg border-yellow-300 dark:border-yellow-900/60 text-yellow-900 dark:text-yellow-200 hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
+                  >
+                    {resending ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Відправляємо…</>
+                    ) : "Надіслати лист повторно"}
+                  </Button>
                 </div>
               )}
               <div className="space-y-2">
@@ -150,11 +198,6 @@ export default function SignInPage() {
             </CardFooter>
           </form>
         </Card>
-
-        <p className="text-[11px] text-center text-muted-foreground/70 leading-relaxed px-6">
-          <CheckCircle2 className="inline h-3.5 w-3.5 mr-1 text-success" />
-          Ваш email буде підтверджено після першого входу. Перевірте поштову скриньку.
-        </p>
       </div>
     </div>
   );
