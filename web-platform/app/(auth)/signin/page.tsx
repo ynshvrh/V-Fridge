@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError, apiFetch } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
+import { GoogleSignInButton } from "@/components/google-signin-button";
+import { Separator } from "@/components/ui/separator";
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email format"),
@@ -116,6 +118,14 @@ export default function SignInPage() {
             <CardTitle className="text-2xl font-black tracking-tight">Welcome back</CardTitle>
             <CardDescription>Sign in to manage your fridge</CardDescription>
           </CardHeader>
+          <CardContent className="pt-4 pb-2 space-y-4">
+            <GoogleSignInButton />
+            <div className="flex items-center gap-3">
+              <Separator className="flex-1" />
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">or</span>
+              <Separator className="flex-1" />
+            </div>
+          </CardContent>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4 pt-4">
               {error && (

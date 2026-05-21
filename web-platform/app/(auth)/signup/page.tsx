@@ -15,6 +15,8 @@ import {
 import { Loader2, Refrigerator, UserPlus, MailCheck } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
+import { GoogleSignInButton } from "@/components/google-signin-button";
+import { Separator } from "@/components/ui/separator";
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({ username: "", email: "", password: "" });
@@ -80,6 +82,14 @@ export default function SignUpPage() {
               <CardTitle className="text-2xl font-black tracking-tight">Create account</CardTitle>
               <CardDescription>A few seconds and your smart fridge is ready</CardDescription>
             </CardHeader>
+            <CardContent className="pt-4 pb-2 space-y-4">
+              <GoogleSignInButton />
+              <div className="flex items-center gap-3">
+                <Separator className="flex-1" />
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">or</span>
+                <Separator className="flex-1" />
+              </div>
+            </CardContent>
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4 pt-4">
                 {error && (
