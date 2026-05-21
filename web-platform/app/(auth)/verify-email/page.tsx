@@ -40,15 +40,12 @@ function VerifyEmailInner() {
   const [state, setState] = useState<VerifyState>(() => {
     if (status === "ok") return { kind: "ok" };
     if (status === "error") return { kind: "error", message: reason || "Failed to verify email" };
+    if (!token) return { kind: "error", message: "Token is missing — open the link from the email" };
     return { kind: "loading" };
   });
 
   useEffect(() => {
-    if (state.kind !== "loading") return;
-    if (!token) {
-      setState({ kind: "error", message: "Token is missing — open the link from the email" });
-      return;
-    }
+    if (state.kind !== "loading" || !token) return;
 
     let cancelled = false;
     apiFetch<TokenPair>("/auth/verify-email", {

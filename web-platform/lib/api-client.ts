@@ -87,7 +87,7 @@ export async function apiFetch<T = unknown>(path: string, opts: FetchOptions = {
       body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
     });
 
-  let token = skipAuth ? undefined : tokenStore.get()?.accessToken;
+  const token = skipAuth ? undefined : tokenStore.get()?.accessToken;
   let res = await send(token);
 
   if (res.status === 401 && !skipAuth && tokenStore.get()) {
