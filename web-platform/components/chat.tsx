@@ -12,10 +12,10 @@ import { apiFetch, ApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
 
 const QUICK_PROMPTS = [
-  "Що приготувати на вечерю?",
-  "Швидкий сніданок за 10 хвилин",
-  "Що зробити з того, що скоро зіпсується?",
-  "Корисний обід без м'яса",
+  "What should I cook for dinner?",
+  "Quick breakfast in 10 minutes",
+  "What can I make from things about to expire?",
+  "A healthy meatless lunch",
 ];
 
 export default function Chat() {
@@ -28,7 +28,7 @@ export default function Chat() {
   useEffect(() => {
     apiFetch<Message[]>("/chat")
       .then((data) => { if (Array.isArray(data)) setMessages(data.slice(-20)); })
-      .catch((err) => console.error("Помилка завантаження історії:", err));
+      .catch((err) => console.error("Failed to load chat history:", err));
   }, []);
 
   const scrollToBottom = () => {
@@ -53,9 +53,9 @@ export default function Chat() {
       setMessages((prev) => [...prev, data].slice(-20));
     } catch (err) {
       if (err instanceof ApiError && err.status === 429) {
-        toast.warning("Забагато запитів. Спробуйте через хвилину.");
+        toast.warning("Too many requests. Try again in a minute.");
       } else {
-        toast.error(getErrorMessage(err, "Не вдалося надіслати повідомлення"));
+        toast.error(getErrorMessage(err, "Failed to send the message"));
       }
     } finally {
       setLoading(false);
@@ -68,13 +68,13 @@ export default function Chat() {
   };
 
   const clearHistory = async () => {
-    if (!confirm("Видалити всю історію переписки?")) return;
+    if (!confirm("Delete the entire chat history?")) return;
     try {
       await apiFetch("/chat", { method: "DELETE" });
       setMessages([]);
-      toast.success("Історію очищено");
+      toast.success("Chat history cleared");
     } catch (err) {
-      toast.error(getErrorMessage(err, "Не вдалося очистити чат"));
+      toast.error(getErrorMessage(err, "Failed to clear the chat"));
     }
   };
 
@@ -86,9 +86,9 @@ export default function Chat() {
             <ChefHat className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-bold text-foreground text-sm">Шеф V-Fridge</h3>
+            <h3 className="font-bold text-foreground text-sm">V-Fridge Chef</h3>
             <span className="flex items-center gap-1.5 text-[11px] text-success font-medium">
-              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> онлайн і готовий
+              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> online and ready
             </span>
           </div>
         </div>
@@ -97,7 +97,7 @@ export default function Chat() {
           size="icon"
           onClick={clearHistory}
           className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
-          title="Очистити чат"
+          title="Clear chat"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -113,9 +113,12 @@ export default function Chat() {
               <Sparkles className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-1 max-w-sm">
-              <h4 className="font-bold text-lg">Привіт! Я ваш кулінарний помічник 👨‍🍳</h4>
+              <h4 className="font-bold text-lg inline-flex items-center gap-2">
+                Hi! I am your culinary assistant
+                <ChefHat className="h-5 w-5 text-primary" />
+              </h4>
               <p className="text-sm text-muted-foreground">
-                Скажіть, що ви хочете приготувати — я підкажу рецепт із ваших продуктів.
+                Tell me what to cook — I will suggest a recipe from your groceries.
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
@@ -188,7 +191,7 @@ export default function Chat() {
           <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2">
             <div className="bg-card border border-border/60 p-3 px-4 rounded-2xl rounded-tl-md flex items-center gap-2.5 shadow-sm">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">Шеф готує відповідь…</span>
+              <span className="text-sm font-medium text-muted-foreground">Chef is cooking up a reply…</span>
             </div>
           </div>
         )}
@@ -200,7 +203,7 @@ export default function Chat() {
       >
         <Input
           className="rounded-xl border-border/70 focus-visible:ring-primary h-11 transition-all placeholder:text-muted-foreground/70"
-          placeholder="Спитайте рецепт або що приготувати…"
+          placeholder="Ask for a recipe or what to cook…"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={loading}

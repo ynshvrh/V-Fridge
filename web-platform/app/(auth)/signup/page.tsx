@@ -32,7 +32,7 @@ export default function SignUpPage() {
       await signup(formData.username, formData.email, formData.password);
       setDone(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Не вдалося створити акаунт");
+      setError(err instanceof Error ? err.message : "Failed to create the account");
     } finally {
       setLoading(false);
     }
@@ -57,28 +57,28 @@ export default function SignUpPage() {
               <div className="h-14 w-14 rounded-2xl bg-secondary text-secondary-foreground grid place-items-center mx-auto">
                 <MailCheck className="h-7 w-7" />
               </div>
-              <CardTitle className="text-2xl font-black tracking-tight">Перевірте пошту</CardTitle>
+              <CardTitle className="text-2xl font-black tracking-tight">Check your inbox</CardTitle>
               <CardDescription>
-                Ми надіслали лист на <strong className="text-foreground">{formData.email}</strong> з кнопкою підтвердження.
-                Після кліку ви автоматично увійдете в акаунт.
+                We sent an email to <strong className="text-foreground">{formData.email}</strong> with a confirmation button.
+                Once you click it, you will be signed in automatically.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 pt-4">
               <p className="text-xs text-muted-foreground text-center px-4">
-                Не бачите листа? Перевірте папку «Спам» або зачекайте кілька хвилин.
+                No email yet? Check the Spam folder or wait a few minutes.
               </p>
             </CardContent>
             <CardFooter className="flex flex-col gap-2 pt-2">
               <Button asChild variant="outline" className="w-full h-11 rounded-xl">
-                <Link href="/signin">Вже підтвердили? Увійти</Link>
+                <Link href="/signin">Already verified? Sign in</Link>
               </Button>
             </CardFooter>
           </Card>
         ) : (
           <Card className="rounded-3xl border-border/60 shadow-2xl shadow-primary/5">
             <CardHeader className="text-center pb-2">
-              <CardTitle className="text-2xl font-black tracking-tight">Створити акаунт</CardTitle>
-              <CardDescription>Кілька секунд — і ваш розумний холодильник готовий</CardDescription>
+              <CardTitle className="text-2xl font-black tracking-tight">Create account</CardTitle>
+              <CardDescription>A few seconds and your smart fridge is ready</CardDescription>
             </CardHeader>
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4 pt-4">
@@ -89,11 +89,11 @@ export default function SignUpPage() {
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    Ім'я користувача
+                    Username
                   </Label>
                   <Input
                     id="username"
-                    placeholder="Як до вас звертатись?"
+                    placeholder="What should we call you?"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     className="h-11 rounded-xl"
@@ -116,12 +116,12 @@ export default function SignUpPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    Пароль
+                    Password
                   </Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="мінімум 6 символів"
+                    placeholder="at least 6 characters"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="h-11 rounded-xl"
@@ -134,19 +134,19 @@ export default function SignUpPage() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Створюємо акаунт…
+                      Creating account…
                     </>
                   ) : (
                     <>
                       <UserPlus className="mr-2 h-4 w-4" />
-                      Створити акаунт
+                      Create account
                     </>
                   )}
                 </Button>
                 <p className="text-sm text-center text-muted-foreground">
-                  Вже маєте акаунт?{" "}
+                  Already have an account?{" "}
                   <Link href="/signin" className="text-primary hover:underline font-semibold">
-                    Увійти
+                    Sign in
                   </Link>
                 </p>
               </CardFooter>

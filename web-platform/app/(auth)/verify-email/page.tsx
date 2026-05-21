@@ -39,14 +39,14 @@ function VerifyEmailInner() {
   const { applySession } = useAuth();
   const [state, setState] = useState<VerifyState>(() => {
     if (status === "ok") return { kind: "ok" };
-    if (status === "error") return { kind: "error", message: reason || "Не вдалось підтвердити email" };
+    if (status === "error") return { kind: "error", message: reason || "Failed to verify email" };
     return { kind: "loading" };
   });
 
   useEffect(() => {
     if (state.kind !== "loading") return;
     if (!token) {
-      setState({ kind: "error", message: "Токен відсутній — відкрийте посилання з листа" });
+      setState({ kind: "error", message: "Token is missing — open the link from the email" });
       return;
     }
 
@@ -67,7 +67,7 @@ function VerifyEmailInner() {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        const message = err instanceof Error ? err.message : "Не вдалось підтвердити email";
+        const message = err instanceof Error ? err.message : "Failed to verify email";
         setState({ kind: "error", message });
         router.replace(`/verify-email?status=error&reason=${encodeURIComponent(message)}`);
       });
@@ -83,8 +83,8 @@ function VerifyEmailInner() {
             <div className="h-14 w-14 rounded-2xl bg-secondary text-secondary-foreground grid place-items-center mx-auto">
               <Loader2 className="h-7 w-7 animate-spin" />
             </div>
-            <CardTitle className="text-2xl font-black tracking-tight">Підтверджуємо email…</CardTitle>
-            <CardDescription>Зачекайте, це лише мить.</CardDescription>
+            <CardTitle className="text-2xl font-black tracking-tight">Verifying email…</CardTitle>
+            <CardDescription>Hold on, this only takes a moment.</CardDescription>
           </>
         )}
         {state.kind === "ok" && (
@@ -92,8 +92,8 @@ function VerifyEmailInner() {
             <div className="h-14 w-14 rounded-2xl bg-success/15 text-success grid place-items-center mx-auto">
               <MailCheck className="h-7 w-7" />
             </div>
-            <CardTitle className="text-2xl font-black tracking-tight">Email підтверджено!</CardTitle>
-            <CardDescription>Переносимо вас на дашборд…</CardDescription>
+            <CardTitle className="text-2xl font-black tracking-tight">Email verified!</CardTitle>
+            <CardDescription>Taking you to the dashboard…</CardDescription>
           </>
         )}
         {state.kind === "error" && (
@@ -101,7 +101,7 @@ function VerifyEmailInner() {
             <div className="h-14 w-14 rounded-2xl bg-destructive/10 text-destructive grid place-items-center mx-auto">
               <MailWarning className="h-7 w-7" />
             </div>
-            <CardTitle className="text-2xl font-black tracking-tight">Підтвердити не вдалося</CardTitle>
+            <CardTitle className="text-2xl font-black tracking-tight">Verification failed</CardTitle>
             <CardDescription>{state.message}</CardDescription>
           </>
         )}
@@ -113,14 +113,14 @@ function VerifyEmailInner() {
         {state.kind === "ok" && (
           <Button asChild className="w-full h-11 rounded-xl font-bold shadow-md shadow-primary/20">
             <Link href="/">
-              На дашборд
+              Go to dashboard
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         )}
         {state.kind === "error" && (
           <Button asChild variant="outline" className="w-full h-11 rounded-xl">
-            <Link href="/signin">Повернутись до входу</Link>
+            <Link href="/signin">Back to sign in</Link>
           </Button>
         )}
       </CardFooter>

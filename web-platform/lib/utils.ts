@@ -11,5 +11,5 @@ export function getErrorMessage(error: unknown, fallback?: string): string {
     return String(error);
   }
   if(typeof error === 'string') return error;
-  return fallback || "Сталася помилка"
+  return fallback || "Something went wrong"
 }

@@ -21,8 +21,8 @@ import { useAuth } from "@/providers/auth-provider";
 import { ApiError, apiFetch } from "@/lib/api-client";
 
 const signInSchema = z.object({
-  email: z.string().email("Некоректний формат email"),
-  password: z.string().min(1, "Пароль обов'язковий"),
+  email: z.string().email("Invalid email format"),
+  password: z.string().min(1, "Password is required"),
 });
 
 function VerificationBanner() {
@@ -31,8 +31,8 @@ function VerificationBanner() {
   const reason = params.get("reason");
 
   useEffect(() => {
-    if (verified === "1") toast.success("Email успішно підтверджено!");
-    else if (verified === "0") toast.error(reason || "Не вдалось підтвердити email");
+    if (verified === "1") toast.success("Email verified!");
+    else if (verified === "0") toast.error(reason || "Failed to verify email");
   }, [verified, reason]);
 
   return null;
@@ -56,7 +56,7 @@ export default function SignInPage() {
 
     const validation = signInSchema.safeParse({ email, password });
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message || "Некоректні дані");
+      setError(validation.error.issues[0]?.message || "Invalid input");
       setLoading(false);
       return;
     }
@@ -69,7 +69,7 @@ export default function SignInPage() {
         setNeedsVerification(true);
         setError("");
       } else {
-        const msg = err instanceof Error ? err.message : "Невірний email або пароль";
+        const msg = err instanceof Error ? err.message : "Invalid email or password";
         setError(msg);
       }
     } finally {
@@ -86,9 +86,9 @@ export default function SignInPage() {
         body: { email },
         skipAuth: true,
       });
-      toast.success("Лист підтвердження надіслано");
+      toast.success("Verification email sent");
     } catch {
-      toast.error("Не вдалося надіслати лист");
+      toast.error("Failed to send the email");
     } finally {
       setResending(false);
     }
@@ -112,8 +112,8 @@ export default function SignInPage() {
 
         <Card className="rounded-3xl border-border/60 shadow-2xl shadow-primary/5">
           <CardHeader className="space-y-1 text-center pb-2">
-            <CardTitle className="text-2xl font-black tracking-tight">З поверненням</CardTitle>
-            <CardDescription>Увійдіть, щоб керувати своїм холодильником</CardDescription>
+            <CardTitle className="text-2xl font-black tracking-tight">Welcome back</CardTitle>
+            <CardDescription>Sign in to manage your fridge</CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4 pt-4">
@@ -127,8 +127,8 @@ export default function SignInPage() {
                   <div className="flex items-start gap-3">
                     <MailWarning className="h-5 w-5 text-yellow-900 dark:text-yellow-200 shrink-0 mt-0.5" />
                     <div className="text-sm text-yellow-900 dark:text-yellow-200">
-                      <p className="font-bold mb-1">Email ще не підтверджено</p>
-                      <p>Перевірте поштову скриньку — ми надсилали лист з посиланням підтвердження.</p>
+                      <p className="font-bold mb-1">Email is not verified yet</p>
+                      <p>Check your inbox — we sent a confirmation link.</p>
                     </div>
                   </div>
                   <Button
@@ -139,8 +139,8 @@ export default function SignInPage() {
                     className="w-full h-10 rounded-lg border-yellow-300 dark:border-yellow-900/60 text-yellow-900 dark:text-yellow-200 hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
                   >
                     {resending ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Відправляємо…</>
-                    ) : "Надіслати лист повторно"}
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending…</>
+                    ) : "Resend verification email"}
                   </Button>
                 </div>
               )}
@@ -161,7 +161,7 @@ export default function SignInPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  Пароль
+                  Password
                 </Label>
                 <Input
                   id="password"
@@ -180,19 +180,19 @@ export default function SignInPage() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Входимо…
+                    Signing in…
                   </>
                 ) : (
                   <>
                     <LogIn className="mr-2 h-4 w-4" />
-                    Увійти
+                    Sign in
                   </>
                 )}
               </Button>
               <p className="text-sm text-center text-muted-foreground">
-                Ще не маєте акаунту?{" "}
+                No account yet?{" "}
                 <Link href="/signup" className="text-primary hover:underline font-semibold">
-                  Зареєструватися
+                  Sign up
                 </Link>
               </p>
             </CardFooter>

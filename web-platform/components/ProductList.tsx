@@ -29,7 +29,7 @@ type FreshnessState = {
 
 function getFreshness(date: string | Date | null | undefined): FreshnessState {
   if (!date) {
-    return { label: "Без дати", className: "bg-muted text-muted-foreground border-border" };
+    return { label: "No date", className: "bg-muted text-muted-foreground border-border" };
   }
   const d = new Date(date);
   const now = new Date();
@@ -37,7 +37,7 @@ function getFreshness(date: string | Date | null | undefined): FreshnessState {
 
   if (diffDays < 0) {
     return {
-      label: "Прострочено",
+      label: "Expired",
       className: "bg-destructive text-white border-destructive",
       ringClass: "ring-2 ring-destructive/40",
       icon: <AlertTriangle className="h-3 w-3" />,
@@ -45,13 +45,13 @@ function getFreshness(date: string | Date | null | undefined): FreshnessState {
   }
   if (diffDays <= 3) {
     return {
-      label: `${diffDays} ${diffDays === 1 ? "день" : "дні"}`,
+      label: `${diffDays} ${diffDays === 1 ? "day" : "days"}`,
       className: "bg-yellow-100 text-yellow-900 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-100 dark:border-yellow-700/60",
       ringClass: "ring-1 ring-yellow-400/40",
     };
   }
   return {
-    label: "Свіжий",
+    label: "Fresh",
     className: "bg-secondary text-secondary-foreground border-secondary",
   };
 }
@@ -68,7 +68,7 @@ export function ProductList() {
         const data = await apiFetch<Array<{ id: number; ownerId: number } & Record<string, unknown>>>("/products");
         setProducts(data.map((p) => ({ ...p, ownerId: String(p.ownerId) })) as never);
       } catch (error) {
-        console.error("Помилка завантаження продуктів:", error);
+        console.error("Failed to load products:", error);
       } finally {
         setLoading(false);
       }
@@ -77,14 +77,14 @@ export function ProductList() {
   }, [setProducts]);
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Видалити цей продукт?")) return;
+    if (!confirm("Delete this product?")) return;
 
     try {
       await apiFetch(`/products/${id}`, { method: "DELETE" });
       removeProduct(id);
-      toast.success("Продукт видалено");
+      toast.success("Product deleted");
     } catch (err) {
-      toast.error(getErrorMessage(err, "Не вдалося видалити продукт"));
+      toast.error(getErrorMessage(err, "Failed to delete the product"));
     }
   };
 
@@ -96,7 +96,7 @@ export function ProductList() {
       );
       updateProduct({ ...updated, ownerId: String(updated.ownerId) } as never);
       setEditingId(null);
-      toast.success("Кількість оновлено");
+      toast.success("Quantity updated");
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
@@ -110,7 +110,7 @@ export function ProductList() {
           <Refrigerator className="h-6 w-6 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
         </div>
         <p className="text-sm font-medium text-muted-foreground animate-pulse">
-          Заглядаємо в холодильник…
+          Peeking into the fridge…
         </p>
       </div>
     );
@@ -122,9 +122,9 @@ export function ProductList() {
         <div className="bg-secondary w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm">
           <Refrigerator className="h-10 w-10 text-secondary-foreground" />
         </div>
-        <h3 className="text-xl font-black tracking-tight">Холодильник порожній</h3>
+        <h3 className="text-xl font-black tracking-tight">Your fridge is empty</h3>
         <p className="text-muted-foreground max-w-xs mx-auto mt-2 text-sm">
-          Час додати перші продукти — потім AI-кухар запропонує рецепти.
+          Add a few groceries — then the AI chef will suggest recipes.
         </p>
       </div>
     );
@@ -158,7 +158,7 @@ export function ProductList() {
                     variant="ghost"
                     className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive shrink-0"
                     onClick={() => handleDelete(product.id)}
-                    title="Видалити"
+                    title="Delete"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -168,12 +168,12 @@ export function ProductList() {
                   <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                   <p className="text-xs font-semibold">
                     {product.expiryDate
-                      ? new Date(product.expiryDate).toLocaleDateString("uk-UA", {
+                      ? new Date(product.expiryDate).toLocaleDateString("en-US", {
                           day: "numeric",
                           month: "long",
                           year: "numeric",
                         })
-                      : "Без дати"}
+                      : "No date"}
                   </p>
                 </div>
 
@@ -211,7 +211,7 @@ export function ProductList() {
                   <>
                     <div className="flex flex-col">
                       <span className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">
-                        Кількість
+                        Quantity
                       </span>
                       <div className="flex items-baseline gap-1">
                         <span className="text-2xl font-black tracking-tight">{product.quantity}</span>
@@ -228,7 +228,7 @@ export function ProductList() {
                       }}
                     >
                       <Edit2 className="h-3.5 w-3.5" />
-                      Редагувати
+                      Edit
                     </Button>
                   </>
                 )}

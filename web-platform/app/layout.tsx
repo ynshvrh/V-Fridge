@@ -12,8 +12,8 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "V-Fridge — Розумний холодильник з AI-кухарем",
-  description: "Керуйте продуктами, відстежуйте терміни придатності та отримуйте персональні рецепти від AI-кухаря.",
+  title: "V-Fridge — Smart fridge with an AI chef",
+  description: "Track your groceries, watch expiry dates, and get personal recipes from an AI chef.",
 };
 
 export const viewport: Viewport = {
@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="uk" className="h-full">
+    <html lang="en" className="h-full">
       <body className={`${geistSans.variable} ${geistMono.variable} h-full bg-ambient`}>
         <AuthProvider>
           <SidebarProvider className="h-full">

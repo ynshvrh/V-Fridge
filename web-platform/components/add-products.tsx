@@ -46,20 +46,20 @@ export function AddProducts() {
     name: "",
     description: "",
     quantity: "1",
-    unit: "шт",
+    unit: "pcs",
     expiryDate: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const reset = () => setFormData({ name: "", description: "", quantity: "1", unit: "шт", expiryDate: "" });
+  const reset = () => setFormData({ name: "", description: "", quantity: "1", unit: "pcs", expiryDate: "" });
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!user) {
-      toast.error("Ви не авторизовані. Спробуйте перелогінитись.");
+      toast.error("You are not signed in. Try signing in again.");
       return;
     }
 
@@ -69,7 +69,7 @@ export function AddProducts() {
       today.setHours(0, 0, 0, 0);
 
       if (selectedDate < today) {
-        const confirmAdd = confirm("⚠️ Продукт вже протермінований. Додати все одно?");
+        const confirmAdd = confirm("This product is already expired. Add anyway?");
         if (!confirmAdd) return;
       }
     }
@@ -87,7 +87,7 @@ export function AddProducts() {
 
     const validation = productSchema.safeParse(payload);
     if (!validation.success) {
-      toast.error(validation.error.issues[0]?.message || "Помилка валідації");
+      toast.error(validation.error.issues[0]?.message || "Validation error");
       setIsLoading(false);
       return;
     }
@@ -104,11 +104,11 @@ export function AddProducts() {
         },
       });
       addProductToStore({ ...savedProduct, ownerId: String(savedProduct.ownerId) });
-      toast.success(`«${savedProduct.name}» додано`);
+      toast.success(`"${savedProduct.name}" added`);
       setIsOpen(false);
       reset();
     } catch (error) {
-      toast.error(getErrorMessage(error, "Не вдалося додати продукт"));
+      toast.error(getErrorMessage(error, "Failed to add the product"));
     } finally {
       setIsLoading(false);
     }
@@ -119,7 +119,7 @@ export function AddProducts() {
       <DialogTrigger asChild>
         <Button size="lg" className="rounded-xl font-bold gap-2 shadow-md shadow-primary/20">
           <Plus className="h-4 w-4" />
-          Додати продукт
+          Add product
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md rounded-2xl">
@@ -127,17 +127,17 @@ export function AddProducts() {
           <div className="h-11 w-11 rounded-xl bg-secondary text-secondary-foreground grid place-items-center mb-2">
             <Sparkles className="h-5 w-5" />
           </div>
-          <DialogTitle className="text-xl tracking-tight">Новий продукт у холодильник</DialogTitle>
-          <DialogDescription>Додайте назву, кількість і дату придатності.</DialogDescription>
+          <DialogTitle className="text-xl tracking-tight">New product in the fridge</DialogTitle>
+          <DialogDescription>Add a name, quantity, and expiry date.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleAdd} className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Назва
+              Name
             </Label>
             <Input
               id="name"
-              placeholder="Наприклад: Молоко"
+              placeholder="e.g. Milk"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
@@ -149,7 +149,7 @@ export function AddProducts() {
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2 space-y-2">
               <Label htmlFor="quantity" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Кількість
+                Quantity
               </Label>
               <Input
                 id="quantity"
@@ -164,7 +164,7 @@ export function AddProducts() {
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Од.
+                Unit
               </Label>
               <Select
                 value={formData.unit}
@@ -174,11 +174,11 @@ export function AddProducts() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="шт">шт</SelectItem>
-                  <SelectItem value="кг">кг</SelectItem>
-                  <SelectItem value="г">г</SelectItem>
-                  <SelectItem value="л">л</SelectItem>
-                  <SelectItem value="мл">мл</SelectItem>
+                  <SelectItem value="pcs">pcs</SelectItem>
+                  <SelectItem value="kg">kg</SelectItem>
+                  <SelectItem value="g">g</SelectItem>
+                  <SelectItem value="l">l</SelectItem>
+                  <SelectItem value="ml">ml</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -186,7 +186,7 @@ export function AddProducts() {
 
           <div className="space-y-2">
             <Label htmlFor="expiryDate" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Термін придатності
+              Expiry date
             </Label>
             <Input
               id="expiryDate"
@@ -200,11 +200,11 @@ export function AddProducts() {
 
           <div className="space-y-2">
             <Label htmlFor="description" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Опис (необов'язково)
+              Description (optional)
             </Label>
             <Input
               id="description"
-              placeholder="Наприклад: 2.5% жирності"
+              placeholder="e.g. 2.5% fat"
               className="h-11 rounded-xl"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -219,11 +219,11 @@ export function AddProducts() {
               className="rounded-xl"
               disabled={isLoading}
             >
-              Скасувати
+              Cancel
             </Button>
             <Button type="submit" disabled={isLoading} className="rounded-xl font-bold">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Додати
+              Add
             </Button>
           </div>
         </form>
