@@ -23,6 +23,8 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<{ message?: string }>;
   loginWithGoogle: (idToken: string) => Promise<void>;
+  /** Store a token pair returned by the API directly (e.g. after email verification). */
+  applySession: (pair: TokenPair) => void;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 };
@@ -140,8 +142,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<AuthContextValue>(() => ({
-    user, status, login, signup, loginWithGoogle, logout, refreshUser,
-  }), [user, status, login, signup, loginWithGoogle, logout, refreshUser]);
+    user, status, login, signup, loginWithGoogle, applySession: storePair, logout, refreshUser,
+  }), [user, status, login, signup, loginWithGoogle, storePair, logout, refreshUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

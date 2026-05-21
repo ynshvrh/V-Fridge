@@ -12,21 +12,31 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, Refrigerator, MailCheck, MailWarning, LogIn } from "lucide-react";
+import { Loader2, Refrigerator, MailCheck, MailWarning, ArrowRight } from "lucide-react";
 import { apiFetch } from "@/lib/api-client";
+import { useAuth, type AuthUser } from "@/providers/auth-provider";
 
 type VerifyState =
   | { kind: "loading" }
   | { kind: "ok" }
   | { kind: "error"; message: string };
 
+type TokenPair = {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresAt: string;
+  refreshTokenExpiresAt: string;
+  user: AuthUser;
+};
+
 function VerifyEmailInner() {
   const router = useRouter();
   const params = useSearchParams();
   const token = params.get("token");
-  const status = params.get("status"); // when the API redirected back ("ok" | "error")
+  const status = params.get("status");
   const reason = params.get("reason");
 
+  const { applySession } = useAuth();
   const [state, setState] = useState<VerifyState>(() => {
     if (status === "ok") return { kind: "ok" };
     if (status === "error") return { kind: "error", message: reason || "Не вдалось підтвердити email" };
@@ -39,22 +49,31 @@ function VerifyEmailInner() {
       setState({ kind: "error", message: "Токен відсутній — відкрийте посилання з листа" });
       return;
     }
-    apiFetch<{ success: true }>("/auth/verify-email", {
+
+    let cancelled = false;
+    apiFetch<TokenPair>("/auth/verify-email", {
       method: "POST",
       body: { token },
       skipAuth: true,
     })
-      .then(() => {
+      .then((pair) => {
+        if (cancelled) return;
+        applySession(pair);
         setState({ kind: "ok" });
-        // Drop the one-shot token from the URL so refresh doesn't re-POST it.
+        // Drop the one-shot token from the URL, then hop to the dashboard after a beat
+        // so the user actually sees the "verified" confirmation.
         router.replace("/verify-email?status=ok");
+        setTimeout(() => router.replace("/"), 1200);
       })
       .catch((err: unknown) => {
+        if (cancelled) return;
         const message = err instanceof Error ? err.message : "Не вдалось підтвердити email";
         setState({ kind: "error", message });
         router.replace(`/verify-email?status=error&reason=${encodeURIComponent(message)}`);
       });
-  }, [token, state.kind, router]);
+
+    return () => { cancelled = true; };
+  }, [token, state.kind, router, applySession]);
 
   return (
     <Card className="rounded-3xl border-border/60 shadow-2xl shadow-primary/5">
@@ -74,7 +93,7 @@ function VerifyEmailInner() {
               <MailCheck className="h-7 w-7" />
             </div>
             <CardTitle className="text-2xl font-black tracking-tight">Email підтверджено!</CardTitle>
-            <CardDescription>Ваш акаунт готовий до роботи.</CardDescription>
+            <CardDescription>Переносимо вас на дашборд…</CardDescription>
           </>
         )}
         {state.kind === "error" && (
@@ -93,9 +112,9 @@ function VerifyEmailInner() {
       <CardFooter className="flex flex-col gap-3 pt-2">
         {state.kind === "ok" && (
           <Button asChild className="w-full h-11 rounded-xl font-bold shadow-md shadow-primary/20">
-            <Link href="/signin">
-              <LogIn className="mr-2 h-4 w-4" />
-              Увійти в акаунт
+            <Link href="/">
+              На дашборд
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         )}
