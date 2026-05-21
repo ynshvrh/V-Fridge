@@ -19,6 +19,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError, apiFetch } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/utils";
 
 const signInSchema = z.object({
   email: z.string().email("Invalid email format"),
@@ -87,8 +88,8 @@ export default function SignInPage() {
         skipAuth: true,
       });
       toast.success("Verification email sent");
-    } catch {
-      toast.error("Failed to send the email");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to send the email"));
     } finally {
       setResending(false);
     }

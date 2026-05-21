@@ -7,9 +7,10 @@ export function cn(...inputs: ClassValue[]) {
 
 export function getErrorMessage(error: unknown, fallback?: string): string {
   if (error instanceof Error) return error.message;
-  if (error && typeof error === 'object' && 'message' in error){
-    return String(error);
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error) {
+    const msg = (error as { message: unknown }).message;
+    if (typeof msg === "string" && msg.length > 0) return msg;
   }
-  if(typeof error === 'string') return error;
-  return fallback || "Something went wrong"
+  return fallback || "Something went wrong";
 }

@@ -12,6 +12,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { apiFetch } from "@/lib/api-client";
 import { Trash2, LogOut, ShieldCheck, User, MailCheck, MailWarning } from "lucide-react";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -23,8 +24,8 @@ export default function Settings() {
     try {
       await apiFetch(`/${type}`, { method: "DELETE" });
       toast.success(`${type === "chat" ? "Chat" : "Fridge"} cleared`);
-    } catch {
-      toast.error("Failed to perform the action");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to perform the action"));
     }
   };
 
@@ -37,8 +38,8 @@ export default function Settings() {
         skipAuth: true,
       });
       toast.success("Verification email sent");
-    } catch {
-      toast.error("Failed to send the email");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to send the email"));
     }
   };
 
