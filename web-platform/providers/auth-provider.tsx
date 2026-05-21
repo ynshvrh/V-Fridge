@@ -31,7 +31,7 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const PROTECTED_PATHS = ["/", "/recipe", "/settings", "/shopping"];
+const PROTECTED_PATHS = ["/", "/recipe", "/settings", "/shopping", "/planner"];
 const AUTH_ONLY_GUEST_PATHS = ["/signin", "/signup"];
 
 export function AuthProvider({ children }: { children: ReactNode }) {

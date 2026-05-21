@@ -22,6 +22,7 @@ import {
   LogOut,
   Refrigerator,
   ShoppingBasket,
+  CalendarDays,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -29,6 +30,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, desc: "Inventory and stats" },
   { href: "/shopping", label: "Shopping list", icon: ShoppingBasket, desc: "Plan what to buy" },
+  { href: "/planner", label: "Meal planner", icon: CalendarDays, desc: "Five meals for the week" },
   { href: "/recipe", label: "AI chef", icon: UtensilsCrossed, desc: "Recipes from your fridge" },
 ];
 
