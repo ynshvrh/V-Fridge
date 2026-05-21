@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build + lint + typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-platform
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web-platform/package-lock.json
+
+      - run: npm ci
+
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm run build
+        env:
+          # The build does not call the API; this just gives Next a non-empty default
+          # so any module that touches process.env.NEXT_PUBLIC_API_URL at build time is happy.
+          NEXT_PUBLIC_API_URL: http://localhost:5080
