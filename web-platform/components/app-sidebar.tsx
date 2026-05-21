@@ -25,8 +25,8 @@ import {
 import { useAuth } from "@/providers/auth-provider";
 
 const NAV = [
-  { href: "/", label: "Дашборд", icon: LayoutDashboard, desc: "Інвентар і статистика" },
-  { href: "/recipe", label: "AI-кухар", icon: UtensilsCrossed, desc: "Рецепти від Gemini" },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard, desc: "Inventory and stats" },
+  { href: "/recipe", label: "AI chef", icon: UtensilsCrossed, desc: "Recipes from your fridge" },
 ];
 
 export function AppSidebar() {
@@ -50,7 +50,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2">
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
-            Навігація
+            Navigation
           </SidebarGroupLabel>
           <SidebarMenu>
             {NAV.map((item) => {
@@ -77,7 +77,7 @@ export function AppSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
-            Акаунт
+            Account
           </SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -88,7 +88,7 @@ export function AppSidebar() {
               >
                 <Link href="/settings">
                   <Settings className="mr-2 h-4 w-4" />
-                  Налаштування
+                  Settings
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -105,7 +105,7 @@ export function AppSidebar() {
                   {(user.username || user.email || "U").slice(0, 1).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold truncate">{user.username || "Гість"}</p>
+                  <p className="text-sm font-semibold truncate">{user.username || "Guest"}</p>
                   <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
                 </div>
               </div>
@@ -113,7 +113,7 @@ export function AppSidebar() {
                 onClick={logout}
                 className="w-full justify-center bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors rounded-lg"
               >
-                <LogOut className="mr-2 h-4 w-4" /> Вийти
+                <LogOut className="mr-2 h-4 w-4" /> Sign out
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : (
@@ -123,7 +123,7 @@ export function AppSidebar() {
                 className="w-full justify-center bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-sm"
               >
                 <Link href="/signin">
-                  <LogIn className="mr-2 h-4 w-4" /> Увійти
+                  <LogIn className="mr-2 h-4 w-4" /> Sign in
                 </Link>
               </SidebarMenuButton>
               <SidebarMenuButton
@@ -131,7 +131,7 @@ export function AppSidebar() {
                 className="w-full justify-center bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-lg"
               >
                 <Link href="/signup">
-                  <UserPlus className="mr-2 h-4 w-4" /> Створити акаунт
+                  <UserPlus className="mr-2 h-4 w-4" /> Create account
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

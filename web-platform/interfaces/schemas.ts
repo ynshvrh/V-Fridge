@@ -2,24 +2,24 @@ import { z } from "zod";
 
 
 export const signUpSchema = z.object({
-  email: z.string().email("Невірний формат email"),
-  username: z.string().min(3, "Юзернейм має бути не менше 3 символів").max(50),
-  password: z.string().min(6, "Пароль має бути не менше 6 символів"),
+  email: z.string().email("Invalid email format"),
+  username: z.string().min(3, "Username must be at least 3 characters").max(50),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 
 export const productSchema = z.object({
- name: z.string().min(2, "Назва занадто коротка"),
-  quantity: z.number().positive("Кількість має бути більша за 0"),
+ name: z.string().min(2, "Name is too short"),
+  quantity: z.number().positive("Quantity must be greater than 0"),
   unit: z.string(),
   expiryDate: z.string().refine((val) => {
-    if (!val) return true; 
+    if (!val) return true;
     const date = new Date(val);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return date >= today;
   }, {
-    message: "Продукт вже зіпсувався або дата введена некоректно"
+    message: "Product is already expired or the date is invalid"
   }),
   ownerId: z.string()
 });
@@ -31,7 +31,7 @@ export const updateProductSchema = productSchema.partial().extend({
 
 
 export const chatSchema = z.object({
-  content: z.string().min(1, "Повідомлення не може бути порожнім"),
+  content: z.string().min(1, "Message cannot be empty"),
 });
 export const updateSettingsSchema = z.object({
   username: z.string().min(3).max(50).optional(),

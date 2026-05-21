@@ -35,17 +35,17 @@ export default function Dashboard() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-widest">
               <Refrigerator className="h-3 w-3" />
-              Ваш холодильник
+              Your fridge
             </div>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight">
               {user?.username ? (
-                <>Вітаємо, <span className="text-primary">{user.username}</span>!</>
+                <>Welcome, <span className="text-primary">{user.username}</span>!</>
               ) : (
-                "Дашборд"
+                "Dashboard"
               )}
             </h1>
             <p className="text-base md:text-lg text-muted-foreground font-medium">
-              Керуйте продуктами та отримуйте свіжі ідеї рецептів від AI.
+              Manage your groceries and get fresh recipe ideas from AI.
             </p>
           </div>
           <div className="hidden md:block">
@@ -55,23 +55,23 @@ export default function Dashboard() {
 
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
-            label="Всього продуктів"
+            label="Total items"
             value={stats.total}
             tone="primary"
             icon={<Refrigerator className="h-5 w-5" />}
           />
           <StatCard
-            label="Швидко зіпсується"
+            label="Spoiling soon"
             value={stats.soon}
             tone="warning"
-            hint="у найближчі 3 дні"
+            hint="within the next 3 days"
             icon={<CalendarClock className="h-5 w-5" />}
           />
           <StatCard
-            label="Прострочені"
+            label="Expired"
             value={stats.expired}
             tone="danger"
-            hint="час викинути"
+            hint="time to toss"
             icon={<AlertTriangle className="h-5 w-5" />}
           />
         </section>
@@ -82,15 +82,15 @@ export default function Dashboard() {
               <Sparkles className="h-6 w-6" />
             </div>
             <div className="space-y-1">
-              <h2 className="text-xl md:text-2xl font-black tracking-tight">Не знаєте що приготувати?</h2>
+              <h2 className="text-xl md:text-2xl font-black tracking-tight">Not sure what to cook?</h2>
               <p className="text-sm md:text-base text-muted-foreground max-w-xl">
-                Запитайте AI-кухаря — він порадить рецепт із того, що вже є в холодильнику.
+                Ask the AI chef — it will suggest a recipe from items already in your fridge.
               </p>
             </div>
           </div>
           <Button asChild size="lg" className="rounded-xl font-bold shrink-0 shadow-md shadow-primary/20">
             <Link href="/recipe">
-              Відкрити AI-кухаря
+              Open AI chef
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -104,13 +104,13 @@ export default function Dashboard() {
           <div className="rounded-3xl border border-border/60 shadow-xl bg-card overflow-hidden">
             <div className="p-5 md:p-6 border-b border-border/60 bg-muted/40 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-lg">Інвентар</h3>
+                <h3 className="font-bold text-lg">Inventory</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Сортовано за датою придатності
+                  Sorted by expiry date
                 </p>
               </div>
               <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2.5 py-1 rounded-full bg-background border border-border/60">
-                {stats.total} {stats.total === 1 ? "товар" : "товарів"}
+                {stats.total} {stats.total === 1 ? "item" : "items"}
               </span>
             </div>
             <div className="p-4 md:p-6 min-h-[24rem]">

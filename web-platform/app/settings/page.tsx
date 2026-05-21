@@ -17,14 +17,14 @@ export default function Settings() {
   const { user, logout } = useAuth();
 
   const clearData = async (type: "chat" | "products") => {
-    const labels = { chat: "повідомлення", products: "продукти" };
-    if (!confirm(`Видалити всі ${labels[type]}?`)) return;
+    const labels = { chat: "messages", products: "products" };
+    if (!confirm(`Delete all ${labels[type]}?`)) return;
 
     try {
       await apiFetch(`/${type}`, { method: "DELETE" });
-      toast.success(`${type === "chat" ? "Чат" : "Холодильник"} очищено`);
+      toast.success(`${type === "chat" ? "Chat" : "Fridge"} cleared`);
     } catch {
-      toast.error("Не вдалося виконати дію");
+      toast.error("Failed to perform the action");
     }
   };
 
@@ -36,9 +36,9 @@ export default function Settings() {
         body: { email: user.email },
         skipAuth: true,
       });
-      toast.success("Лист підтвердження надіслано");
+      toast.success("Verification email sent");
     } catch {
-      toast.error("Не вдалося надіслати лист");
+      toast.error("Failed to send the email");
     }
   };
 
@@ -48,11 +48,11 @@ export default function Settings() {
         <header className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-widest">
             <User className="h-3 w-3" />
-            Профіль
+            Profile
           </div>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight">Налаштування</h1>
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight">Settings</h1>
           <p className="text-base md:text-lg text-muted-foreground font-medium">
-            Керуйте профілем та даними вашого V-Fridge.
+            Manage your V-Fridge profile and data.
           </p>
         </header>
 
@@ -66,16 +66,16 @@ export default function Settings() {
               </div>
               <div>
                 <h3 className="font-black text-xl tracking-tight">
-                  {user?.username || "Гість"}
+                  {user?.username || "Guest"}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {user?.email || "Email не вказано"}
+                  {user?.email || "Email not set"}
                 </p>
               </div>
               {user?.emailVerified ? (
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/15 text-success text-[10px] font-bold uppercase tracking-widest">
                   <MailCheck className="h-3 w-3" />
-                  Email підтверджено
+                  Email verified
                 </div>
               ) : (
                 <button
@@ -84,7 +84,7 @@ export default function Settings() {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-100 text-[11px] font-bold uppercase tracking-widest hover:bg-yellow-200 transition-colors"
                 >
                   <MailWarning className="h-3.5 w-3.5" />
-                  Підтвердити email
+                  Verify email
                 </button>
               )}
             </div>
@@ -93,16 +93,16 @@ export default function Settings() {
           <main className="md:col-span-8 space-y-5">
             <Card className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
               <CardHeader className="bg-muted/40 pb-4">
-                <CardTitle className="text-lg">Персональні дані</CardTitle>
-                <CardDescription>Інформація вашого облікового запису</CardDescription>
+                <CardTitle className="text-lg">Personal details</CardTitle>
+                <CardDescription>Your account information</CardDescription>
               </CardHeader>
               <CardContent className="pt-5 grid sm:grid-cols-2 gap-4">
                 <div className="space-y-1 p-4 rounded-2xl bg-secondary/30 border border-secondary">
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    Юзернейм
+                    Username
                   </p>
                   <p className="text-base font-bold truncate">
-                    {user?.username || "Гість"}
+                    {user?.username || "Guest"}
                   </p>
                 </div>
                 <div className="space-y-1 p-4 rounded-2xl bg-secondary/30 border border-secondary">
@@ -116,8 +116,8 @@ export default function Settings() {
 
             <Card className="rounded-3xl border-destructive/20 shadow-sm overflow-hidden">
               <CardHeader className="bg-destructive/5 border-b border-destructive/10 pb-4">
-                <CardTitle className="text-lg text-destructive">Небезпечна зона</CardTitle>
-                <CardDescription>Ці дії неможливо скасувати</CardDescription>
+                <CardTitle className="text-lg text-destructive">Danger zone</CardTitle>
+                <CardDescription>These actions cannot be undone</CardDescription>
               </CardHeader>
               <CardContent className="pt-5 flex flex-col sm:flex-row gap-3">
                 <Button
@@ -126,7 +126,7 @@ export default function Settings() {
                   onClick={() => clearData("products")}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Очистити продукти
+                  Clear products
                 </Button>
                 <Button
                   variant="outline"
@@ -134,7 +134,7 @@ export default function Settings() {
                   onClick={() => clearData("chat")}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Видалити історію чату
+                  Delete chat history
                 </Button>
               </CardContent>
             </Card>
@@ -146,7 +146,7 @@ export default function Settings() {
                     <ShieldCheck className="h-5 w-5 text-success" />
                   </div>
                   <p className="font-semibold text-sm">
-                    {user ? "Сесія активна та захищена" : "Авторизація відсутня"}
+                    {user ? "Session active and secure" : "Not signed in"}
                   </p>
                 </div>
                 <Button
@@ -155,7 +155,7 @@ export default function Settings() {
                   onClick={logout}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Вийти з акаунту
+                  Sign out
                 </Button>
               </CardContent>
             </Card>
