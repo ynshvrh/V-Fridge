@@ -3,7 +3,8 @@ import { z } from "zod";
 
 export const signUpSchema = z.object({
   email: z.string().email("Invalid email format"),
-  username: z.string().min(3, "Username must be at least 3 characters").max(50),
+  // Display name: optional; the server falls back to the email prefix when empty.
+  username: z.string().max(50, "Display name is too long").optional(),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 

@@ -99,15 +99,14 @@ export default function SignUpPage() {
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    Username
+                    Display name <span className="text-muted-foreground/60 font-medium normal-case tracking-normal">(optional)</span>
                   </Label>
                   <Input
                     id="username"
-                    placeholder="What should we call you?"
+                    placeholder="Leave empty to use your email prefix"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     className="h-11 rounded-xl"
-                    required
                   />
                 </div>
                 <div className="space-y-2">
