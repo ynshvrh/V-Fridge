@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
 import { PRODUCT_CATEGORIES, categoryLabel } from "@/interfaces/categories";
+import { useFridges } from "@/providers/fridge-provider";
+import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
 
 type ShoppingItem = {
   id: number;
@@ -42,12 +44,15 @@ export default function ShoppingPage() {
   const [category, setCategory] = useState("other");
   const [adding, setAdding] = useState(false);
 
+  const activeFridgeId = useFridges().active?.id ?? null;
+
   useEffect(() => {
+    setLoading(true);
     apiFetch<ShoppingItem[]>("/shopping")
       .then((data) => setItems(Array.isArray(data) ? data : []))
       .catch((err) => toast.error(getErrorMessage(err, "Failed to load shopping list")))
       .finally(() => setLoading(false));
-  }, []);
+  }, [activeFridgeId]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,6 +128,7 @@ export default function ShoppingPage() {
           <p className="text-base md:text-lg text-muted-foreground font-medium">
             Plan ahead. Tap the cart icon to move a purchased item straight into your fridge.
           </p>
+          <ActiveFridgeBanner icon={ShoppingBasket} label="Shopping list for" />
         </header>
 
         <Card className="rounded-3xl border-border/60 shadow-sm bg-card">

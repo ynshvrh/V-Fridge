@@ -5,6 +5,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/app-sidebar";
 import { AuthProvider } from "@/providers/auth-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { FridgeProvider } from "@/providers/fridge-provider";
 import { Toaster } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import { Refrigerator } from "lucide-react";
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${geistSans.variable} ${geistMono.variable} h-full bg-ambient`}>
         <ThemeProvider>
           <AuthProvider>
+            <FridgeProvider>
             <SidebarProvider className="h-full">
               <AppSidebar />
               <SidebarInset className="h-full flex flex-col">
@@ -71,6 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </main>
               </SidebarInset>
             </SidebarProvider>
+            </FridgeProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

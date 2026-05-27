@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -14,40 +14,16 @@ import { Refrigerator, UserPlus, Trash2, Loader2, LogOut, Plus, Crown } from "lu
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
-
-type Fridge = {
-  id: number;
-  name: string;
-  ownerId: number;
-  role: "owner" | "member";
-  memberCount: number;
-  createdAt: string | null;
-};
+import { useFridges, type Fridge } from "@/providers/fridge-provider";
 
 export function FridgesCard() {
-  const [fridges, setFridges] = useState<Fridge[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { fridges, status, refresh, active, setActive } = useFridges();
+  const loading = status === "loading";
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState<number | null>(null);
   const [inviteFor, setInviteFor] = useState<number | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
-
-  useEffect(() => {
-    apiFetch<Fridge[]>("/fridges")
-      .then((data) => setFridges(Array.isArray(data) ? data : []))
-      .catch((err) => toast.error(getErrorMessage(err, "Failed to load fridges")))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const refresh = async () => {
-    try {
-      const data = await apiFetch<Fridge[]>("/fridges");
-      setFridges(data);
-    } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to reload fridges"));
-    }
-  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +46,7 @@ export function FridgesCard() {
     setBusy(f.id);
     try {
       await apiFetch(`/fridges/${f.id}`, { method: "DELETE" });
+      if (active?.id === f.id) setActive(null); // fall back to the first remaining fridge
       await refresh();
       toast.success("Fridge deleted");
     } catch (err) {
@@ -84,6 +61,7 @@ export function FridgesCard() {
     setBusy(f.id);
     try {
       await apiFetch(`/fridges/${f.id}/members/me`, { method: "DELETE" });
+      if (active?.id === f.id) setActive(null);
       await refresh();
       toast.success("Left the fridge");
     } catch (err) {

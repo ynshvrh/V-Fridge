@@ -8,6 +8,7 @@ import { useMemo } from "react";
 import { Refrigerator, AlertTriangle, Sparkles, ArrowRight, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnalyticsTile } from "@/components/analytics-tile";
+import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -48,6 +49,7 @@ export default function Dashboard() {
             <p className="text-base md:text-lg text-muted-foreground font-medium">
               Manage your groceries and get fresh recipe ideas from AI.
             </p>
+            <ActiveFridgeBanner icon={Refrigerator} label="Inventory for" />
           </div>
           <div className="hidden md:block">
             <AddProducts />
