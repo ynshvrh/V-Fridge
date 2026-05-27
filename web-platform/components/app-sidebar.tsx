@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SidebarFridgeSwitcher } from "@/components/sidebar-fridge-switcher";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, desc: "Inventory and stats" },
@@ -53,6 +54,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2">
+        {status === "authenticated" && <SidebarFridgeSwitcher />}
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
             Navigation

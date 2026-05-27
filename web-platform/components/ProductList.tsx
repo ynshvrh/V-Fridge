@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { getErrorMessage } from "@/lib/utils";
 import { categoryLabel } from "@/interfaces/categories";
+import { useFridges } from "@/providers/fridge-provider";
 import { EditProductDialog } from "@/components/edit-product-dialog";
 import type { Product } from "@/interfaces/type";
 
@@ -60,20 +61,24 @@ export function ProductList() {
   const { products, setProducts, removeProduct } = useProductStore();
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Product | null>(null);
+  const activeFridgeId = useFridges().active?.id ?? null;
 
   useEffect(() => {
+    let cancelled = false;
     async function loadProducts() {
+      setLoading(true);
       try {
         const data = await apiFetch<Array<{ id: number; ownerId: number } & Record<string, unknown>>>("/products");
-        setProducts(data.map((p) => ({ ...p, ownerId: String(p.ownerId) })) as never);
+        if (!cancelled) setProducts(data.map((p) => ({ ...p, ownerId: String(p.ownerId) })) as never);
       } catch (error) {
         console.error("Failed to load products:", error);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     loadProducts();
-  }, [setProducts]);
+    return () => { cancelled = true; };
+  }, [setProducts, activeFridgeId]);
 
   const handleDelete = async (id: number) => {
     if (!confirm("Delete this product?")) return;

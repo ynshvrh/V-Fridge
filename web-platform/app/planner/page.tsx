@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CalendarDays, ChefHat, Loader2, Sparkles, ShoppingBasket } from "lucide-react";
@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
 import { categoryLabel } from "@/interfaces/categories";
+import { useFridges } from "@/providers/fridge-provider";
+import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
 
 type Meal = { name: string; day: string; ingredients: string[]; note: string | null };
 type GapItem = { name: string; quantity: string | null; unit: string | null; category: string };
@@ -23,6 +25,14 @@ export default function PlannerPage() {
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
+
+  const activeFridgeId = useFridges().active?.id ?? null;
+
+  // Clear the current plan when the user switches fridges — the meals only make
+  // sense for the inventory that produced them.
+  useEffect(() => {
+    setPlan(null);
+  }, [activeFridgeId]);
 
   const generate = async () => {
     setLoading(true);
@@ -65,6 +75,7 @@ export default function PlannerPage() {
             <p className="text-base md:text-lg text-muted-foreground font-medium">
               Five weekday meals planned around what is in your fridge. Missing ingredients land in your shopping list with one click.
             </p>
+            <ActiveFridgeBanner icon={CalendarDays} label="Meal plan for" />
           </div>
           <Button size="lg" onClick={generate} disabled={loading} className="rounded-xl font-bold gap-2 shadow-md shadow-primary/20 shrink-0">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
