@@ -31,10 +31,10 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-celadon: var(--celadon);
-  --color-celadon-soft: var(--celadon-soft);
-  --color-violet-brand: var(--violet-brand);
-  --color-violet-soft: var(--violet-soft);
+  --color-mistral: var(--mistral);
+  --color-zephir: var(--zephir);
+  --color-solara: var(--solara);
+  --color-pulpe: var(--pulpe);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -50,107 +50,113 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* === V-Fridge palette ===
-   Celadon: #D7E7C3 → soft, fresh green (secondary/accent surfaces)
-   Violet:  #8C5383 → primary brand & CTA */
+/* === V-Fridge palette · citrus splash ===
+   Mistral #A3DFF1 → cool sky-blue (accent surfaces, charts cool tone)
+   Zéphir  #FEE4B8 → soft cream (secondary surfaces, sidebar wash)
+   Solara  #FFC065 → golden-orange (lighter brand variant)
+   Pulpe   #FFA43A → vibrant tangerine (primary brand & CTA)
+
+   These four are the brand identity; everything else (background, ink,
+   destructive, success) is derived to sit comfortably alongside.        */
 :root {
   --radius: 0.75rem;
 
   /* Base surfaces */
-  --background: #FBFCF7;            /* warm off-white tinted with celadon */
-  --foreground: #2A1E2A;            /* deep violet-tinted ink */
+  --background: #FFFAF0;            /* barely-tinted ivory, Zéphir wash */
+  --foreground: #2A1810;            /* deep warm brown */
   --card: #FFFFFF;
-  --card-foreground: #2A1E2A;
+  --card-foreground: #2A1810;
   --popover: #FFFFFF;
-  --popover-foreground: #2A1E2A;
+  --popover-foreground: #2A1810;
 
   /* Brand */
-  --celadon: #D7E7C3;
-  --celadon-soft: #ECF3DF;
-  --violet-brand: #8C5383;
-  --violet-soft: #B884B0;
+  --mistral: #A3DFF1;
+  --zephir:  #FEE4B8;
+  --solara:  #FFC065;
+  --pulpe:   #FFA43A;
 
-  /* Primary = Violet, Secondary = Celadon */
-  --primary: #8C5383;
+  /* Primary = Pulpe, Secondary = Zéphir, Accent = Mistral */
+  --primary: #FFA43A;
   --primary-foreground: #FFFFFF;
-  --secondary: #D7E7C3;
-  --secondary-foreground: #2A4A1F;
+  --secondary: #FEE4B8;
+  --secondary-foreground: #6B3F0C;
 
-  --muted: #F3F6EC;
-  --muted-foreground: #6B5C6B;
-  --accent: #ECF3DF;
-  --accent-foreground: #4C2D4A;
+  --muted: #FFF6E6;
+  --muted-foreground: #8A6B4F;
+  --accent: #A3DFF1;
+  --accent-foreground: #0E3D52;
 
-  --destructive: #C0392B;
-  --success: #4A8B3A;
+  /* Outside-palette feedback colours — chosen to harmonise with citrus */
+  --destructive: #E64528;           /* blood-orange red */
+  --success: #5BAE6F;               /* fresh leaf green */
   --success-foreground: #FFFFFF;
 
-  --border: #E5E5D8;
-  --input: #E5E5D8;
-  --ring: #8C5383;
+  --border: #F2E1C0;
+  --input: #F2E1C0;
+  --ring: #FFA43A;
 
-  --chart-1: #8C5383;
-  --chart-2: #A8C893;
-  --chart-3: #B884B0;
-  --chart-4: #D7E7C3;
-  --chart-5: #6B3F65;
+  --chart-1: #FFA43A;               /* Pulpe */
+  --chart-2: #A3DFF1;               /* Mistral */
+  --chart-3: #FFC065;               /* Solara */
+  --chart-4: #5BAE6F;               /* leaf green */
+  --chart-5: #E78EA5;               /* dusty pink for contrast */
 
-  /* Sidebar — warm celadon wash */
-  --sidebar: #F1F6E7;
-  --sidebar-foreground: #2A1E2A;
-  --sidebar-primary: #8C5383;
+  /* Sidebar — warm Zéphir wash */
+  --sidebar: #FFF6E6;
+  --sidebar-foreground: #2A1810;
+  --sidebar-primary: #FFA43A;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #DDEACA;
-  --sidebar-accent-foreground: #2A4A1F;
-  --sidebar-border: #D2DEC0;
-  --sidebar-ring: #8C5383;
+  --sidebar-accent: #FEE4B8;
+  --sidebar-accent-foreground: #6B3F0C;
+  --sidebar-border: #F2E1C0;
+  --sidebar-ring: #FFA43A;
 }
 
 .dark {
-  --background: #1A121A;            /* deep violet-black */
-  --foreground: #ECF3DF;            /* celadon-tinted ivory */
-  --card: #241A24;
-  --card-foreground: #ECF3DF;
-  --popover: #241A24;
-  --popover-foreground: #ECF3DF;
+  --background: #1A1006;            /* deep coffee-bean dark */
+  --foreground: #FFF1DE;            /* warm cream ivory */
+  --card: #261810;
+  --card-foreground: #FFF1DE;
+  --popover: #261810;
+  --popover-foreground: #FFF1DE;
 
-  --celadon: #B5C9A1;
-  --celadon-soft: #3D4A33;
-  --violet-brand: #B884B0;
-  --violet-soft: #6B3F65;
+  --mistral: #7CC0D8;
+  --zephir:  #4D3D24;
+  --solara:  #FFD089;
+  --pulpe:   #FFB85C;
 
-  --primary: #B884B0;
-  --primary-foreground: #1A121A;
-  --secondary: #3D4A33;
-  --secondary-foreground: #ECF3DF;
+  --primary: #FFB85C;
+  --primary-foreground: #1A1006;
+  --secondary: #4D3D24;
+  --secondary-foreground: #FFF1DE;
 
-  --muted: #2E232E;
-  --muted-foreground: #B5A9B5;
-  --accent: #3D2F3B;
-  --accent-foreground: #ECF3DF;
+  --muted: #2E2014;
+  --muted-foreground: #C2A88A;
+  --accent: #7CC0D8;
+  --accent-foreground: #0E2A3A;
 
-  --destructive: #E55B4B;
-  --success: #7CB36A;
-  --success-foreground: #1A121A;
+  --destructive: #FF6240;
+  --success: #7BC18A;
+  --success-foreground: #1A1006;
 
-  --border: rgba(236, 243, 223, 0.10);
-  --input: rgba(236, 243, 223, 0.15);
-  --ring: #B884B0;
+  --border: rgba(255, 241, 222, 0.10);
+  --input: rgba(255, 241, 222, 0.15);
+  --ring: #FFB85C;
 
-  --chart-1: #B884B0;
-  --chart-2: #B5C9A1;
-  --chart-3: #8C5383;
-  --chart-4: #7A9266;
-  --chart-5: #D2A8CC;
+  --chart-1: #FFB85C;
+  --chart-2: #7CC0D8;
+  --chart-3: #FFD089;
+  --chart-4: #7BC18A;
+  --chart-5: #EFA0B5;
 
-  --sidebar: #1F151F;
-  --sidebar-foreground: #ECF3DF;
-  --sidebar-primary: #B884B0;
-  --sidebar-primary-foreground: #1A121A;
-  --sidebar-accent: #2E232E;
-  --sidebar-accent-foreground: #ECF3DF;
-  --sidebar-border: rgba(236, 243, 223, 0.10);
-  --sidebar-ring: #B884B0;
+  --sidebar: #1F140A;
+  --sidebar-foreground: #FFF1DE;
+  --sidebar-primary: #FFB85C;
+  --sidebar-primary-foreground: #1A1006;
+  --sidebar-accent: #4D3D24;
+  --sidebar-accent-foreground: #FFF1DE;
+  --sidebar-border: rgba(255, 241, 222, 0.10);
+  --sidebar-ring: #FFB85C;
 }
 
 @layer base {
@@ -185,13 +191,13 @@
 @layer utilities {
   .bg-ambient {
     background:
-      radial-gradient(60% 50% at 0% 0%, color-mix(in oklch, var(--celadon) 60%, transparent) 0%, transparent 60%),
-      radial-gradient(50% 40% at 100% 100%, color-mix(in oklch, var(--violet-soft) 30%, transparent) 0%, transparent 60%),
+      radial-gradient(60% 50% at 0% 0%, color-mix(in oklch, var(--mistral) 60%, transparent) 0%, transparent 60%),
+      radial-gradient(50% 40% at 100% 100%, color-mix(in oklch, var(--solara) 30%, transparent) 0%, transparent 60%),
       var(--background);
   }
   .bg-ambient-soft {
     background:
-      radial-gradient(50% 35% at 100% 0%, color-mix(in oklch, var(--celadon) 45%, transparent) 0%, transparent 60%),
+      radial-gradient(50% 35% at 100% 0%, color-mix(in oklch, var(--mistral) 45%, transparent) 0%, transparent 60%),
       var(--background);
   }
 }
