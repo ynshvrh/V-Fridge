@@ -6,14 +6,17 @@ import { useAuth } from "@/providers/auth-provider";
 import { useProductStore } from "@/store/useVFridgeStore";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Refrigerator, AlertTriangle, Sparkles, ArrowRight, CalendarClock } from "lucide-react";
+import { Refrigerator, AlertTriangle, Sparkles, ArrowRight, CalendarClock, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { AnalyticsTile } from "@/components/analytics-tile";
 import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
+import { useFridges } from "@/providers/fridge-provider";
 
 export default function Dashboard() {
   const t = useTranslations();
   const { user } = useAuth();
+  const { fridges, status: fridgesStatus } = useFridges();
   const products = useProductStore((state) => state.products);
 
   const stats = useMemo(() => {
@@ -31,6 +34,37 @@ export default function Dashboard() {
     }
     return { total: products.length, expired, soon };
   }, [products]);
+
+  // Without a fridge there's nothing for the products list to scope to.
+  // Surface a CTA that points to /settings instead of letting the rest of the
+  // page silently 401 every backend call.
+  if (fridgesStatus === "ready" && fridges.length === 0) {
+    return (
+      <div className="min-h-full w-full p-4 md:p-8 lg:p-12">
+        <div className="max-w-2xl mx-auto pt-12">
+          <Card className="rounded-3xl border-2 border-dashed border-border bg-muted/20">
+            <CardContent className="py-16 px-8 text-center space-y-5">
+              <div className="h-20 w-20 mx-auto rounded-2xl bg-secondary text-secondary-foreground grid place-items-center shadow-sm">
+                <Refrigerator className="h-10 w-10" />
+              </div>
+              <div className="space-y-1.5">
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight">{t("fridgesNoneTitle")}</h1>
+                <p className="text-sm md:text-base text-muted-foreground max-w-sm mx-auto">
+                  {t("fridgesNoneBody")}
+                </p>
+              </div>
+              <Button asChild size="lg" className="rounded-xl font-bold gap-2 shadow-md shadow-primary/20">
+                <Link href="/settings">
+                  <SettingsIcon className="h-4 w-4" />
+                  {t("navSettings")}
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full w-full p-4 md:p-8 lg:p-12">
