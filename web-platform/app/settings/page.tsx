@@ -1,4 +1,6 @@
 "use client";
+import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -10,24 +12,39 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/providers/auth-provider";
 import { apiFetch } from "@/lib/api-client";
-import { Trash2, LogOut, ShieldCheck, User, MailCheck, MailWarning, Palette } from "lucide-react";
+import {
+  Trash2,
+  LogOut,
+  ShieldCheck,
+  User,
+  MailCheck,
+  MailWarning,
+  Palette,
+  Languages,
+  ChefHat,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FridgesCard } from "@/components/fridges-card";
+import { SUPPORTED_LOCALES, switchLocale, type Locale } from "@/lib/locale";
+import { CUISINE_SLUGS, cuisineLabelKey } from "@/interfaces/cuisines";
 
 export default function Settings() {
-  const { user, logout } = useAuth();
+  const t = useTranslations();
+  const activeLocale = useLocale() as Locale;
+  const { user, logout, refreshUser } = useAuth();
 
   const clearData = async (type: "chat" | "products") => {
-    const labels = { chat: "messages", products: "products" };
-    if (!confirm(`Delete all ${labels[type]}?`)) return;
+    const confirmKey = type === "chat" ? "settingsDeleteChatConfirm" : "settingsClearProductsConfirm";
+    if (!confirm(t(confirmKey))) return;
 
     try {
       await apiFetch(`/${type}`, { method: "DELETE" });
-      toast.success(`${type === "chat" ? "Chat" : "Fridge"} cleared`);
+      toast.success(t(type === "chat" ? "settingsChatCleared" : "settingsFridgeCleared"));
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to perform the action"));
+      toast.error(getErrorMessage(err, t("settingsPreferencesFailed")));
     }
   };
 
@@ -39,9 +56,9 @@ export default function Settings() {
         body: { email: user.email },
         skipAuth: true,
       });
-      toast.success("Verification email sent");
+      toast.success(t("signinResendSent"));
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to send the email"));
+      toast.error(getErrorMessage(err, t("settingsPreferencesFailed")));
     }
   };
 
@@ -51,11 +68,11 @@ export default function Settings() {
         <header className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-widest">
             <User className="h-3 w-3" />
-            Profile
+            {t("settingsProfile")}
           </div>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight">Settings</h1>
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight">{t("settingsTitle")}</h1>
           <p className="text-base md:text-lg text-muted-foreground font-medium">
-            Manage your V-Fridge profile and data.
+            {t("settingsHeroSubtitle")}
           </p>
         </header>
 
@@ -72,13 +89,13 @@ export default function Settings() {
                   {user?.username || "Guest"}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {user?.email || "Email not set"}
+                  {user?.email || "—"}
                 </p>
               </div>
               {user?.emailVerified ? (
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/15 text-success text-[10px] font-bold uppercase tracking-widest">
                   <MailCheck className="h-3 w-3" />
-                  Email verified
+                  {t("settingsEmailVerified")}
                 </div>
               ) : (
                 <button
@@ -87,58 +104,38 @@ export default function Settings() {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-100 text-[11px] font-bold uppercase tracking-widest hover:bg-yellow-200 transition-colors"
                 >
                   <MailWarning className="h-3.5 w-3.5" />
-                  Verify email
+                  {t("settingsEmailNotVerified")}
                 </button>
               )}
             </div>
           </section>
 
           <main className="md:col-span-8 space-y-5">
-            <Card className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
-              <CardHeader className="bg-muted/40 pb-4">
-                <CardTitle className="text-lg">Personal details</CardTitle>
-                <CardDescription>Your account information</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-5 grid sm:grid-cols-2 gap-4">
-                <div className="space-y-1 p-4 rounded-2xl bg-secondary/30 border border-secondary">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    Username
-                  </p>
-                  <p className="text-base font-bold truncate">
-                    {user?.username || "Guest"}
-                  </p>
-                </div>
-                <div className="space-y-1 p-4 rounded-2xl bg-secondary/30 border border-secondary">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                    Email
-                  </p>
-                  <p className="text-base font-bold truncate">{user?.email || "—"}</p>
-                </div>
-              </CardContent>
-            </Card>
-
             <FridgesCard />
 
             <Card className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
               <CardHeader className="bg-muted/40 pb-4">
                 <CardTitle className="text-lg inline-flex items-center gap-2">
                   <Palette className="h-4 w-4" />
-                  Appearance
+                  {t("settingsAppearance")}
                 </CardTitle>
-                <CardDescription>Light, dark, or follow your operating system.</CardDescription>
+                <CardDescription>{t("settingsAppearanceHint")}</CardDescription>
               </CardHeader>
-              <CardContent className="pt-5 flex items-center justify-between gap-4">
-                <p className="text-sm text-muted-foreground">
-                  Affects the whole app and is remembered on this device.
-                </p>
+              <CardContent className="pt-5 flex items-center justify-end gap-4">
                 <ThemeToggle />
               </CardContent>
             </Card>
 
+            <LanguageCard activeLocale={activeLocale} />
+            <CuisineCard
+              currentSlug={user?.cuisinePreference ?? "any"}
+              onSaved={refreshUser}
+            />
+
             <Card className="rounded-3xl border-destructive/20 shadow-sm overflow-hidden">
               <CardHeader className="bg-destructive/5 border-b border-destructive/10 pb-4">
-                <CardTitle className="text-lg text-destructive">Danger zone</CardTitle>
-                <CardDescription>These actions cannot be undone</CardDescription>
+                <CardTitle className="text-lg text-destructive">{t("settingsDangerZone")}</CardTitle>
+                <CardDescription>{t("settingsCannotBeUndone")}</CardDescription>
               </CardHeader>
               <CardContent className="pt-5 flex flex-col sm:flex-row gap-3">
                 <Button
@@ -147,7 +144,7 @@ export default function Settings() {
                   onClick={() => clearData("products")}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Clear products
+                  {t("settingsClearProducts")}
                 </Button>
                 <Button
                   variant="outline"
@@ -155,7 +152,7 @@ export default function Settings() {
                   onClick={() => clearData("chat")}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete chat history
+                  {t("settingsDeleteChat")}
                 </Button>
               </CardContent>
             </Card>
@@ -167,7 +164,7 @@ export default function Settings() {
                     <ShieldCheck className="h-5 w-5 text-success" />
                   </div>
                   <p className="font-semibold text-sm">
-                    {user ? "Session active and secure" : "Not signed in"}
+                    {user?.username || user?.email}
                   </p>
                 </div>
                 <Button
@@ -176,7 +173,7 @@ export default function Settings() {
                   onClick={logout}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
+                  {t("settingsSignOut")}
                 </Button>
               </CardContent>
             </Card>
@@ -184,5 +181,107 @@ export default function Settings() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LanguageCard({ activeLocale }: { activeLocale: Locale }) {
+  const t = useTranslations();
+  const [busy, setBusy] = useState<Locale | null>(null);
+
+  const pick = async (locale: Locale) => {
+    if (locale === activeLocale || busy) return;
+    setBusy(locale);
+    try {
+      await switchLocale(locale);
+      // switchLocale forces a reload; control never returns here. Setting
+      // busy state is mostly belt-and-braces in case the navigation stalls.
+    } catch (err) {
+      setBusy(null);
+      toast.error(getErrorMessage(err, t("settingsPreferencesFailed")));
+    }
+  };
+
+  return (
+    <Card className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
+      <CardHeader className="bg-muted/40 pb-4">
+        <CardTitle className="text-lg inline-flex items-center gap-2">
+          <Languages className="h-4 w-4" />
+          {t("settingsLanguage")}
+        </CardTitle>
+        <CardDescription>{t("settingsLanguageHint")}</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-5 flex flex-col sm:flex-row gap-2">
+        {SUPPORTED_LOCALES.map((loc) => {
+          const labelKey = loc === "en" ? "settingsLanguageEnglish" : "settingsLanguageUkrainian";
+          const isActive = loc === activeLocale;
+          return (
+            <Button
+              key={loc}
+              variant={isActive ? "default" : "outline"}
+              disabled={busy !== null}
+              onClick={() => pick(loc)}
+              className="flex-1 h-11 rounded-xl gap-2 font-bold"
+            >
+              {busy === loc && <Loader2 className="h-4 w-4 animate-spin" />}
+              {t(labelKey)}
+            </Button>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CuisineCard({
+  currentSlug,
+  onSaved,
+}: {
+  currentSlug: string;
+  onSaved: () => Promise<void>;
+}) {
+  const t = useTranslations();
+  const [saving, setSaving] = useState(false);
+
+  const save = async (slug: string) => {
+    if (slug === currentSlug || saving) return;
+    setSaving(true);
+    try {
+      await apiFetch("/auth/me/preferences", {
+        method: "PATCH",
+        body: { cuisinePreference: slug },
+      });
+      await onSaved();
+      toast.success(t("settingsCuisineSaved"));
+    } catch (err) {
+      toast.error(getErrorMessage(err, t("settingsPreferencesFailed")));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
+      <CardHeader className="bg-muted/40 pb-4">
+        <CardTitle className="text-lg inline-flex items-center gap-2">
+          <ChefHat className="h-4 w-4" />
+          {t("settingsCuisine")}
+        </CardTitle>
+        <CardDescription>{t("settingsCuisineHint")}</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-5">
+        <select
+          value={currentSlug}
+          disabled={saving}
+          onChange={(e) => save(e.target.value)}
+          className="w-full h-11 rounded-xl border border-border/70 bg-background px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {CUISINE_SLUGS.map((slug) => (
+            <option key={slug} value={slug}>
+              {t(cuisineLabelKey(slug))}
+            </option>
+          ))}
+        </select>
+      </CardContent>
+    </Card>
   );
 }

@@ -23,6 +23,29 @@ const labelMap: Record<string, string> = Object.fromEntries(
   PRODUCT_CATEGORIES.map((c) => [c.slug, c.label]),
 );
 
+const KEY_BY_SLUG: Record<string, string> = {
+  "dairy": "categoryDairy",
+  "meat-fish": "categoryMeatFish",
+  "vegetables": "categoryVegetables",
+  "fruits": "categoryFruits",
+  "bakery": "categoryBakery",
+  "pantry": "categoryPantry",
+  "snacks": "categorySnacks",
+  "drinks": "categoryDrinks",
+  "alcohol": "categoryAlcohol",
+  "sauces": "categorySauces",
+  "frozen": "categoryFrozen",
+  "canned-prepared": "categoryCannedPrepared",
+  "other": "categoryOther",
+};
+
+/** Slug → translation key. Pair with next-intl's `useTranslations()`. */
+export function categoryLabelKey(slug: string | null | undefined): string {
+  if (!slug) return "categoryOther";
+  return KEY_BY_SLUG[slug] ?? "categoryOther";
+}
+
+/** Legacy English-only label. Prefer `categoryLabelKey` + `t()` in new code. */
 export function categoryLabel(slug: string | null | undefined): string {
   if (!slug) return "Other";
   return labelMap[slug] ?? "Other";
