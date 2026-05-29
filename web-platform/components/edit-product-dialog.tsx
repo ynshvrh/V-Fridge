@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,7 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { useProductStore } from "@/store/useVFridgeStore";
 import { getErrorMessage } from "@/lib/utils";
-import { PRODUCT_CATEGORIES } from "@/interfaces/categories";
+import { PRODUCT_CATEGORIES, categoryLabelKey } from "@/interfaces/categories";
 import type { Product } from "@/interfaces/type";
 
 type ProductResponse = {
@@ -65,6 +66,7 @@ function expiryToInputValue(value: string | Date | null | undefined): string {
 }
 
 export function EditProductDialog({ product, open, onOpenChange }: Props) {
+  const t = useTranslations();
   const updateProduct = useProductStore((s) => s.updateProduct);
   const removeProduct = useProductStore((s) => s.removeProduct);
 
@@ -96,12 +98,12 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
 
     const trimmedName = formData.name.trim();
     if (trimmedName.length < 2) {
-      toast.error("Name is too short");
+      toast.error(t("addProductNameTooShort"));
       return;
     }
     const qty = Number(formData.quantity);
     if (!Number.isFinite(qty) || qty <= 0) {
-      toast.error("Quantity must be greater than 0");
+      toast.error(t("addProductQuantityTooLow"));
       return;
     }
 
@@ -134,15 +136,15 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
 
       if ("removed" in updated && updated.removed) {
         removeProduct(product.id);
-        toast.success(`"${product.name}" finished — logged`);
+        toast.success(t("dashboardConsumeLogged", { name: product.name }));
       } else {
         const u = updated as ProductResponse;
         updateProduct({ ...u, ownerId: String(u.ownerId) });
-        toast.success("Product updated");
+        toast.success(t("productUpdatedToast"));
       }
       onOpenChange(false);
     } catch (error) {
-      toast.error(getErrorMessage(error, "Failed to update the product"));
+      toast.error(getErrorMessage(error, t("productUpdateFailed")));
     } finally {
       setIsLoading(false);
     }
@@ -155,13 +157,13 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
           <div className="h-11 w-11 rounded-xl bg-secondary text-secondary-foreground grid place-items-center mb-2">
             <Pencil className="h-5 w-5" />
           </div>
-          <DialogTitle className="text-xl tracking-tight">Edit product</DialogTitle>
-          <DialogDescription>Change name, quantity, unit, category, or expiry date.</DialogDescription>
+          <DialogTitle className="text-xl tracking-tight">{t("addProductEditTitle")}</DialogTitle>
+          <DialogDescription>{t("editProductBody")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label htmlFor="edit-name" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Name
+              {t("addProductName")}
             </Label>
             <Input
               id="edit-name"
@@ -176,7 +178,7 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2 space-y-2">
               <Label htmlFor="edit-quantity" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Quantity
+                {t("addProductQuantity")}
               </Label>
               <Input
                 id="edit-quantity"
@@ -190,7 +192,7 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Unit</Label>
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("addProductUnit")}</Label>
               <Select
                 value={formData.unit}
                 onValueChange={(v) => setFormData({ ...formData, unit: v })}
@@ -208,7 +210,7 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Category</Label>
+            <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("addProductCategory")}</Label>
             <Select
               value={formData.category}
               onValueChange={(v) => setFormData({ ...formData, category: v })}
@@ -218,7 +220,7 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
               </SelectTrigger>
               <SelectContent>
                 {PRODUCT_CATEGORIES.map((c) => (
-                  <SelectItem key={c.slug} value={c.slug}>{c.label}</SelectItem>
+                  <SelectItem key={c.slug} value={c.slug}>{t(categoryLabelKey(c.slug))}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -226,7 +228,7 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
 
           <div className="space-y-2">
             <Label htmlFor="edit-expiryDate" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Expiry date
+              {t("addProductExpiry")}
             </Label>
             <Input
               id="edit-expiryDate"
@@ -239,7 +241,7 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
 
           <div className="space-y-2">
             <Label htmlFor="edit-description" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Description (optional)
+              {t("addProductDescriptionLabel")}
             </Label>
             <Input
               id="edit-description"
@@ -257,11 +259,11 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
               className="rounded-xl"
               disabled={isLoading}
             >
-              Cancel
+              {t("actionCancel")}
             </Button>
             <Button type="submit" disabled={isLoading} className="rounded-xl font-bold">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save
+              {t("actionSave")}
             </Button>
           </div>
         </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/providers/auth-provider";
 import { apiFetch } from "@/lib/api-client";
 import {
@@ -26,7 +27,7 @@ import { toast } from "sonner";
 import { useProductStore } from "@/store/useVFridgeStore";
 import { productSchema } from "@/interfaces/schemas";
 import { getErrorMessage } from "@/lib/utils";
-import { PRODUCT_CATEGORIES } from "@/interfaces/categories";
+import { PRODUCT_CATEGORIES, categoryLabelKey } from "@/interfaces/categories";
 import { BarcodeScanner, type ScannedProduct } from "@/components/barcode-scanner";
 
 type ProductResponse = {
@@ -42,6 +43,7 @@ type ProductResponse = {
 };
 
 export function AddProducts() {
+  const t = useTranslations();
   const { user } = useAuth();
   const addProductToStore = useProductStore((state) => state.addProduct);
 
@@ -68,14 +70,14 @@ export function AddProducts() {
       unit: p.unit,
       category: p.category,
     }));
-    toast.success(`Filled from barcode ${p.barcode}`);
+    toast.success(t("addProductFilledFromBarcode", { barcode: p.barcode }));
   };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!user) {
-      toast.error("You are not signed in. Try signing in again.");
+      toast.error(t("addProductNotSignedIn"));
       return;
     }
 
@@ -85,7 +87,7 @@ export function AddProducts() {
       today.setHours(0, 0, 0, 0);
 
       if (selectedDate < today) {
-        const confirmAdd = confirm("This product is already expired. Add anyway?");
+        const confirmAdd = confirm(t("addProductExpiredConfirm"));
         if (!confirmAdd) return;
       }
     }
@@ -104,7 +106,7 @@ export function AddProducts() {
 
     const validation = productSchema.safeParse(payload);
     if (!validation.success) {
-      toast.error(validation.error.issues[0]?.message || "Validation error");
+      toast.error(validation.error.issues[0]?.message || t("addProductValidation"));
       setIsLoading(false);
       return;
     }
@@ -122,11 +124,11 @@ export function AddProducts() {
         },
       });
       addProductToStore({ ...savedProduct, ownerId: String(savedProduct.ownerId) });
-      toast.success(`"${savedProduct.name}" added`);
+      toast.success(t("addProductAddedToast", { name: savedProduct.name }));
       setIsOpen(false);
       reset();
     } catch (error) {
-      toast.error(getErrorMessage(error, "Failed to add the product"));
+      toast.error(getErrorMessage(error, t("addProductAddFailed")));
     } finally {
       setIsLoading(false);
     }
@@ -137,7 +139,7 @@ export function AddProducts() {
       <DialogTrigger asChild>
         <Button size="lg" className="rounded-xl font-bold gap-2 shadow-md shadow-primary/20">
           <Plus className="h-4 w-4" />
-          Add product
+          {t("dashboardAddProduct")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md rounded-2xl">
@@ -145,8 +147,8 @@ export function AddProducts() {
           <div className="h-11 w-11 rounded-xl bg-secondary text-secondary-foreground grid place-items-center mb-2">
             <Sparkles className="h-5 w-5" />
           </div>
-          <DialogTitle className="text-xl tracking-tight">New product in the fridge</DialogTitle>
-          <DialogDescription>Add a name, quantity, and expiry date.</DialogDescription>
+          <DialogTitle className="text-xl tracking-tight">{t("addProductDialogTitle")}</DialogTitle>
+          <DialogDescription>{t("addProductDialogBody")}</DialogDescription>
         </DialogHeader>
         <Button
           type="button"
@@ -155,7 +157,7 @@ export function AddProducts() {
           className="w-full rounded-xl gap-2 mt-1"
         >
           <ScanBarcode className="h-4 w-4" />
-          Scan barcode
+          {t("addProductScanBarcode")}
         </Button>
         <BarcodeScanner
           open={scannerOpen}
@@ -165,11 +167,11 @@ export function AddProducts() {
         <form onSubmit={handleAdd} className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label htmlFor="name" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Name
+              {t("addProductName")}
             </Label>
             <Input
               id="name"
-              placeholder="e.g. Milk"
+              placeholder={t("addProductNamePlaceholder")}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
@@ -181,7 +183,7 @@ export function AddProducts() {
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2 space-y-2">
               <Label htmlFor="quantity" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Quantity
+                {t("addProductQuantity")}
               </Label>
               <Input
                 id="quantity"
@@ -196,7 +198,7 @@ export function AddProducts() {
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                Unit
+                {t("addProductUnit")}
               </Label>
               <Select
                 value={formData.unit}
@@ -218,7 +220,7 @@ export function AddProducts() {
 
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Category
+              {t("addProductCategory")}
             </Label>
             <Select
               value={formData.category}
@@ -229,7 +231,7 @@ export function AddProducts() {
               </SelectTrigger>
               <SelectContent>
                 {PRODUCT_CATEGORIES.map((c) => (
-                  <SelectItem key={c.slug} value={c.slug}>{c.label}</SelectItem>
+                  <SelectItem key={c.slug} value={c.slug}>{t(categoryLabelKey(c.slug))}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -237,7 +239,7 @@ export function AddProducts() {
 
           <div className="space-y-2">
             <Label htmlFor="expiryDate" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Expiry date
+              {t("addProductExpiry")}
             </Label>
             <Input
               id="expiryDate"
@@ -251,11 +253,11 @@ export function AddProducts() {
 
           <div className="space-y-2">
             <Label htmlFor="description" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-              Description (optional)
+              {t("addProductDescriptionLabel")}
             </Label>
             <Input
               id="description"
-              placeholder="e.g. 2.5% fat"
+              placeholder={t("addProductDescriptionPlaceholder")}
               className="h-11 rounded-xl"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -270,11 +272,11 @@ export function AddProducts() {
               className="rounded-xl"
               disabled={isLoading}
             >
-              Cancel
+              {t("actionCancel")}
             </Button>
             <Button type="submit" disabled={isLoading} className="rounded-xl font-bold">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Add
+              {t("actionAdd")}
             </Button>
           </div>
         </form>

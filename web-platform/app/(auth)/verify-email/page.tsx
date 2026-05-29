@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardHeader,
@@ -30,6 +31,7 @@ type TokenPair = {
 };
 
 function VerifyEmailInner() {
+  const t = useTranslations();
   const router = useRouter();
   const params = useSearchParams();
   const token = params.get("token");
@@ -39,8 +41,8 @@ function VerifyEmailInner() {
   const { applySession } = useAuth();
   const [state, setState] = useState<VerifyState>(() => {
     if (status === "ok") return { kind: "ok" };
-    if (status === "error") return { kind: "error", message: reason || "Failed to verify email" };
-    if (!token) return { kind: "error", message: "Token is missing — open the link from the email" };
+    if (status === "error") return { kind: "error", message: reason || t("verifyFailed") };
+    if (!token) return { kind: "error", message: t("verifyMissingToken") };
     return { kind: "loading" };
   });
 
@@ -64,13 +66,13 @@ function VerifyEmailInner() {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        const message = err instanceof Error ? err.message : "Failed to verify email";
+        const message = err instanceof Error ? err.message : t("verifyFailed");
         setState({ kind: "error", message });
         router.replace(`/verify-email?status=error&reason=${encodeURIComponent(message)}`);
       });
 
     return () => { cancelled = true; };
-  }, [token, state.kind, router, applySession]);
+  }, [token, state.kind, router, applySession, t]);
 
   return (
     <Card className="rounded-3xl border-border/60 shadow-2xl shadow-primary/5">
@@ -80,8 +82,8 @@ function VerifyEmailInner() {
             <div className="h-14 w-14 rounded-2xl bg-secondary text-secondary-foreground grid place-items-center mx-auto">
               <Loader2 className="h-7 w-7 animate-spin" />
             </div>
-            <CardTitle className="text-2xl font-black tracking-tight">Verifying email…</CardTitle>
-            <CardDescription>Hold on, this only takes a moment.</CardDescription>
+            <CardTitle className="text-2xl font-black tracking-tight">{t("verifyTitle")}</CardTitle>
+            <CardDescription>{t("verifyLoadingBody")}</CardDescription>
           </>
         )}
         {state.kind === "ok" && (
@@ -89,8 +91,8 @@ function VerifyEmailInner() {
             <div className="h-14 w-14 rounded-2xl bg-success/15 text-success grid place-items-center mx-auto">
               <MailCheck className="h-7 w-7" />
             </div>
-            <CardTitle className="text-2xl font-black tracking-tight">Email verified!</CardTitle>
-            <CardDescription>Taking you to the dashboard…</CardDescription>
+            <CardTitle className="text-2xl font-black tracking-tight">{t("verifyOkTitle")}</CardTitle>
+            <CardDescription>{t("verifyOkBody")}</CardDescription>
           </>
         )}
         {state.kind === "error" && (
@@ -98,7 +100,7 @@ function VerifyEmailInner() {
             <div className="h-14 w-14 rounded-2xl bg-destructive/10 text-destructive grid place-items-center mx-auto">
               <MailWarning className="h-7 w-7" />
             </div>
-            <CardTitle className="text-2xl font-black tracking-tight">Verification failed</CardTitle>
+            <CardTitle className="text-2xl font-black tracking-tight">{t("verifyErrorTitle")}</CardTitle>
             <CardDescription>{state.message}</CardDescription>
           </>
         )}
@@ -110,14 +112,14 @@ function VerifyEmailInner() {
         {state.kind === "ok" && (
           <Button asChild className="w-full h-11 rounded-xl font-bold shadow-md shadow-primary/20">
             <Link href="/">
-              Go to dashboard
+              {t("verifyGoToDashboard")}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         )}
         {state.kind === "error" && (
           <Button asChild variant="outline" className="w-full h-11 rounded-xl">
-            <Link href="/signin">Back to sign in</Link>
+            <Link href="/signin">{t("signupBackToSignIn")}</Link>
           </Button>
         )}
       </CardFooter>
@@ -126,6 +128,7 @@ function VerifyEmailInner() {
 }
 
 export default function VerifyEmailPage() {
+  const t = useTranslations();
   return (
     <div className="flex min-h-screen items-center justify-center bg-ambient px-4 py-10">
       <div className="w-full max-w-md space-y-6">
@@ -135,7 +138,7 @@ export default function VerifyEmailPage() {
           </div>
           <div className="leading-tight">
             <h2 className="text-2xl font-black text-primary tracking-tight">V-Fridge</h2>
-            <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Smart Kitchen</p>
+            <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">{t("appTagline")}</p>
           </div>
         </Link>
 

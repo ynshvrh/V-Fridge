@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardHeader,
@@ -26,6 +27,7 @@ type ApiState =
   | { phase: "error"; message: string };
 
 function InviteInner() {
+  const t = useTranslations();
   const router = useRouter();
   const params = useSearchParams();
   const token = params.get("token");
@@ -57,23 +59,23 @@ function InviteInner() {
             return;
           }
         }
-        setApiState({ phase: "error", message: getErrorMessage(err, "Could not accept the invite") });
+        setApiState({ phase: "error", message: getErrorMessage(err, t("inviteGenericError")) });
       });
     /* eslint-enable react-hooks/set-state-in-effect */
 
     return () => { cancelled = true; };
-  }, [canCall, token]);
+  }, [canCall, token, t]);
 
   // Everything derives from token + authStatus + user + apiState.
   const view = useMemo(() => {
-    if (!token) return { kind: "error" as const, message: "Invite token is missing. Open the link from the email." };
+    if (!token) return { kind: "error" as const, message: t("inviteTokenMissing") };
     if (authStatus === "loading") return { kind: "loading" as const };
     if (authStatus === "unauthenticated") return { kind: "needs-auth" as const, token };
     if (user && !user.emailVerified) return { kind: "needs-verify" as const };
     if (apiState.phase === "pending" || apiState.phase === "idle") return { kind: "loading" as const };
     if (apiState.phase === "ok") return { kind: "ok" as const, fridgeId: apiState.fridgeId, fridgeName: apiState.fridgeName };
     return { kind: "error" as const, message: apiState.message };
-  }, [token, authStatus, user, apiState]);
+  }, [token, authStatus, user, apiState, t]);
 
   return (
     <Card className="rounded-3xl border-border/60 shadow-2xl shadow-primary/5">
@@ -85,35 +87,31 @@ function InviteInner() {
         </div>
         {view.kind === "loading" && (
           <>
-            <CardTitle className="text-2xl font-black tracking-tight">Checking your invite…</CardTitle>
-            <CardDescription><Loader2 className="h-4 w-4 animate-spin inline" /> One moment.</CardDescription>
+            <CardTitle className="text-2xl font-black tracking-tight">{t("inviteCheckingTitle")}</CardTitle>
+            <CardDescription><Loader2 className="h-4 w-4 animate-spin inline" /> {t("inviteCheckingBody")}</CardDescription>
           </>
         )}
         {view.kind === "needs-auth" && (
           <>
-            <CardTitle className="text-2xl font-black tracking-tight">You&apos;re invited to a fridge</CardTitle>
-            <CardDescription>
-              Sign in or create an account first — the invite stays valid for 7 days from when it was sent.
-            </CardDescription>
+            <CardTitle className="text-2xl font-black tracking-tight">{t("inviteNeedsAuthTitle")}</CardTitle>
+            <CardDescription>{t("inviteNeedsAuthBody")}</CardDescription>
           </>
         )}
         {view.kind === "needs-verify" && (
           <>
-            <CardTitle className="text-2xl font-black tracking-tight">Verify your email first</CardTitle>
-            <CardDescription>
-              Open the verification email you received when you signed up, then come back here and reload.
-            </CardDescription>
+            <CardTitle className="text-2xl font-black tracking-tight">{t("inviteNeedsVerifyTitle")}</CardTitle>
+            <CardDescription>{t("inviteNeedsVerifyBody")}</CardDescription>
           </>
         )}
         {view.kind === "ok" && (
           <>
-            <CardTitle className="text-2xl font-black tracking-tight">Welcome to {view.fridgeName}!</CardTitle>
-            <CardDescription>You are now a member of this shared fridge.</CardDescription>
+            <CardTitle className="text-2xl font-black tracking-tight">{t("inviteWelcome", { name: view.fridgeName })}</CardTitle>
+            <CardDescription>{t("inviteWelcomeBody")}</CardDescription>
           </>
         )}
         {view.kind === "error" && (
           <>
-            <CardTitle className="text-2xl font-black tracking-tight">Invite could not be accepted</CardTitle>
+            <CardTitle className="text-2xl font-black tracking-tight">{t("inviteErrorTitle")}</CardTitle>
             <CardDescription>{view.message}</CardDescription>
           </>
         )}
@@ -125,21 +123,21 @@ function InviteInner() {
         {view.kind === "needs-auth" && (
           <>
             <Button asChild className="w-full h-11 rounded-xl font-bold">
-              <Link href={`/signin?next=/invite?token=${encodeURIComponent(view.token)}`}>Sign in</Link>
+              <Link href={`/signin?next=/invite?token=${encodeURIComponent(view.token)}`}>{t("signinSubmit")}</Link>
             </Button>
             <Button asChild variant="outline" className="w-full h-11 rounded-xl">
-              <Link href={`/signup?next=/invite?token=${encodeURIComponent(view.token)}`}>Create account</Link>
+              <Link href={`/signup?next=/invite?token=${encodeURIComponent(view.token)}`}>{t("signupSubmit")}</Link>
             </Button>
           </>
         )}
         {view.kind === "ok" && (
           <Button onClick={() => router.replace("/settings")} className="w-full h-11 rounded-xl font-bold gap-2">
-            Open settings <ArrowRight className="h-4 w-4" />
+            {t("inviteOpenSettings")} <ArrowRight className="h-4 w-4" />
           </Button>
         )}
         {view.kind === "error" && (
           <Button asChild variant="outline" className="w-full h-11 rounded-xl">
-            <Link href="/">Back to dashboard</Link>
+            <Link href="/">{t("inviteBackToDashboard")}</Link>
           </Button>
         )}
       </CardFooter>
@@ -148,6 +146,7 @@ function InviteInner() {
 }
 
 export default function InvitePage() {
+  const t = useTranslations();
   return (
     <div className="flex min-h-screen items-center justify-center bg-ambient px-4 py-10">
       <div className="w-full max-w-md space-y-6">
@@ -157,7 +156,7 @@ export default function InvitePage() {
           </div>
           <div className="leading-tight">
             <h2 className="text-2xl font-black text-primary tracking-tight">V-Fridge</h2>
-            <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Smart Kitchen</p>
+            <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">{t("appTagline")}</p>
           </div>
         </Link>
 

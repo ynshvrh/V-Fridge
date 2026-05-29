@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -11,14 +12,10 @@ import { Message } from "@/interfaces/type";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
 
-const QUICK_PROMPTS = [
-  "What should I cook for dinner?",
-  "Quick breakfast in 10 minutes",
-  "What can I make from things about to expire?",
-  "A healthy meatless lunch",
-];
+const QUICK_PROMPT_KEYS = ["chatPrompt1", "chatPrompt2", "chatPrompt3", "chatPrompt4"] as const;
 
 export default function Chat() {
+  const t = useTranslations();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,9 +50,9 @@ export default function Chat() {
       setMessages((prev) => [...prev, data].slice(-20));
     } catch (err) {
       if (err instanceof ApiError && err.status === 429) {
-        toast.warning("Too many requests. Try again in a minute.");
+        toast.warning(t("chatRateLimit"));
       } else {
-        toast.error(getErrorMessage(err, "Failed to send the message"));
+        toast.error(getErrorMessage(err, t("chatSendFailed")));
       }
     } finally {
       setLoading(false);
@@ -68,13 +65,13 @@ export default function Chat() {
   };
 
   const clearHistory = async () => {
-    if (!confirm("Delete the entire chat history?")) return;
+    if (!confirm(t("chatClearTitle"))) return;
     try {
       await apiFetch("/chat", { method: "DELETE" });
       setMessages([]);
-      toast.success("Chat history cleared");
+      toast.success(t("settingsChatCleared"));
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to clear the chat"));
+      toast.error(getErrorMessage(err, t("chatClearFailed")));
     }
   };
 
@@ -86,9 +83,9 @@ export default function Chat() {
             <ChefHat className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-bold text-foreground text-sm">V-Fridge Chef</h3>
+            <h3 className="font-bold text-foreground text-sm">{t("chatHeader")}</h3>
             <span className="flex items-center gap-1.5 text-[11px] text-success font-medium">
-              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> online and ready
+              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> {t("chatSubtitle")}
             </span>
           </div>
         </div>
@@ -97,7 +94,7 @@ export default function Chat() {
           size="icon"
           onClick={clearHistory}
           className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
-          title="Clear chat"
+          title={t("chatClearAction")}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -114,23 +111,26 @@ export default function Chat() {
             </div>
             <div className="space-y-1 max-w-sm">
               <h4 className="font-bold text-lg inline-flex items-center gap-2">
-                Hi! I am your culinary assistant
+                {t("chatGreeting")}
                 <ChefHat className="h-5 w-5 text-primary" />
               </h4>
               <p className="text-sm text-muted-foreground">
-                Tell me what to cook — I will suggest a recipe from your groceries.
+                {t("chatEmpty")}
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
-              {QUICK_PROMPTS.map((prompt) => (
-                <button
-                  key={prompt}
-                  onClick={() => sendMessage(prompt)}
-                  className="text-left text-sm px-4 py-3 rounded-xl border border-border/70 bg-card hover:bg-secondary hover:border-primary/30 transition-colors"
-                >
-                  {prompt}
-                </button>
-              ))}
+              {QUICK_PROMPT_KEYS.map((key) => {
+                const prompt = t(key);
+                return (
+                  <button
+                    key={key}
+                    onClick={() => sendMessage(prompt)}
+                    className="text-left text-sm px-4 py-3 rounded-xl border border-border/70 bg-card hover:bg-secondary hover:border-primary/30 transition-colors"
+                  >
+                    {prompt}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -191,7 +191,7 @@ export default function Chat() {
           <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2">
             <div className="bg-card border border-border/60 p-3 px-4 rounded-2xl rounded-tl-md flex items-center gap-2.5 shadow-sm">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">Chef is cooking up a reply…</span>
+              <span className="text-sm font-medium text-muted-foreground">{t("chatThinking")}</span>
             </div>
           </div>
         )}
@@ -203,7 +203,7 @@ export default function Chat() {
       >
         <Input
           className="rounded-xl border-border/70 focus-visible:ring-primary h-11 transition-all placeholder:text-muted-foreground/70"
-          placeholder="Ask for a recipe or what to cook…"
+          placeholder={t("chatInputHint")}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={loading}
