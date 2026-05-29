@@ -1,29 +1,32 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme, type ThemeMode } from "@/providers/theme-provider";
 import { cn } from "@/lib/utils";
 
-const OPTIONS: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-  { value: "system", label: "System", icon: Monitor },
+const OPTIONS: { value: ThemeMode; labelKey: string; icon: typeof Sun }[] = [
+  { value: "light", labelKey: "settingsThemeLight", icon: Sun },
+  { value: "dark", labelKey: "settingsThemeDark", icon: Moon },
+  { value: "system", labelKey: "settingsThemeSystem", icon: Monitor },
 ];
 
 export function ThemeToggle({ className }: { className?: string }) {
+  const t = useTranslations();
   const { mode, setMode } = useTheme();
 
   return (
     <div
       role="radiogroup"
-      aria-label="Theme"
+      aria-label={t("settingsAppearance")}
       className={cn(
         "inline-flex items-center gap-0.5 rounded-full border border-border/70 bg-card/60 p-0.5",
         className,
       )}
     >
-      {OPTIONS.map(({ value, label, icon: Icon }) => {
+      {OPTIONS.map(({ value, labelKey, icon: Icon }) => {
         const selected = mode === value;
+        const label = t(labelKey);
         return (
           <button
             key={value}

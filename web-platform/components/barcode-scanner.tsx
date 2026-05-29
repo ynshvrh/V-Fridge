@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { BrowserMultiFormatReader, type Result } from "@zxing/library";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -24,6 +25,7 @@ type Props = {
 const STORE_URL = "https://world.openfoodfacts.org/api/v0/product";
 
 export function BarcodeScanner({ open, onClose, onResolved }: Props) {
+  const t = useTranslations();
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="sm:max-w-md rounded-2xl">
@@ -31,9 +33,9 @@ export function BarcodeScanner({ open, onClose, onResolved }: Props) {
           <div className="h-11 w-11 rounded-xl bg-secondary text-secondary-foreground grid place-items-center mb-2">
             <ScanBarcode className="h-5 w-5" />
           </div>
-          <DialogTitle className="text-xl tracking-tight">Scan a barcode</DialogTitle>
+          <DialogTitle className="text-xl tracking-tight">{t("barcodeTitle")}</DialogTitle>
           <DialogDescription>
-            Point your camera at the product&apos;s barcode. We look it up on OpenFoodFacts and pre-fill the form.
+            {t("barcodeHint")}
           </DialogDescription>
         </DialogHeader>
         {open && <ScannerBody onClose={onClose} onResolved={onResolved} />}
@@ -49,6 +51,7 @@ function ScannerBody({
   onClose: () => void;
   onResolved: (product: ScannedProduct) => void;
 }) {
+  const t = useTranslations();
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserMultiFormatReader | null>(null);
   const lockedRef = useRef(false);
@@ -82,7 +85,7 @@ function ScannerBody({
           if (cancelled) return;
           if (!product) {
             setStatus("error");
-            setErrorMessage("Could not find this product. Try adding it manually.");
+            setErrorMessage(t("barcodeNotFound"));
             return;
           }
           onResolved(product);
@@ -90,7 +93,7 @@ function ScannerBody({
         } catch (e) {
           if (cancelled) return;
           setStatus("error");
-          setErrorMessage(e instanceof Error ? e.message : "Lookup failed");
+          setErrorMessage(e instanceof Error ? e.message : t("barcodeLookupFailed"));
         }
       })
       .catch((err: unknown) => {
@@ -98,10 +101,10 @@ function ScannerBody({
         setStatus("error");
         setErrorMessage(
           err instanceof Error && err.name === "NotAllowedError"
-            ? "Camera access was blocked. Allow it in your browser to scan."
+            ? t("barcodeCameraBlocked")
             : err instanceof Error
               ? err.message
-              : "Could not start the camera.",
+              : t("barcodeCameraFailed"),
         );
       });
 
@@ -110,7 +113,7 @@ function ScannerBody({
       readerRef.current?.reset();
       readerRef.current = null;
     };
-  }, [retryNonce, onClose, onResolved]);
+  }, [retryNonce, onClose, onResolved, t]);
 
   const retry = () => {
     setErrorMessage(null);
@@ -126,13 +129,13 @@ function ScannerBody({
           <div className="absolute inset-0 grid place-items-center bg-background/80">
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              <span className="text-sm font-medium">Looking up product…</span>
+              <span className="text-sm font-medium">{t("barcodeLookingUp")}</span>
             </div>
           </div>
         )}
         {status === "scanning" && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-background/80 text-xs font-medium flex items-center gap-1.5">
-            <Camera className="h-3 w-3" /> Scanning…
+            <Camera className="h-3 w-3" /> {t("barcodeScanning")}
           </div>
         )}
       </div>
@@ -145,10 +148,10 @@ function ScannerBody({
       )}
 
       <div className="flex justify-between gap-2 pt-1">
-        <Button variant="ghost" onClick={onClose} className="rounded-xl">Cancel</Button>
+        <Button variant="ghost" onClick={onClose} className="rounded-xl">{t("actionCancel")}</Button>
         {status === "error" && (
           <Button onClick={retry} className="rounded-xl gap-2">
-            <RefreshCw className="h-4 w-4" /> Try again
+            <RefreshCw className="h-4 w-4" /> {t("actionRetry")}
           </Button>
         )}
       </div>

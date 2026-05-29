@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,25 +24,29 @@ import { getErrorMessage } from "@/lib/utils";
 import { GoogleSignInButton } from "@/components/google-signin-button";
 import { Separator } from "@/components/ui/separator";
 
-const signInSchema = z.object({
-  email: z.string().email("Invalid email format"),
-  password: z.string().min(1, "Password is required"),
-});
+function buildSignInSchema(t: (key: string) => string) {
+  return z.object({
+    email: z.string().email(t("signinValidationInvalidEmail")),
+    password: z.string().min(1, t("signinValidationPasswordRequired")),
+  });
+}
 
 function VerificationBanner() {
+  const t = useTranslations();
   const params = useSearchParams();
   const verified = params.get("verified");
   const reason = params.get("reason");
 
   useEffect(() => {
-    if (verified === "1") toast.success("Email verified!");
-    else if (verified === "0") toast.error(reason || "Failed to verify email");
-  }, [verified, reason]);
+    if (verified === "1") toast.success(t("verifyOkTitle"));
+    else if (verified === "0") toast.error(reason || t("verifyFailed"));
+  }, [verified, reason, t]);
 
   return null;
 }
 
 export default function SignInPage() {
+  const t = useTranslations();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -57,9 +62,9 @@ export default function SignInPage() {
     setError("");
     setNeedsVerification(false);
 
-    const validation = signInSchema.safeParse({ email, password });
+    const validation = buildSignInSchema(t).safeParse({ email, password });
     if (!validation.success) {
-      setError(validation.error.issues[0]?.message || "Invalid input");
+      setError(validation.error.issues[0]?.message || t("signinValidationInvalidEmail"));
       setLoading(false);
       return;
     }
@@ -72,7 +77,7 @@ export default function SignInPage() {
         setNeedsVerification(true);
         setError("");
       } else {
-        const msg = err instanceof Error ? err.message : "Invalid email or password";
+        const msg = err instanceof Error ? err.message : t("signinInvalidCreds");
         setError(msg);
       }
     } finally {
@@ -89,9 +94,9 @@ export default function SignInPage() {
         body: { email },
         skipAuth: true,
       });
-      toast.success("Verification email sent");
+      toast.success(t("signinResendSent"));
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to send the email"));
+      toast.error(getErrorMessage(err, t("settingsPreferencesFailed")));
     } finally {
       setResending(false);
     }
@@ -109,20 +114,20 @@ export default function SignInPage() {
           </div>
           <div className="leading-tight">
             <h2 className="text-2xl font-black text-primary tracking-tight">V-Fridge</h2>
-            <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Smart Kitchen</p>
+            <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">{t("appTagline")}</p>
           </div>
         </Link>
 
         <Card className="rounded-3xl border-border/60 shadow-2xl shadow-primary/5">
           <CardHeader className="space-y-1 text-center pb-2">
-            <CardTitle className="text-2xl font-black tracking-tight">Welcome back</CardTitle>
-            <CardDescription>Sign in to manage your fridge</CardDescription>
+            <CardTitle className="text-2xl font-black tracking-tight">{t("signinTitle")}</CardTitle>
+            <CardDescription>{t("signinSubheading")}</CardDescription>
           </CardHeader>
           <CardContent className="pt-4 pb-2 space-y-4">
             <GoogleSignInButton />
             <div className="flex items-center gap-3">
               <Separator className="flex-1" />
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">or</span>
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("wordOr")}</span>
               <Separator className="flex-1" />
             </div>
           </CardContent>
@@ -138,8 +143,8 @@ export default function SignInPage() {
                   <div className="flex items-start gap-3">
                     <MailWarning className="h-5 w-5 text-yellow-900 dark:text-yellow-200 shrink-0 mt-0.5" />
                     <div className="text-sm text-yellow-900 dark:text-yellow-200">
-                      <p className="font-bold mb-1">Email is not verified yet</p>
-                      <p>Check your inbox — we sent a confirmation link.</p>
+                      <p className="font-bold mb-1">{t("signinNotVerifiedTitle")}</p>
+                      <p>{t("signinNotVerifiedBody")}</p>
                     </div>
                   </div>
                   <Button
@@ -150,19 +155,19 @@ export default function SignInPage() {
                     className="w-full h-10 rounded-lg border-yellow-300 dark:border-yellow-900/60 text-yellow-900 dark:text-yellow-200 hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
                   >
                     {resending ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Sending…</>
-                    ) : "Resend verification email"}
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t("signinSendingVerification")}</>
+                    ) : t("signinResend")}
                   </Button>
                 </div>
               )}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  Email
+                  {t("signinEmail")}
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder={t("authEmailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
@@ -172,7 +177,7 @@ export default function SignInPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  Password
+                  {t("signinPassword")}
                 </Label>
                 <Input
                   id="password"
@@ -191,20 +196,23 @@ export default function SignInPage() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in…
+                    {t("signinSigningIn")}
                   </>
                 ) : (
                   <>
                     <LogIn className="mr-2 h-4 w-4" />
-                    Sign in
+                    {t("signinSubmit")}
                   </>
                 )}
               </Button>
               <p className="text-sm text-center text-muted-foreground">
-                No account yet?{" "}
-                <Link href="/signup" className="text-primary hover:underline font-semibold">
-                  Sign up
-                </Link>
+                {t.rich("signinNoAccountRich", {
+                  link: (chunks) => (
+                    <Link href="/signup" className="text-primary hover:underline font-semibold">
+                      {chunks}
+                    </Link>
+                  ),
+                })}
               </p>
             </CardFooter>
           </form>

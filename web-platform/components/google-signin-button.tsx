@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/providers/auth-provider";
 import { getErrorMessage } from "@/lib/utils";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ declare global {
 }
 
 export function GoogleSignInButton({ next }: { next?: string }) {
+  const t = useTranslations();
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const router = useRouter();
   const { loginWithGoogle } = useAuth();
@@ -58,7 +60,7 @@ export function GoogleSignInButton({ next }: { next?: string }) {
           await loginWithGoogle(response.credential);
           router.push(next ?? "/");
         } catch (err) {
-          toast.error(getErrorMessage(err, "Google sign-in failed"));
+          toast.error(getErrorMessage(err, t("googleSignInFailed")));
         }
       },
     });
@@ -72,7 +74,7 @@ export function GoogleSignInButton({ next }: { next?: string }) {
       width: 320,
     });
     renderedRef.current = true;
-  }, [scriptReady, clientId, loginWithGoogle, router, next]);
+  }, [scriptReady, clientId, loginWithGoogle, router, next, t]);
 
   if (!clientId) return null;
 

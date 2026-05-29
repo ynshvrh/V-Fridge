@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,7 @@ import { GoogleSignInButton } from "@/components/google-signin-button";
 import { Separator } from "@/components/ui/separator";
 
 export default function SignUpPage() {
+  const t = useTranslations();
   const [formData, setFormData] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,7 +36,7 @@ export default function SignUpPage() {
       await signup(formData.username, formData.email, formData.password);
       setDone(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create the account");
+      setError(err instanceof Error ? err.message : t("signupGenericError"));
     } finally {
       setLoading(false);
     }
@@ -49,7 +51,7 @@ export default function SignUpPage() {
           </div>
           <div className="leading-tight">
             <h2 className="text-2xl font-black text-primary tracking-tight">V-Fridge</h2>
-            <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Smart Kitchen</p>
+            <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">{t("appTagline")}</p>
           </div>
         </Link>
 
@@ -59,34 +61,36 @@ export default function SignUpPage() {
               <div className="h-14 w-14 rounded-2xl bg-secondary text-secondary-foreground grid place-items-center mx-auto">
                 <MailCheck className="h-7 w-7" />
               </div>
-              <CardTitle className="text-2xl font-black tracking-tight">Check your inbox</CardTitle>
+              <CardTitle className="text-2xl font-black tracking-tight">{t("signupDoneTitle")}</CardTitle>
               <CardDescription>
-                We sent an email to <strong className="text-foreground">{formData.email}</strong> with a confirmation button.
-                Once you click it, you will be signed in automatically.
+                {t.rich("signupDoneBodyRich", {
+                  email: formData.email,
+                  strong: (chunks) => <strong className="text-foreground">{chunks}</strong>,
+                })}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 pt-4">
               <p className="text-xs text-muted-foreground text-center px-4">
-                No email yet? Check the Spam folder or wait a few minutes.
+                {t("signupSpamHint")}
               </p>
             </CardContent>
             <CardFooter className="flex flex-col gap-2 pt-2">
               <Button asChild variant="outline" className="w-full h-11 rounded-xl">
-                <Link href="/signin">Already verified? Sign in</Link>
+                <Link href="/signin">{t("signupAlreadyVerified")}</Link>
               </Button>
             </CardFooter>
           </Card>
         ) : (
           <Card className="rounded-3xl border-border/60 shadow-2xl shadow-primary/5">
             <CardHeader className="text-center pb-2">
-              <CardTitle className="text-2xl font-black tracking-tight">Create account</CardTitle>
-              <CardDescription>A few seconds and your smart fridge is ready</CardDescription>
+              <CardTitle className="text-2xl font-black tracking-tight">{t("signupTitle")}</CardTitle>
+              <CardDescription>{t("signupSubheading")}</CardDescription>
             </CardHeader>
             <CardContent className="pt-4 pb-2 space-y-4">
               <GoogleSignInButton />
               <div className="flex items-center gap-3">
                 <Separator className="flex-1" />
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">or</span>
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("wordOr")}</span>
                 <Separator className="flex-1" />
               </div>
             </CardContent>
@@ -99,11 +103,11 @@ export default function SignUpPage() {
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    Display name <span className="text-muted-foreground/60 font-medium normal-case tracking-normal">(optional)</span>
+                    {t("signupUsernameLabel")}
                   </Label>
                   <Input
                     id="username"
-                    placeholder="Leave empty to use your email prefix"
+                    placeholder={t("signupUsernameHint")}
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     className="h-11 rounded-xl"
@@ -111,12 +115,12 @@ export default function SignUpPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    Email
+                    {t("signinEmail")}
                   </Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="you@example.com"
+                    placeholder={t("authEmailPlaceholder")}
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="h-11 rounded-xl"
@@ -125,12 +129,12 @@ export default function SignUpPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    Password
+                    {t("signupPasswordLabel")}
                   </Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="at least 6 characters"
+                    placeholder={t("signupPasswordPlaceholder")}
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="h-11 rounded-xl"
@@ -143,20 +147,23 @@ export default function SignUpPage() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating account…
+                      {t("signupCreating")}
                     </>
                   ) : (
                     <>
                       <UserPlus className="mr-2 h-4 w-4" />
-                      Create account
+                      {t("signupSubmit")}
                     </>
                   )}
                 </Button>
                 <p className="text-sm text-center text-muted-foreground">
-                  Already have an account?{" "}
-                  <Link href="/signin" className="text-primary hover:underline font-semibold">
-                    Sign in
-                  </Link>
+                  {t.rich("signupHaveAccountRich", {
+                    link: (chunks) => (
+                      <Link href="/signin" className="text-primary hover:underline font-semibold">
+                        {chunks}
+                      </Link>
+                    ),
+                  })}
                 </p>
               </CardFooter>
             </form>

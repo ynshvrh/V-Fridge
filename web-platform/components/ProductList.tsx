@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useProductStore } from "@/store/useVFridgeStore";
 import { apiFetch } from "@/lib/api-client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,13 +17,16 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { getErrorMessage } from "@/lib/utils";
-import { categoryLabel } from "@/interfaces/categories";
+import { categoryLabelKey } from "@/interfaces/categories";
 import { useFridges } from "@/providers/fridge-provider";
 import { EditProductDialog } from "@/components/edit-product-dialog";
 import type { Product } from "@/interfaces/type";
 
+type FreshnessTone = "none" | "expired" | "soon" | "fresh";
+
 type FreshnessState = {
-  label: string;
+  tone: FreshnessTone;
+  daysLeft?: number;
   className: string;
   ringClass?: string;
   icon?: React.ReactNode;
@@ -30,7 +34,7 @@ type FreshnessState = {
 
 function getFreshness(date: string | Date | null | undefined): FreshnessState {
   if (!date) {
-    return { label: "No date", className: "bg-muted text-muted-foreground border-border" };
+    return { tone: "none", className: "bg-muted text-muted-foreground border-border" };
   }
   const d = new Date(date);
   const now = new Date();
@@ -38,7 +42,7 @@ function getFreshness(date: string | Date | null | undefined): FreshnessState {
 
   if (diffDays < 0) {
     return {
-      label: "Expired",
+      tone: "expired",
       className: "bg-destructive text-white border-destructive",
       ringClass: "ring-2 ring-destructive/40",
       icon: <AlertTriangle className="h-3 w-3" />,
@@ -46,18 +50,20 @@ function getFreshness(date: string | Date | null | undefined): FreshnessState {
   }
   if (diffDays <= 3) {
     return {
-      label: `${diffDays} ${diffDays === 1 ? "day" : "days"}`,
+      tone: "soon",
+      daysLeft: diffDays,
       className: "bg-yellow-100 text-yellow-900 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-100 dark:border-yellow-700/60",
       ringClass: "ring-1 ring-yellow-400/40",
     };
   }
   return {
-    label: "Fresh",
+    tone: "fresh",
     className: "bg-secondary text-secondary-foreground border-secondary",
   };
 }
 
 export function ProductList() {
+  const t = useTranslations();
   const { products, setProducts, removeProduct } = useProductStore();
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Product | null>(null);
@@ -81,14 +87,23 @@ export function ProductList() {
   }, [setProducts, activeFridgeId]);
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Delete this product?")) return;
+    if (!confirm(t("productDeleteConfirm"))) return;
 
     try {
       await apiFetch(`/products/${id}`, { method: "DELETE" });
       removeProduct(id);
-      toast.success("Product deleted");
+      toast.success(t("productDeletedToast"));
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to delete the product"));
+      toast.error(getErrorMessage(err, t("productDeleteFailed")));
+    }
+  };
+
+  const freshnessLabel = (state: FreshnessState): string => {
+    switch (state.tone) {
+      case "none": return t("productNoDate");
+      case "expired": return t("productExpiredShort");
+      case "soon": return t("productDaysLeft", { count: state.daysLeft ?? 0 });
+      case "fresh": return t("productFresh");
     }
   };
 
@@ -100,7 +115,7 @@ export function ProductList() {
           <Refrigerator className="h-6 w-6 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
         </div>
         <p className="text-sm font-medium text-muted-foreground animate-pulse">
-          Peeking into the fridge…
+          {t("productListLoading")}
         </p>
       </div>
     );
@@ -112,9 +127,9 @@ export function ProductList() {
         <div className="bg-secondary w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-sm">
           <Refrigerator className="h-10 w-10 text-secondary-foreground" />
         </div>
-        <h3 className="text-xl font-black tracking-tight">Your fridge is empty</h3>
+        <h3 className="text-xl font-black tracking-tight">{t("dashboardEmptyTitle")}</h3>
         <p className="text-muted-foreground max-w-xs mx-auto mt-2 text-sm">
-          Add a few groceries — then the AI chef will suggest recipes.
+          {t("dashboardEmptyBodyChef")}
         </p>
       </div>
     );
@@ -141,10 +156,10 @@ export function ProductList() {
                           className={`rounded-full px-2.5 py-0 h-5 text-[10px] uppercase font-black tracking-widest gap-1 border ${fresh.className}`}
                         >
                           {fresh.icon}
-                          {fresh.label}
+                          {freshnessLabel(fresh)}
                         </Badge>
                         <Badge className="rounded-full px-2.5 py-0 h-5 text-[10px] font-bold tracking-wide gap-1 border bg-muted/60 text-muted-foreground border-border">
-                          {categoryLabel(product.category)}
+                          {t(categoryLabelKey(product.category))}
                         </Badge>
                       </div>
                     </div>
@@ -154,7 +169,7 @@ export function ProductList() {
                       variant="ghost"
                       className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive shrink-0"
                       onClick={() => handleDelete(product.id)}
-                      title="Delete"
+                      title={t("actionDelete")}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -164,12 +179,12 @@ export function ProductList() {
                     <CalendarDays className="h-3.5 w-3.5 shrink-0" />
                     <p className="text-xs font-semibold">
                       {product.expiryDate
-                        ? new Date(product.expiryDate).toLocaleDateString("en-US", {
+                        ? new Date(product.expiryDate).toLocaleDateString(undefined, {
                             day: "numeric",
                             month: "long",
                             year: "numeric",
                           })
-                        : "No date"}
+                        : t("productNoDate")}
                     </p>
                   </div>
 
@@ -183,7 +198,7 @@ export function ProductList() {
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-border/60">
                   <div className="flex flex-col">
                     <span className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">
-                      Quantity
+                      {t("addProductQuantity")}
                     </span>
                     <div className="flex items-baseline gap-1">
                       <span className="text-2xl font-black tracking-tight">{product.quantity}</span>
@@ -197,7 +212,7 @@ export function ProductList() {
                     onClick={() => setEditing(product)}
                   >
                     <Edit2 className="h-3.5 w-3.5" />
-                    Edit
+                    {t("actionEdit")}
                   </Button>
                 </div>
               </CardContent>

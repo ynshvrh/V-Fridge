@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -16,7 +17,7 @@ import { Plus, ShoppingBasket, Loader2, Trash2, Check, Square, CheckSquare } fro
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
-import { PRODUCT_CATEGORIES, categoryLabel } from "@/interfaces/categories";
+import { PRODUCT_CATEGORIES, categoryLabelKey } from "@/interfaces/categories";
 import { useFridges } from "@/providers/fridge-provider";
 import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
 
@@ -36,6 +37,7 @@ type ProductResponse = {
 };
 
 export default function ShoppingPage() {
+  const t = useTranslations();
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
@@ -50,9 +52,9 @@ export default function ShoppingPage() {
     setLoading(true);
     apiFetch<ShoppingItem[]>("/shopping")
       .then((data) => setItems(Array.isArray(data) ? data : []))
-      .catch((err) => toast.error(getErrorMessage(err, "Failed to load shopping list")))
+      .catch((err) => toast.error(getErrorMessage(err, t("shoppingLoadFailed"))))
       .finally(() => setLoading(false));
-  }, [activeFridgeId]);
+  }, [activeFridgeId, t]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,7 +74,7 @@ export default function ShoppingPage() {
       setName("");
       setQuantity("1");
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to add item"));
+      toast.error(getErrorMessage(err, t("shoppingAddFailed")));
     } finally {
       setAdding(false);
     }
@@ -85,7 +87,7 @@ export default function ShoppingPage() {
       await apiFetch(`/shopping/${item.id}`, { method: "PATCH", body: { checked: next } });
     } catch (err) {
       setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, checked: !next } : i)));
-      toast.error(getErrorMessage(err, "Failed to update item"));
+      toast.error(getErrorMessage(err, t("shoppingUpdateFailed")));
     }
   };
 
@@ -96,7 +98,7 @@ export default function ShoppingPage() {
       await apiFetch(`/shopping/${id}`, { method: "DELETE" });
     } catch (err) {
       setItems(prev);
-      toast.error(getErrorMessage(err, "Failed to delete item"));
+      toast.error(getErrorMessage(err, t("shoppingDeleteFailed")));
     }
   };
 
@@ -107,9 +109,9 @@ export default function ShoppingPage() {
         body: { expiryDate: null },
       });
       setItems((prev) => prev.filter((i) => i.id !== item.id));
-      toast.success(`"${product.name}" added to the fridge`);
+      toast.success(t("shoppingAddedToFridge", { name: product.name }));
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to add to the fridge"));
+      toast.error(getErrorMessage(err, t("shoppingPurchaseFailed")));
     }
   };
 
@@ -122,13 +124,13 @@ export default function ShoppingPage() {
         <header className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-widest">
             <ShoppingBasket className="h-3 w-3" />
-            Shopping list
+            {t("shoppingTitle")}
           </div>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight">What to buy</h1>
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight">{t("shoppingHeroTitle")}</h1>
           <p className="text-base md:text-lg text-muted-foreground font-medium">
-            Plan ahead. Tap the cart icon to move a purchased item straight into your fridge.
+            {t("shoppingHeroSubtitle")}
           </p>
-          <ActiveFridgeBanner icon={ShoppingBasket} label="Shopping list for" />
+          <ActiveFridgeBanner icon={ShoppingBasket} label={t("shoppingActiveFor")} />
         </header>
 
         <Card className="rounded-3xl border-border/60 shadow-sm bg-card">
@@ -136,11 +138,11 @@ export default function ShoppingPage() {
             <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
               <div className="md:col-span-5 space-y-2">
                 <Label htmlFor="sh-name" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  Item
+                  {t("shoppingFieldItem")}
                 </Label>
                 <Input
                   id="sh-name"
-                  placeholder="e.g. Tomatoes"
+                  placeholder={t("shoppingFieldItemPlaceholder")}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -149,7 +151,7 @@ export default function ShoppingPage() {
               </div>
               <div className="md:col-span-2 space-y-2">
                 <Label htmlFor="sh-qty" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                  Qty
+                  {t("shoppingFieldQty")}
                 </Label>
                 <Input
                   id="sh-qty"
@@ -162,7 +164,7 @@ export default function ShoppingPage() {
                 />
               </div>
               <div className="md:col-span-2 space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Unit</Label>
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("addProductUnit")}</Label>
                 <Select value={unit} onValueChange={setUnit}>
                   <SelectTrigger className="h-11 rounded-xl">
                     <SelectValue />
@@ -177,14 +179,14 @@ export default function ShoppingPage() {
                 </Select>
               </div>
               <div className="md:col-span-3 space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Category</Label>
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t("addProductCategory")}</Label>
                 <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger className="h-11 rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {PRODUCT_CATEGORIES.map((c) => (
-                      <SelectItem key={c.slug} value={c.slug}>{c.label}</SelectItem>
+                      <SelectItem key={c.slug} value={c.slug}>{t(categoryLabelKey(c.slug))}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -192,7 +194,7 @@ export default function ShoppingPage() {
               <div className="md:col-span-12">
                 <Button type="submit" disabled={adding || !name.trim()} className="rounded-xl font-bold w-full md:w-auto">
                   {adding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-                  Add to list
+                  {t("shoppingAddToList")}
                 </Button>
               </div>
             </form>
@@ -207,14 +209,14 @@ export default function ShoppingPage() {
           <Card className="rounded-3xl border-2 border-dashed border-border bg-muted/20">
             <CardContent className="py-16 text-center space-y-3">
               <ShoppingBasket className="h-10 w-10 text-muted-foreground mx-auto" />
-              <h3 className="text-xl font-black tracking-tight">Your list is empty</h3>
-              <p className="text-sm text-muted-foreground">Add the first item using the form above.</p>
+              <h3 className="text-xl font-black tracking-tight">{t("shoppingEmpty")}</h3>
+              <p className="text-sm text-muted-foreground">{t("shoppingEmptyHint")}</p>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-6">
             <ShoppingItemGroup
-              title={`To buy (${unchecked.length})`}
+              title={`${t("shoppingToBuy")} (${unchecked.length})`}
               items={unchecked}
               onToggle={handleToggle}
               onDelete={handleDelete}
@@ -222,7 +224,7 @@ export default function ShoppingPage() {
             />
             {checked.length > 0 && (
               <ShoppingItemGroup
-                title={`Got them (${checked.length})`}
+                title={`${t("shoppingGotThem")} (${checked.length})`}
                 items={checked}
                 onToggle={handleToggle}
                 onDelete={handleDelete}
@@ -252,6 +254,7 @@ function ShoppingItemGroup({
   onPurchase: (i: ShoppingItem) => void;
   muted?: boolean;
 }) {
+  const t = useTranslations();
   return (
     <section className="space-y-3">
       <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">{title}</h2>
@@ -265,7 +268,7 @@ function ShoppingItemGroup({
               <button
                 type="button"
                 onClick={() => onToggle(item)}
-                aria-label={item.checked ? "Mark as not bought" : "Mark as bought"}
+                aria-label={item.checked ? t("shoppingAriaUncheck") : t("shoppingAriaCheck")}
                 aria-pressed={item.checked}
                 className="text-primary hover:text-primary/80"
               >
@@ -277,7 +280,7 @@ function ShoppingItemGroup({
                 <p className={`font-bold truncate ${item.checked ? "line-through" : ""}`}>{item.name}</p>
                 <p className="text-xs text-muted-foreground">
                   {item.quantity != null ? `${item.quantity} ${item.unit ?? ""} · ` : ""}
-                  {categoryLabel(item.category)}
+                  {t(categoryLabelKey(item.category))}
                 </p>
               </div>
               <div className="flex items-center gap-1.5">
@@ -287,10 +290,10 @@ function ShoppingItemGroup({
                     variant="secondary"
                     className="rounded-lg gap-1.5"
                     onClick={() => onPurchase(item)}
-                    title="Mark purchased and add to the fridge"
+                    title={t("shoppingMoveToFridge")}
                   >
                     <Check className="h-3.5 w-3.5" />
-                    Buy
+                    {t("shoppingBuyShort")}
                   </Button>
                 )}
                 <Button
@@ -298,7 +301,7 @@ function ShoppingItemGroup({
                   variant="ghost"
                   className="h-9 w-9 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                   onClick={() => onDelete(item.id)}
-                  title="Remove from list"
+                  title={t("actionDelete")}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
