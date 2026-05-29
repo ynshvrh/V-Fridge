@@ -17,12 +17,6 @@ import { apiFetch } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
 import { useFridges, type Fridge } from "@/providers/fridge-provider";
 
-type DeleteFridgeResponse = {
-  success: boolean;
-  replacementFridgeId?: number;
-  replacementFridgeName?: string;
-};
-
 export function FridgesCard() {
   const t = useTranslations();
   const { fridges, status, refresh, active, setActive } = useFridges();
@@ -53,16 +47,12 @@ export function FridgesCard() {
     if (!confirm(t("fridgesDeleteTitle", { name: f.name }))) return;
     setBusy(f.id);
     try {
-      const resp = await apiFetch<DeleteFridgeResponse>(`/fridges/${f.id}`, { method: "DELETE" });
-      if (active?.id === f.id) setActive(null); // fall back to the first remaining fridge
+      await apiFetch(`/fridges/${f.id}`, { method: "DELETE" });
+      // Deleting the active fridge clears the pin so the provider falls back
+      // to the first remaining fridge — or to "no fridge" if this was the last.
+      if (active?.id === f.id) setActive(null);
       await refresh();
-      // Server auto-creates a fresh empty fridge when the caller drops to zero;
-      // surface that explicitly so the user knows nothing dropped on the floor.
-      if (resp?.replacementFridgeName) {
-        toast.success(t("fridgesReplacementToast", { name: resp.replacementFridgeName }));
-      } else {
-        toast.success(t("fridgesDeleted"));
-      }
+      toast.success(t("fridgesDeleted"));
     } catch (err) {
       toast.error(getErrorMessage(err, t("fridgesDeleteFailed")));
     } finally {
