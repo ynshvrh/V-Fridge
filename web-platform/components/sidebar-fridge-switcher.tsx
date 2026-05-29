@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Refrigerator } from "lucide-react";
 import { SidebarGroup, SidebarGroupLabel } from "@/components/ui/sidebar";
 import {
@@ -17,6 +18,7 @@ import { useFridges } from "@/providers/fridge-provider";
  * updates the pinned id (and triggers every page to refetch via FridgeProvider).
  */
 export function SidebarFridgeSwitcher() {
+  const t = useTranslations();
   const { fridges, active, setActive, status } = useFridges();
 
   if (status !== "ready" || !active) return null;
@@ -25,7 +27,7 @@ export function SidebarFridgeSwitcher() {
     return (
       <SidebarGroup>
         <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
-          Active fridge
+          {t("sidebarActiveFridge")}
         </SidebarGroupLabel>
         <div className="flex w-full items-center gap-3 rounded-lg border border-border/70 bg-background px-3 py-2">
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground">
@@ -34,7 +36,7 @@ export function SidebarFridgeSwitcher() {
           <span className="min-w-0 flex-1 leading-tight">
             <span className="block truncate text-sm font-bold">{active.name}</span>
             <span className="block text-[11px] text-muted-foreground">
-              {active.memberCount} {active.memberCount === 1 ? "member" : "members"}
+              {t("fridgesMembers", { count: active.memberCount })}
             </span>
           </span>
         </div>
@@ -74,8 +76,7 @@ export function SidebarFridgeSwitcher() {
               <span className="flex flex-col leading-tight">
                 <span className="text-sm font-medium">{f.name}</span>
                 <span className="text-[11px] text-muted-foreground">
-                  {f.role === "owner" ? "Owner" : "Member"} · {f.memberCount}{" "}
-                  {f.memberCount === 1 ? "member" : "members"}
+                  {f.role === "owner" ? t("fridgesOwner") : t("fridgesMember")} · {t("fridgesMembers", { count: f.memberCount })}
                 </span>
               </span>
             </SelectItem>

@@ -5,12 +5,14 @@ import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
 import { useProductStore } from "@/store/useVFridgeStore";
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Refrigerator, AlertTriangle, Sparkles, ArrowRight, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnalyticsTile } from "@/components/analytics-tile";
 import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
 
 export default function Dashboard() {
+  const t = useTranslations();
   const { user } = useAuth();
   const products = useProductStore((state) => state.products);
 
@@ -37,19 +39,20 @@ export default function Dashboard() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-widest">
               <Refrigerator className="h-3 w-3" />
-              Your fridge
+              {t("navFridge")}
             </div>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight">
-              {user?.username ? (
-                <>Welcome, <span className="text-primary">{user.username}</span>!</>
-              ) : (
-                "Dashboard"
-              )}
+              {user?.username
+                ? t.rich("dashboardWelcomeWithName", {
+                    name: user.username,
+                    primary: (chunks) => <span className="text-primary">{chunks}</span>,
+                  })
+                : t("dashboardTitle")}
             </h1>
             <p className="text-base md:text-lg text-muted-foreground font-medium">
-              Manage your groceries and get fresh recipe ideas from AI.
+              {t("dashboardHeroSubtitle")}
             </p>
-            <ActiveFridgeBanner icon={Refrigerator} label="Inventory for" />
+            <ActiveFridgeBanner icon={Refrigerator} label={t("dashboardActiveFor")} />
           </div>
           <div className="hidden md:block">
             <AddProducts />
@@ -58,23 +61,23 @@ export default function Dashboard() {
 
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
-            label="Total items"
+            label={t("dashboardStatTotal")}
             value={stats.total}
             tone="primary"
             icon={<Refrigerator className="h-5 w-5" />}
           />
           <StatCard
-            label="Spoiling soon"
+            label={t("dashboardStatSoon")}
             value={stats.soon}
             tone="warning"
-            hint="within the next 3 days"
+            hint={t("dashboardStatSoonHint")}
             icon={<CalendarClock className="h-5 w-5" />}
           />
           <StatCard
-            label="Expired"
+            label={t("dashboardStatExpired")}
             value={stats.expired}
             tone="danger"
-            hint="time to toss"
+            hint={t("dashboardStatExpiredHint")}
             icon={<AlertTriangle className="h-5 w-5" />}
           />
         </section>
@@ -87,15 +90,15 @@ export default function Dashboard() {
               <Sparkles className="h-6 w-6" />
             </div>
             <div className="space-y-1">
-              <h2 className="text-xl md:text-2xl font-black tracking-tight">Not sure what to cook?</h2>
+              <h2 className="text-xl md:text-2xl font-black tracking-tight">{t("dashboardChefCtaTitle")}</h2>
               <p className="text-sm md:text-base text-muted-foreground max-w-xl">
-                Ask the AI chef — it will suggest a recipe from items already in your fridge.
+                {t("dashboardChefCtaBody")}
               </p>
             </div>
           </div>
           <Button asChild size="lg" className="rounded-xl font-bold shrink-0 shadow-md shadow-primary/20">
             <Link href="/recipe">
-              Open AI chef
+              {t("dashboardOpenChef")}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -109,13 +112,13 @@ export default function Dashboard() {
           <div className="rounded-3xl border border-border/60 shadow-xl bg-card overflow-hidden">
             <div className="p-5 md:p-6 border-b border-border/60 bg-muted/40 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-lg">Inventory</h3>
+                <h3 className="font-bold text-lg">{t("dashboardInventory")}</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Sorted by expiry date
+                  {t("dashboardInventorySortHint")}
                 </p>
               </div>
               <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2.5 py-1 rounded-full bg-background border border-border/60">
-                {stats.total} {stats.total === 1 ? "item" : "items"}
+                {t("dashboardItemsCount", { count: stats.total })}
               </span>
             </div>
             <div className="p-4 md:p-6 min-h-[24rem]">

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Trash2, TrendingDown, Zap } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiFetch } from "@/lib/api-client";
-import { categoryLabel } from "@/interfaces/categories";
+import { categoryLabelKey } from "@/interfaces/categories";
 
 type AnalyticsSummary = {
   mostWasted: Array<{ productName: string; totalQuantity: number; occurrences: number; category: string }>;
@@ -13,6 +14,7 @@ type AnalyticsSummary = {
 };
 
 export function AnalyticsTile() {
+  const t = useTranslations();
   const [data, setData] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,12 +43,12 @@ export function AnalyticsTile() {
               <Trash2 className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="font-black tracking-tight text-sm">Most wasted</h3>
-              <p className="text-[11px] text-muted-foreground">Last 30 days</p>
+              <h3 className="font-black tracking-tight text-sm">{t("analyticsMostWasted")}</h3>
+              <p className="text-[11px] text-muted-foreground">{t("analyticsMostWastedSubtitle")}</p>
             </div>
           </div>
           {data.mostWasted.length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">No wasted items yet — well done.</p>
+            <p className="text-xs text-muted-foreground italic">{t("analyticsNoWasted")}</p>
           ) : (
             <ul className="space-y-1.5 text-sm">
               {data.mostWasted.slice(0, 3).map((row) => (
@@ -69,20 +71,20 @@ export function AnalyticsTile() {
               <Zap className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="font-black tracking-tight text-sm">Fastest consumed</h3>
-              <p className="text-[11px] text-muted-foreground">Days from add to finished</p>
+              <h3 className="font-black tracking-tight text-sm">{t("analyticsFastestConsumed")}</h3>
+              <p className="text-[11px] text-muted-foreground">{t("analyticsFastestConsumedSubtitle")}</p>
             </div>
           </div>
           {data.fastestConsumed.length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">No items finished yet.</p>
+            <p className="text-xs text-muted-foreground italic">{t("analyticsNoConsumed")}</p>
           ) : (
             <ul className="space-y-1.5 text-sm">
               {data.fastestConsumed.slice(0, 3).map((row) => (
                 <li key={row.productName} className="flex items-baseline justify-between gap-2">
                   <span className="truncate">
-                    {row.productName} <span className="text-[10px] text-muted-foreground">· {categoryLabel(row.category)}</span>
+                    {row.productName} <span className="text-[10px] text-muted-foreground">· {t(categoryLabelKey(row.category))}</span>
                   </span>
-                  <span className="text-xs font-bold shrink-0">{row.ageDays}d</span>
+                  <span className="text-xs font-bold shrink-0">{t("analyticsDaysShort", { n: row.ageDays })}</span>
                 </li>
               ))}
             </ul>
@@ -97,12 +99,12 @@ export function AnalyticsTile() {
               <TrendingDown className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="font-black tracking-tight text-sm">Weekly</h3>
-              <p className="text-[11px] text-muted-foreground">Consumed vs wasted</p>
+              <h3 className="font-black tracking-tight text-sm">{t("analyticsWeekly")}</h3>
+              <p className="text-[11px] text-muted-foreground">{t("analyticsWeeklySubtitle")}</p>
             </div>
           </div>
           {data.weeklyTrends.length === 0 ? (
-            <p className="text-xs text-muted-foreground italic">Not enough history yet.</p>
+            <p className="text-xs text-muted-foreground italic">{t("analyticsNoHistory")}</p>
           ) : (
             <ul className="space-y-1 text-xs">
               {data.weeklyTrends.slice(-4).map((row) => {
@@ -111,7 +113,7 @@ export function AnalyticsTile() {
                   <li key={row.weekStart} className="space-y-1">
                     <div className="flex justify-between text-muted-foreground">
                       <span>{row.weekStart}</span>
-                      <span>{row.consumed}c · {row.wasted + row.expired}w</span>
+                      <span>{t("analyticsConsumedWasted", { c: row.consumed, w: row.wasted + row.expired })}</span>
                     </div>
                     <div className="h-1.5 rounded-full bg-muted overflow-hidden flex">
                       <div

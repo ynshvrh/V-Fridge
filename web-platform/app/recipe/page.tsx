@@ -1,9 +1,11 @@
 "use client";
 import Chat from "@/components/chat";
 import { useAuth } from "@/providers/auth-provider";
+import { useTranslations } from "next-intl";
 import { ChefHat } from "lucide-react";
 
 export default function RecipePage() {
+  const t = useTranslations();
   const { user } = useAuth();
 
   return (
@@ -12,13 +14,15 @@ export default function RecipePage() {
         <header className="flex flex-col items-center text-center space-y-2 shrink-0">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-widest">
             <ChefHat className="h-3.5 w-3.5" />
-            AI chef
+            {t("chatTitle")}
           </div>
           <h1 className="text-3xl md:text-5xl font-black tracking-tight text-foreground">
-            What are we cooking today?
+            {t("chatEmptyHero")}
           </h1>
           <p className="text-base md:text-lg text-muted-foreground font-medium max-w-xl">
-            Looking for ideas for {user?.username || "your meal"} — based on items in your fridge.
+            {user?.username
+              ? t("recipeHeroBodyWithName", { name: user.username })
+              : t("recipeHeroBodyAnonymous")}
           </p>
         </header>
 
@@ -31,7 +35,7 @@ export default function RecipePage() {
 
         <footer className="py-1 shrink-0 text-center">
           <p className="text-[10px] text-muted-foreground/60 uppercase tracking-tighter">
-            Powered by V-Fridge AI · Answers depend on your inventory
+            {t("recipeFooter")}
           </p>
         </footer>
       </div>
