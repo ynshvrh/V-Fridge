@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AuthProvider } from "@/providers/auth-provider";
@@ -41,41 +43,48 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#8C5383",
+  themeColor: "#FF8A1F",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Locale + dictionary come from i18n/request.ts (cookie-driven). Loaded on
+  // the server so the very first paint speaks the user's language — no client
+  // round-trip and no flash of English.
+  const locale = await getLocale();
+  const messages = await getMessages();
   return (
-    <html lang="en" className="h-full" suppressHydrationWarning>
+    <html lang={locale} className="h-full" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} h-full bg-ambient`}>
-        <ThemeProvider>
-          <AuthProvider>
-            <FridgeProvider>
-            <SidebarProvider className="h-full">
-              <AppSidebar />
-              <SidebarInset className="h-full flex flex-col">
-                <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/70 backdrop-blur px-4 lg:hidden">
-                  <SidebarTrigger />
-                  <Separator orientation="vertical" className="mr-2 h-4" />
-                  <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-lg bg-primary text-primary-foreground grid place-items-center shadow-sm">
-                      <Refrigerator className="h-4 w-4" />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ThemeProvider>
+            <AuthProvider>
+              <FridgeProvider>
+              <SidebarProvider className="h-full">
+                <AppSidebar />
+                <SidebarInset className="h-full flex flex-col">
+                  <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/70 backdrop-blur px-4 lg:hidden">
+                    <SidebarTrigger />
+                    <Separator orientation="vertical" className="mr-2 h-4" />
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg bg-primary text-primary-foreground grid place-items-center shadow-sm">
+                        <Refrigerator className="h-4 w-4" />
+                      </div>
+                      <span className="font-bold text-primary tracking-tight">V-Fridge</span>
                     </div>
-                    <span className="font-bold text-primary tracking-tight">V-Fridge</span>
-                  </div>
-                </header>
-                <main className="flex-1 overflow-y-auto relative">
-                  {children}
-                  <Toaster richColors position="top-center" closeButton />
-                </main>
-              </SidebarInset>
-            </SidebarProvider>
-            </FridgeProvider>
-          </AuthProvider>
-        </ThemeProvider>
+                  </header>
+                  <main className="flex-1 overflow-y-auto relative">
+                    {children}
+                    <Toaster richColors position="top-center" closeButton />
+                  </main>
+                </SidebarInset>
+              </SidebarProvider>
+              </FridgeProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

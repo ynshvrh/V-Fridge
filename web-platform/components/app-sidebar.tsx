@@ -9,7 +9,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,15 +26,17 @@ import {
 import { useAuth } from "@/providers/auth-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SidebarFridgeSwitcher } from "@/components/sidebar-fridge-switcher";
+import { useTranslations } from "next-intl";
 
-const NAV = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard, desc: "Inventory and stats" },
-  { href: "/shopping", label: "Shopping list", icon: ShoppingBasket, desc: "Plan what to buy" },
-  { href: "/planner", label: "Meal planner", icon: CalendarDays, desc: "Five meals for the week" },
-  { href: "/recipe", label: "AI chef", icon: UtensilsCrossed, desc: "Recipes from your fridge" },
-];
+const NAV_ITEMS = [
+  { href: "/",         icon: LayoutDashboard, labelKey: "navFridge" },
+  { href: "/shopping", icon: ShoppingBasket,  labelKey: "navShopping" },
+  { href: "/planner",  icon: CalendarDays,    labelKey: "navPlanner" },
+  { href: "/recipe",   icon: UtensilsCrossed, labelKey: "navChef" },
+] as const;
 
 export function AppSidebar() {
+  const t = useTranslations();
   const { user, status, logout } = useAuth();
   const pathname = usePathname();
 
@@ -56,24 +57,22 @@ export function AppSidebar() {
       <SidebarContent className="px-2">
         {status === "authenticated" && <SidebarFridgeSwitcher />}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
-            Navigation
-          </SidebarGroupLabel>
           <SidebarMenu>
-            {NAV.map((item) => {
+            {NAV_ITEMS.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
+              const label = t(item.labelKey);
               return (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
                     isActive={isActive}
-                    tooltip={item.desc}
+                    tooltip={label}
                     className="data-[active=true]:bg-secondary data-[active=true]:text-secondary-foreground data-[active=true]:font-semibold rounded-lg"
                   >
                     <Link href={item.href}>
                       <Icon className="mr-2 h-4 w-4 shrink-0" />
-                      <span>{item.label}</span>
+                      <span>{label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -83,9 +82,6 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
-            Account
-          </SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
@@ -95,7 +91,7 @@ export function AppSidebar() {
               >
                 <Link href="/settings">
                   <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                  {t("navSettings")}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -104,10 +100,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-3 border-t border-sidebar-border/60">
-        <div className="flex items-center justify-between gap-2 px-1 pb-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
-            Theme
-          </span>
+        <div className="flex items-center justify-end px-1 pb-2">
           <ThemeToggle />
         </div>
         <SidebarMenu>
@@ -118,7 +111,7 @@ export function AppSidebar() {
                   {(user.username || user.email || "U").slice(0, 1).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold truncate">{user.username || "Guest"}</p>
+                  <p className="text-sm font-semibold truncate">{user.username || user.email}</p>
                   <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
                 </div>
               </div>
@@ -126,7 +119,7 @@ export function AppSidebar() {
                 onClick={logout}
                 className="w-full justify-center bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors rounded-lg"
               >
-                <LogOut className="mr-2 h-4 w-4" /> Sign out
+                <LogOut className="mr-2 h-4 w-4" /> {t("settingsSignOut")}
               </SidebarMenuButton>
             </SidebarMenuItem>
           ) : (
@@ -136,7 +129,7 @@ export function AppSidebar() {
                 className="w-full justify-center bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-sm"
               >
                 <Link href="/signin">
-                  <LogIn className="mr-2 h-4 w-4" /> Sign in
+                  <LogIn className="mr-2 h-4 w-4" /> {t("signinSubmit")}
                 </Link>
               </SidebarMenuButton>
               <SidebarMenuButton
@@ -144,7 +137,7 @@ export function AppSidebar() {
                 className="w-full justify-center bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-lg"
               >
                 <Link href="/signup">
-                  <UserPlus className="mr-2 h-4 w-4" /> Create account
+                  <UserPlus className="mr-2 h-4 w-4" /> {t("signupSubmit")}
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

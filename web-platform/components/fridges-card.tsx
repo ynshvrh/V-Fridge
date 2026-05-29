@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -16,7 +17,14 @@ import { apiFetch } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
 import { useFridges, type Fridge } from "@/providers/fridge-provider";
 
+type DeleteFridgeResponse = {
+  success: boolean;
+  replacementFridgeId?: number;
+  replacementFridgeName?: string;
+};
+
 export function FridgesCard() {
+  const t = useTranslations();
   const { fridges, status, refresh, active, setActive } = useFridges();
   const loading = status === "loading";
   const [newName, setNewName] = useState("");
@@ -33,39 +41,45 @@ export function FridgesCard() {
       await apiFetch<Fridge>("/fridges", { method: "POST", body: { name: newName.trim() } });
       setNewName("");
       await refresh();
-      toast.success("Fridge created");
+      toast.success(t("fridgesCreated"));
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to create the fridge"));
+      toast.error(getErrorMessage(err, t("fridgesCreateFailed")));
     } finally {
       setCreating(false);
     }
   };
 
   const handleDelete = async (f: Fridge) => {
-    if (!confirm(`Delete "${f.name}"? Products and members will be gone.`)) return;
+    if (!confirm(t("fridgesDeleteTitle", { name: f.name }))) return;
     setBusy(f.id);
     try {
-      await apiFetch(`/fridges/${f.id}`, { method: "DELETE" });
+      const resp = await apiFetch<DeleteFridgeResponse>(`/fridges/${f.id}`, { method: "DELETE" });
       if (active?.id === f.id) setActive(null); // fall back to the first remaining fridge
       await refresh();
-      toast.success("Fridge deleted");
+      // Server auto-creates a fresh empty fridge when the caller drops to zero;
+      // surface that explicitly so the user knows nothing dropped on the floor.
+      if (resp?.replacementFridgeName) {
+        toast.success(t("fridgesReplacementToast", { name: resp.replacementFridgeName }));
+      } else {
+        toast.success(t("fridgesDeleted"));
+      }
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to delete"));
+      toast.error(getErrorMessage(err, t("fridgesDeleteFailed")));
     } finally {
       setBusy(null);
     }
   };
 
   const handleLeave = async (f: Fridge) => {
-    if (!confirm(`Leave "${f.name}"?`)) return;
+    if (!confirm(t("fridgesLeaveTitle", { name: f.name }))) return;
     setBusy(f.id);
     try {
       await apiFetch(`/fridges/${f.id}/members/me`, { method: "DELETE" });
       if (active?.id === f.id) setActive(null);
       await refresh();
-      toast.success("Left the fridge");
+      toast.success(t("fridgesLeft"));
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to leave"));
+      toast.error(getErrorMessage(err, t("fridgesLeaveFailed")));
     } finally {
       setBusy(null);
     }
@@ -80,11 +94,11 @@ export function FridgesCard() {
         method: "POST",
         body: { email: inviteEmail.trim() },
       });
-      toast.success(`Invite sent to ${inviteEmail}`);
+      toast.success(t("fridgesInviteSent", { email: inviteEmail }));
       setInviteEmail("");
       setInviteFor(null);
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to send invite"));
+      toast.error(getErrorMessage(err, t("fridgesInviteFailed")));
     } finally {
       setBusy(null);
     }
@@ -95,11 +109,9 @@ export function FridgesCard() {
       <CardHeader className="bg-muted/40 pb-4">
         <CardTitle className="text-lg inline-flex items-center gap-2">
           <Refrigerator className="h-4 w-4" />
-          Fridges
+          {t("fridgesTitle")}
         </CardTitle>
-        <CardDescription>
-          Manage shared fridges. Invite household members by email; only owners can rename or delete.
-        </CardDescription>
+        <CardDescription>{t("fridgesHint")}</CardDescription>
       </CardHeader>
       <CardContent className="pt-5 space-y-4">
         {loading ? (
@@ -116,12 +128,12 @@ export function FridgesCard() {
                       <p className="font-bold truncate">{f.name}</p>
                       {f.role === "owner" && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase tracking-widest font-black rounded-full bg-primary/10 text-primary">
-                          <Crown className="h-3 w-3" /> Owner
+                          <Crown className="h-3 w-3" /> {t("fridgesOwner")}
                         </span>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {f.memberCount} {f.memberCount === 1 ? "member" : "members"}
+                      {t("fridgesMembers", { count: f.memberCount })}
                     </p>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
@@ -133,7 +145,7 @@ export function FridgesCard() {
                           className="rounded-lg gap-1.5"
                           onClick={() => setInviteFor(inviteFor === f.id ? null : f.id)}
                         >
-                          <UserPlus className="h-3.5 w-3.5" /> Invite
+                          <UserPlus className="h-3.5 w-3.5" /> {t("fridgesMenuInvite")}
                         </Button>
                         <Button
                           size="icon"
@@ -141,7 +153,7 @@ export function FridgesCard() {
                           className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive"
                           onClick={() => handleDelete(f)}
                           disabled={busy === f.id}
-                          title="Delete fridge"
+                          title={t("fridgesMenuDelete")}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -154,7 +166,7 @@ export function FridgesCard() {
                         onClick={() => handleLeave(f)}
                         disabled={busy === f.id}
                       >
-                        <LogOut className="h-3.5 w-3.5" /> Leave
+                        <LogOut className="h-3.5 w-3.5" /> {t("fridgesMenuLeave")}
                       </Button>
                     )}
                   </div>
@@ -167,14 +179,14 @@ export function FridgesCard() {
                   >
                     <Input
                       type="email"
-                      placeholder="invitee@example.com"
+                      placeholder={t("fridgesInviteHint")}
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
                       required
                       className="h-9 rounded-lg flex-1"
                     />
                     <Button type="submit" disabled={busy === f.id} className="h-9 rounded-lg">
-                      Send
+                      {t("actionSend")}
                     </Button>
                   </form>
                 )}
@@ -187,12 +199,12 @@ export function FridgesCard() {
           <Input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="New fridge name…"
+            placeholder={t("fridgesNewName")}
             className="h-10 rounded-xl flex-1"
           />
           <Button type="submit" disabled={creating || !newName.trim()} className="h-10 rounded-xl gap-2">
             {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            Create
+            {t("actionCreate")}
           </Button>
         </form>
       </CardContent>
