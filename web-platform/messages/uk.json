@@ -134,6 +134,9 @@
   "plannerRegenerateFailed": "Не вдалося оновити цей день",
   "plannerRegenerateNotFound": "Плану ще немає. Спочатку згенеруйте його.",
   "plannerRegenerateRateLimit": "Забагато запитів. Зачекайте трохи та спробуйте знову.",
+  "plannerRecipeLoading": "Завантаження рецепта…",
+  "plannerRecipeFailed": "Не вдалося завантажити рецепт. Спробуйте ще раз.",
+  "plannerRecipeRateLimit": "Забагато запитів. Зачекайте трохи та спробуйте знову.",
 
   "settingsTitle": "Налаштування",
   "settingsHeroSubtitle": "Профіль, вигляд, мова, кухня та спільні холодильники.",

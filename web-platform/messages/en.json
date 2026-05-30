@@ -134,6 +134,9 @@
   "plannerRegenerateFailed": "Failed to regenerate this day",
   "plannerRegenerateNotFound": "No meal plan yet. Generate one first.",
   "plannerRegenerateRateLimit": "Too many requests. Wait a moment and try again.",
+  "plannerRecipeLoading": "Loading the recipe…",
+  "plannerRecipeFailed": "Couldn't load the recipe. Try again.",
+  "plannerRecipeRateLimit": "Too many requests. Wait a moment and try again.",
 
   "settingsTitle": "Settings",
   "settingsHeroSubtitle": "Profile, appearance, language, cuisine, and shared fridges.",
