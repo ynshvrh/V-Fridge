@@ -10,6 +10,13 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/providers/auth-provider";
 import { apiFetch } from "@/lib/api-client";
 import {
@@ -121,7 +128,8 @@ export default function Settings() {
                 </CardTitle>
                 <CardDescription>{t("settingsAppearanceHint")}</CardDescription>
               </CardHeader>
-              <CardContent className="pt-5 flex items-center justify-end gap-4">
+              <CardContent className="pt-5 flex items-center justify-between gap-4">
+                <span className="text-sm font-medium text-muted-foreground">{t("settingsThemeLabel")}</span>
                 <ThemeToggle />
               </CardContent>
             </Card>
@@ -269,18 +277,19 @@ function CuisineCard({
         <CardDescription>{t("settingsCuisineHint")}</CardDescription>
       </CardHeader>
       <CardContent className="pt-5">
-        <select
-          value={currentSlug}
-          disabled={saving}
-          onChange={(e) => save(e.target.value)}
-          className="w-full h-11 rounded-xl border border-border/70 bg-background px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {CUISINE_SLUGS.map((slug) => (
-            <option key={slug} value={slug}>
-              {t(cuisineLabelKey(slug))}
-            </option>
-          ))}
-        </select>
+        <Select value={currentSlug} disabled={saving} onValueChange={save}>
+          <SelectTrigger className="w-full h-11 rounded-xl font-semibold">
+            <SelectValue />
+            {saving && <Loader2 className="ml-auto h-4 w-4 animate-spin text-muted-foreground" />}
+          </SelectTrigger>
+          <SelectContent>
+            {CUISINE_SLUGS.map((slug) => (
+              <SelectItem key={slug} value={slug}>
+                {t(cuisineLabelKey(slug))}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </CardContent>
     </Card>
   );

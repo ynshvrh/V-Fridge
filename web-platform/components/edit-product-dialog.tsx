@@ -19,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Pencil } from "lucide-react";
+import { Loader2, Pencil, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { useProductStore } from "@/store/useVFridgeStore";
@@ -79,6 +79,16 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
     category: safeCategory(product.category),
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  // Advisory only — never blocks saving. Mirrors the add form: missing or
+  // "other" category, missing/zero quantity, or missing expiry can lead the AI
+  // chef to wrong suggestions.
+  const hasIncompleteData =
+    !formData.category ||
+    formData.category === "other" ||
+    !formData.quantity.trim() ||
+    Number(formData.quantity) <= 0 ||
+    !formData.expiryDate;
 
   // Re-sync when the parent swaps the product (or reopens with a different one).
   useEffect(() => {
@@ -250,6 +260,16 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
           </div>
+
+          {hasIncompleteData && (
+            <div
+              role="status"
+              className="flex items-start gap-2 rounded-xl border border-yellow-300 bg-yellow-50 px-3 py-2 text-xs text-yellow-900 dark:border-yellow-900/50 dark:bg-yellow-950/30 dark:text-yellow-200"
+            >
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{t("productIncompleteWarning")}</span>
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-2">
             <Button

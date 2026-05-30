@@ -4,15 +4,22 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, ChefHat, Loader2, Sparkles, ShoppingBasket } from "lucide-react";
+import { CalendarDays, ChefHat, Loader2, Sparkles, ShoppingBasket, ChevronDown, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, ApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
 import { categoryLabelKey } from "@/interfaces/categories";
 import { useFridges } from "@/providers/fridge-provider";
 import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
 
-type Meal = { name: string; day: string; ingredients: string[]; note: string | null };
+type Meal = {
+  name: string;
+  day: string;
+  ingredients: string[];
+  note: string | null;
+  description: string | null;
+  steps: string[] | null;
+};
 type GapItem = { name: string; quantity: string | null; unit: string | null; category: string };
 type MealPlan = { meals: Meal[]; gapItems: GapItem[]; generatedAt: string };
 
@@ -38,6 +45,8 @@ export default function PlannerPage() {
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [regeneratingDay, setRegeneratingDay] = useState<string | null>(null);
 
   const activeFridgeId = useFridges().active?.id ?? null;
 
@@ -70,6 +79,32 @@ export default function PlannerPage() {
       toast.error(getErrorMessage(err, t("plannerGenerateFailed")));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const regenerateDay = async (day: string) => {
+    setRegeneratingDay(day);
+    try {
+      const updated = await apiFetch<MealPlan>("/meal-plan/regenerate-day", {
+        method: "POST",
+        body: { day },
+      });
+      setPlan(updated);
+    } catch (err) {
+      // Map known API error codes to friendly copy; fall back to the message.
+      if (err instanceof ApiError) {
+        if (err.status === 404) {
+          toast.error(t("plannerRegenerateNotFound"));
+          return;
+        }
+        if (err.status === 429) {
+          toast.error(t("plannerRegenerateRateLimit"));
+          return;
+        }
+      }
+      toast.error(getErrorMessage(err, t("plannerRegenerateFailed")));
+    } finally {
+      setRegeneratingDay(null);
     }
   };
 
@@ -124,30 +159,83 @@ export default function PlannerPage() {
           </Card>
         ) : (
           <>
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {sortByDay(plan.meals).map((meal, idx) => {
                 const dayKey = DAY_KEY[meal.day];
                 const dayLabel = dayKey ? t(dayKey) : (meal.day || t("plannerDayFallback"));
+                const isExpanded = expandedDay === meal.day;
+                const isRegenerating = regeneratingDay === meal.day;
+                const panelId = `meal-panel-${meal.day}-${idx}`;
                 return (
-                  <Card key={`${meal.day}-${idx}`} className="rounded-3xl border-border/60 shadow-sm bg-card">
+                  <Card key={`${meal.day}-${idx}`} className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
                     <CardContent className="p-5 space-y-3">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                        {dayLabel}
-                      </p>
-                      <h3 className="text-lg font-black tracking-tight line-clamp-2">{meal.name}</h3>
-                      {meal.note && (
-                        <p className="text-xs italic text-muted-foreground line-clamp-2">{meal.note}</p>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedDay((prev) => (prev === meal.day ? null : meal.day))}
+                        aria-expanded={isExpanded}
+                        aria-controls={panelId}
+                        className="flex w-full items-start justify-between gap-2 text-left"
+                      >
+                        <div className="space-y-1 min-w-0">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                            {dayLabel}
+                          </p>
+                          <h3 className="text-lg font-black tracking-tight line-clamp-2">{meal.name}</h3>
+                        </div>
+                        <ChevronDown
+                          className={`mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                        />
+                      </button>
+
+                      {isExpanded && (
+                        <div id={panelId} className="space-y-4 pt-1">
+                          {meal.description && (
+                            <p className="text-sm text-muted-foreground">{meal.description}</p>
+                          )}
+
+                          {meal.note && (
+                            <p className="text-xs italic text-muted-foreground">{meal.note}</p>
+                          )}
+
+                          {meal.steps && meal.steps.length > 0 && (
+                            <div className="space-y-1.5">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                {t("plannerStepsLabel")}
+                              </p>
+                              <ol className="text-sm space-y-1.5 list-decimal list-inside">
+                                {meal.steps.map((step, ix) => (
+                                  <li key={ix} className="pl-1">{step}</li>
+                                ))}
+                              </ol>
+                            </div>
+                          )}
+
+                          <div className="pt-2 border-t border-border/60">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
+                              {t("plannerIngredientsLabel")}
+                            </p>
+                            <ul className="text-xs space-y-0.5 list-disc list-inside">
+                              {meal.ingredients.map((i, ix) => (
+                                <li key={ix}>{i}</li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full rounded-xl gap-2 font-bold"
+                            onClick={() => regenerateDay(meal.day)}
+                            disabled={isRegenerating}
+                          >
+                            {isRegenerating
+                              ? <Loader2 className="h-4 w-4 animate-spin" />
+                              : <RefreshCw className="h-4 w-4" />}
+                            {isRegenerating ? t("plannerRegenerateDayBusy") : t("plannerRegenerateDay")}
+                          </Button>
+                        </div>
                       )}
-                      <div className="pt-2 border-t border-border/60">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">
-                          {t("plannerIngredientsLabel")}
-                        </p>
-                        <ul className="text-xs space-y-0.5 list-disc list-inside">
-                          {meal.ingredients.map((i, ix) => (
-                            <li key={ix}>{i}</li>
-                          ))}
-                        </ul>
-                      </div>
                     </CardContent>
                   </Card>
                 );

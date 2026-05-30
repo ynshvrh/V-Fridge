@@ -22,7 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, ScanBarcode, Sparkles } from "lucide-react";
+import { Loader2, Plus, ScanBarcode, Sparkles, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { useProductStore } from "@/store/useVFridgeStore";
 import { productSchema } from "@/interfaces/schemas";
@@ -61,6 +61,16 @@ export function AddProducts() {
   const [scannerOpen, setScannerOpen] = useState(false);
 
   const reset = () => setFormData({ name: "", description: "", quantity: "1", unit: "pcs", expiryDate: "", category: "other" });
+
+  // Advisory only — never blocks submission. Incomplete or "other"-category
+  // products make the AI chef guess, which has produced wrong suggestions
+  // (e.g. a scanned beer saved as a berry, prompting a blueberry-pie recipe).
+  const hasIncompleteData =
+    !formData.category ||
+    formData.category === "other" ||
+    !formData.quantity.trim() ||
+    Number(formData.quantity) <= 0 ||
+    !formData.expiryDate;
 
   const applyScanned = (p: ScannedProduct) => {
     setFormData((prev) => ({
@@ -263,6 +273,16 @@ export function AddProducts() {
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
           </div>
+
+          {hasIncompleteData && (
+            <div
+              role="status"
+              className="flex items-start gap-2 rounded-xl border border-yellow-300 bg-yellow-50 px-3 py-2 text-xs text-yellow-900 dark:border-yellow-900/50 dark:bg-yellow-950/30 dark:text-yellow-200"
+            >
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{t("productIncompleteWarning")}</span>
+            </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-2">
             <Button
