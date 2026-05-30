@@ -47,6 +47,9 @@ export default function PlannerPage() {
   const [importing, setImporting] = useState(false);
   const [expandedDay, setExpandedDay] = useState<string | null>(null);
   const [regeneratingDay, setRegeneratingDay] = useState<string | null>(null);
+  // Which day's recipe is currently being lazily fetched. Used to scope the
+  // spinner and to guard against duplicate concurrent fetches.
+  const [loadingRecipeDay, setLoadingRecipeDay] = useState<string | null>(null);
 
   const activeFridgeId = useFridges().active?.id ?? null;
 
@@ -80,6 +83,45 @@ export default function PlannerPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // A freshly generated plan ships a LIGHT meal (name + ingredients only). The
+  // recipe (description + steps) is fetched lazily the first time the card is
+  // opened. A meal that already carries steps was regenerated or fetched
+  // earlier, so it renders instantly with no network call.
+  const mealHasRecipe = (meal: Meal): boolean =>
+    !!meal.description || (Array.isArray(meal.steps) && meal.steps.length > 0);
+
+  const fetchRecipe = async (day: string) => {
+    // Guard against duplicate concurrent fetches for the same day.
+    if (loadingRecipeDay === day) return;
+    setLoadingRecipeDay(day);
+    try {
+      const updated = await apiFetch<MealPlan>("/meal-plan/recipe", {
+        method: "POST",
+        body: { day },
+      });
+      setPlan(updated);
+    } catch (err) {
+      // Map known API error codes to friendly copy; fall back to a generic one.
+      if (err instanceof ApiError && err.status === 429) {
+        toast.error(t("plannerRecipeRateLimit"));
+        return;
+      }
+      toast.error(getErrorMessage(err, t("plannerRecipeFailed")));
+    } finally {
+      setLoadingRecipeDay(null);
+    }
+  };
+
+  // Toggle a card open/closed. On the first open of a recipe-less meal, kick off
+  // the lazy recipe fetch.
+  const toggleDay = (meal: Meal) => {
+    setExpandedDay((prev) => {
+      if (prev === meal.day) return null;
+      if (!mealHasRecipe(meal)) void fetchRecipe(meal.day);
+      return meal.day;
+    });
   };
 
   const regenerateDay = async (day: string) => {
@@ -165,13 +207,14 @@ export default function PlannerPage() {
                 const dayLabel = dayKey ? t(dayKey) : (meal.day || t("plannerDayFallback"));
                 const isExpanded = expandedDay === meal.day;
                 const isRegenerating = regeneratingDay === meal.day;
+                const isLoadingRecipe = loadingRecipeDay === meal.day;
                 const panelId = `meal-panel-${meal.day}-${idx}`;
                 return (
                   <Card key={`${meal.day}-${idx}`} className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
                     <CardContent className="p-5 space-y-3">
                       <button
                         type="button"
-                        onClick={() => setExpandedDay((prev) => (prev === meal.day ? null : meal.day))}
+                        onClick={() => toggleDay(meal)}
                         aria-expanded={isExpanded}
                         aria-controls={panelId}
                         className="flex w-full items-start justify-between gap-2 text-left"
@@ -189,25 +232,34 @@ export default function PlannerPage() {
 
                       {isExpanded && (
                         <div id={panelId} className="space-y-4 pt-1">
-                          {meal.description && (
-                            <p className="text-sm text-muted-foreground">{meal.description}</p>
-                          )}
-
-                          {meal.note && (
-                            <p className="text-xs italic text-muted-foreground">{meal.note}</p>
-                          )}
-
-                          {meal.steps && meal.steps.length > 0 && (
-                            <div className="space-y-1.5">
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                                {t("plannerStepsLabel")}
-                              </p>
-                              <ol className="text-sm space-y-1.5 list-decimal list-inside">
-                                {meal.steps.map((step, ix) => (
-                                  <li key={ix} className="pl-1">{step}</li>
-                                ))}
-                              </ol>
+                          {isLoadingRecipe ? (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              {t("plannerRecipeLoading")}
                             </div>
+                          ) : (
+                            <>
+                              {meal.description && (
+                                <p className="text-sm text-muted-foreground">{meal.description}</p>
+                              )}
+
+                              {meal.note && (
+                                <p className="text-xs italic text-muted-foreground">{meal.note}</p>
+                              )}
+
+                              {meal.steps && meal.steps.length > 0 && (
+                                <div className="space-y-1.5">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                    {t("plannerStepsLabel")}
+                                  </p>
+                                  <ol className="text-sm space-y-1.5 list-decimal list-inside">
+                                    {meal.steps.map((step, ix) => (
+                                      <li key={ix} className="pl-1">{step}</li>
+                                    ))}
+                                  </ol>
+                                </div>
+                              )}
+                            </>
                           )}
 
                           <div className="pt-2 border-t border-border/60">
@@ -227,7 +279,7 @@ export default function PlannerPage() {
                             size="sm"
                             className="w-full rounded-xl gap-2 font-bold"
                             onClick={() => regenerateDay(meal.day)}
-                            disabled={isRegenerating}
+                            disabled={isRegenerating || isLoadingRecipe}
                           >
                             {isRegenerating
                               ? <Loader2 className="h-4 w-4 animate-spin" />
