@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, ShoppingBasket, Loader2, Trash2, Check, Square, CheckSquare } from "lucide-react";
+import { useMemo } from "react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
@@ -118,6 +119,22 @@ export default function ShoppingPage() {
   const unchecked = items.filter((i) => !i.checked);
   const checked = items.filter((i) => i.checked);
 
+  // Group the still-to-buy items by category, ordered by the canonical catalog
+  // order so headers stay stable regardless of insertion order. Bought items
+  // keep their own flat "Got them" group below.
+  const uncheckedGroups = useMemo(() => {
+    const byCategory = new Map<string, ShoppingItem[]>();
+    for (const item of unchecked) {
+      const slug = PRODUCT_CATEGORIES.some((c) => c.slug === item.category) ? item.category : "other";
+      const bucket = byCategory.get(slug);
+      if (bucket) bucket.push(item);
+      else byCategory.set(slug, [item]);
+    }
+    return PRODUCT_CATEGORIES
+      .filter((c) => byCategory.has(c.slug))
+      .map((c) => ({ category: c.slug, items: byCategory.get(c.slug)! }));
+  }, [unchecked]);
+
   return (
     <div className="min-h-full w-full p-4 md:p-8 lg:p-12">
       <div className="max-w-3xl mx-auto space-y-8">
@@ -215,22 +232,39 @@ export default function ShoppingPage() {
           </Card>
         ) : (
           <div className="space-y-6">
-            <ShoppingItemGroup
-              title={`${t("shoppingToBuy")} (${unchecked.length})`}
-              items={unchecked}
-              onToggle={handleToggle}
-              onDelete={handleDelete}
-              onPurchase={handlePurchase}
-            />
+            {unchecked.length > 0 && (
+              <section className="space-y-4">
+                <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  {`${t("shoppingToBuy")} (${unchecked.length})`}
+                </h2>
+                <div className="space-y-5">
+                  {uncheckedGroups.map((group) => (
+                    <ShoppingItemGroup
+                      key={group.category}
+                      title={t(categoryLabelKey(group.category))}
+                      items={group.items}
+                      onToggle={handleToggle}
+                      onDelete={handleDelete}
+                      onPurchase={handlePurchase}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
             {checked.length > 0 && (
-              <ShoppingItemGroup
-                title={`${t("shoppingGotThem")} (${checked.length})`}
-                items={checked}
-                onToggle={handleToggle}
-                onDelete={handleDelete}
-                onPurchase={handlePurchase}
-                muted
-              />
+              <section className="space-y-4">
+                <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  {`${t("shoppingGotThem")} (${checked.length})`}
+                </h2>
+                <ShoppingItemGroup
+                  title=""
+                  items={checked}
+                  onToggle={handleToggle}
+                  onDelete={handleDelete}
+                  onPurchase={handlePurchase}
+                  muted
+                />
+              </section>
             )}
           </div>
         )}
@@ -256,8 +290,10 @@ function ShoppingItemGroup({
 }) {
   const t = useTranslations();
   return (
-    <section className="space-y-3">
-      <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">{title}</h2>
+    <section className="space-y-2">
+      {title && (
+        <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/80 px-1">{title}</h3>
+      )}
       <div className="space-y-2">
         {items.map((item) => (
           <Card
