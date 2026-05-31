@@ -264,9 +264,9 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
           {hasIncompleteData && (
             <div
               role="status"
-              className="flex items-start gap-2 rounded-xl border border-yellow-300 bg-yellow-50 px-3 py-2 text-xs text-yellow-900 dark:border-yellow-900/50 dark:bg-yellow-950/30 dark:text-yellow-200"
+              className="flex items-start gap-2 rounded-xl border border-solara/50 bg-solara/15 px-3 py-2 text-xs text-foreground dark:border-solara/30 dark:bg-solara/10"
             >
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-solara" />
               <span>{t("productIncompleteWarning")}</span>
             </div>
           )}

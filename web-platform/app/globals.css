@@ -81,7 +81,7 @@
   --secondary-foreground: #5C3506;
 
   --muted: #FFF6E6;
-  --muted-foreground: #8A6B4F;
+  --muted-foreground: #6E5238;       /* deeper warm brown — readable on ivory/peach, still warm not gray */
   --accent: #67CEEA;
   --accent-foreground: #07344B;
 
@@ -132,7 +132,7 @@
   --secondary-foreground: #E8EEF4;
 
   --muted: #18222F;
-  --muted-foreground: #8FA3B8;
+  --muted-foreground: #A6B8CC;       /* brighter slate — clearer on midnight navy */
   --accent: #67CEEA;
   --accent-foreground: #062236;
 

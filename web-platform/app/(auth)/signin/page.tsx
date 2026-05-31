@@ -139,10 +139,10 @@ export default function SignInPage() {
                 </div>
               )}
               {needsVerification && (
-                <div className="p-4 rounded-xl bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-900/40 space-y-3">
+                <div className="p-4 rounded-xl bg-solara/15 border border-solara/40 dark:bg-solara/10 dark:border-solara/30 space-y-3">
                   <div className="flex items-start gap-3">
-                    <MailWarning className="h-5 w-5 text-yellow-900 dark:text-yellow-200 shrink-0 mt-0.5" />
-                    <div className="text-sm text-yellow-900 dark:text-yellow-200">
+                    <MailWarning className="h-5 w-5 text-solara shrink-0 mt-0.5" />
+                    <div className="text-sm text-foreground">
                       <p className="font-bold mb-1">{t("signinNotVerifiedTitle")}</p>
                       <p>{t("signinNotVerifiedBody")}</p>
                     </div>
@@ -152,7 +152,7 @@ export default function SignInPage() {
                     onClick={handleResend}
                     disabled={resending}
                     variant="outline"
-                    className="w-full h-10 rounded-lg border-yellow-300 dark:border-yellow-900/60 text-yellow-900 dark:text-yellow-200 hover:bg-yellow-100 dark:hover:bg-yellow-900/40"
+                    className="w-full h-10 rounded-lg border-solara/50 text-foreground hover:bg-solara/15"
                   >
                     {resending ? (
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t("signinSendingVerification")}</>

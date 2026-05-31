@@ -52,8 +52,8 @@ function getFreshness(date: string | Date | null | undefined): FreshnessState {
     return {
       tone: "soon",
       daysLeft: diffDays,
-      className: "bg-yellow-100 text-yellow-900 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-100 dark:border-yellow-700/60",
-      ringClass: "ring-1 ring-yellow-400/40",
+      className: "bg-solara/20 text-foreground border-solara/50 dark:bg-solara/15 dark:border-solara/40",
+      ringClass: "ring-1 ring-solara/40",
     };
   }
   return {
