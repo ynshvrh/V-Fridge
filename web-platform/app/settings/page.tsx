@@ -108,9 +108,9 @@ export default function Settings() {
                 <button
                   type="button"
                   onClick={resendVerification}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-100 text-[11px] font-bold uppercase tracking-widest hover:bg-yellow-200 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-solara/20 text-foreground dark:bg-solara/15 text-[11px] font-bold uppercase tracking-widest hover:bg-solara/30 transition-colors"
                 >
-                  <MailWarning className="h-3.5 w-3.5" />
+                  <MailWarning className="h-3.5 w-3.5 text-solara" />
                   {t("settingsEmailNotVerified")}
                 </button>
               )}

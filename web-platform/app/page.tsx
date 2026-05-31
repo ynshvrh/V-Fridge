@@ -178,9 +178,13 @@ function StatCard({
   tone: "primary" | "warning" | "danger";
   icon: React.ReactNode;
 }) {
+  // All three tones stay on the citrus palette — no off-brand tailwind yellows.
+  // "warning" leans on Solara (honey-orange) so expiring-soon reads warm, not alien.
+  // Text stays on the standard foreground for readability in both themes; the tone
+  // colour lives in the surface, border and icon, not the body text.
   const tones = {
     primary: "bg-secondary/60 border-secondary text-secondary-foreground",
-    warning: "bg-yellow-50 border-yellow-200 text-yellow-900 dark:bg-yellow-950/20 dark:border-yellow-900/40 dark:text-yellow-200",
+    warning: "bg-solara/20 border-solara/50 text-foreground dark:bg-solara/10 dark:border-solara/30",
     danger: "bg-destructive/10 border-destructive/30 text-destructive",
   };
   return (
