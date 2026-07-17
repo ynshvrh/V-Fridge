@@ -69,6 +69,7 @@ export default function PlannerPage() {
   // Sheet state
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
+  const [regeneratingMealKey, setRegeneratingMealKey] = useState<string | null>(null);
 
   const activeFridgeId = useFridges().active?.id ?? null;
 
@@ -185,6 +186,58 @@ export default function PlannerPage() {
       toast.error(getErrorMessage(err, t("plannerRegenerateFailed")));
     } finally {
       setRegeneratingDay(null);
+    }
+  };
+
+  const handleRegenerateMeal = async (day: string, mealType: string) => {
+    const key = `${day}-${mealType}`;
+    setRegeneratingMealKey(key);
+    try {
+      const updated = await apiFetch<MealPlan>("/meal-plan/regenerate-meal", {
+        method: "POST",
+        body: { day, mealType },
+      });
+      setPlan(updated);
+
+      const newMeal = updated.meals.find(
+        (m) => m.day === day && m.mealType === mealType
+      );
+      if (newMeal) {
+        setSelectedMeal(newMeal);
+        setCheckedIngredients({});
+
+        const recipeKey = `${newMeal.day}-${newMeal.mealType || ""}`;
+        setLoadingRecipeMealKey(recipeKey);
+        try {
+          const recipeUpdated = await apiFetch<MealPlan>("/meal-plan/recipe", {
+            method: "POST",
+            body: { day: newMeal.day, mealType: newMeal.mealType },
+          });
+          setPlan(recipeUpdated);
+          const finalMeal = recipeUpdated.meals.find(
+            (m) => m.day === day && m.mealType === mealType
+          );
+          if (finalMeal) setSelectedMeal(finalMeal);
+        } catch (err) {
+          toast.error(getErrorMessage(err, t("plannerRecipeFailed")));
+        } finally {
+          setLoadingRecipeMealKey(null);
+        }
+      }
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.status === 404) {
+          toast.error(t("plannerRegenerateNotFound"));
+          return;
+        }
+        if (err.status === 429) {
+          toast.error(t("plannerRegenerateRateLimit"));
+          return;
+        }
+      }
+      toast.error(getErrorMessage(err, t("plannerRegenerateFailed")));
+    } finally {
+      setRegeneratingMealKey(null);
     }
   };
 
@@ -445,18 +498,43 @@ export default function PlannerPage() {
                   </div>
                 )}
 
-                <div className="pt-4 border-t border-border/60">
+                <div className="pt-4 border-t border-border/60 flex flex-col gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     className="w-full h-11 rounded-xl gap-2 font-bold shadow-xs hover:border-destructive/30 hover:text-destructive transition-all"
-                    onClick={() => handleRegenerateInSheet(selectedMeal.day)}
-                    disabled={regeneratingDay === selectedMeal.day || loadingRecipeMealKey != null}
+                    onClick={() => handleRegenerateMeal(selectedMeal.day, selectedMeal.mealType || "")}
+                    disabled={
+                      regeneratingMealKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}` ||
+                      regeneratingDay === selectedMeal.day ||
+                      loadingRecipeMealKey != null
+                    }
                   >
-                    {regeneratingDay === selectedMeal.day ? (
+                    {regeneratingMealKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}` ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <RefreshCw className="h-4 w-4" />
+                    )}
+                    {regeneratingMealKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}`
+                      ? t("plannerRegenerateMealBusy")
+                      : t("plannerRegenerateMeal")}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full h-11 rounded-xl gap-2 font-semibold text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-all"
+                    onClick={() => handleRegenerateInSheet(selectedMeal.day)}
+                    disabled={
+                      regeneratingMealKey != null ||
+                      regeneratingDay === selectedMeal.day ||
+                      loadingRecipeMealKey != null
+                    }
+                  >
+                    {regeneratingDay === selectedMeal.day ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-3 w-3" />
                     )}
                     {regeneratingDay === selectedMeal.day
                       ? t("plannerRegenerateDayBusy")

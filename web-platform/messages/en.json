@@ -134,6 +134,8 @@
   "plannerStepsLabel": "Steps",
   "plannerRegenerateDay": "Regenerate this day",
   "plannerRegenerateDayBusy": "Regenerating…",
+  "plannerRegenerateMeal": "Regenerate this meal",
+  "plannerRegenerateMealBusy": "Regenerating meal...",
   "plannerRegenerateFailed": "Failed to regenerate this day",
   "plannerRegenerateNotFound": "No meal plan yet. Generate one first.",
   "plannerRegenerateRateLimit": "Too many requests. Wait a moment and try again.",

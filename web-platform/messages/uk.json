@@ -134,6 +134,8 @@
   "plannerStepsLabel": "Кроки",
   "plannerRegenerateDay": "Оновити цей день",
   "plannerRegenerateDayBusy": "Оновлення…",
+  "plannerRegenerateMeal": "Оновити тільки цю страву",
+  "plannerRegenerateMealBusy": "Оновлення страви...",
   "plannerRegenerateFailed": "Не вдалося оновити цей день",
   "plannerRegenerateNotFound": "Плану ще немає. Спочатку згенеруйте його.",
   "plannerRegenerateRateLimit": "Забагато запитів. Зачекайте трохи та спробуйте знову.",
