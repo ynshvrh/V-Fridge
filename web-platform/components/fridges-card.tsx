@@ -95,10 +95,10 @@ export function FridgesCard() {
   };
 
   return (
-    <Card className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
-      <CardHeader className="bg-muted/40 pb-4">
-        <CardTitle className="text-lg inline-flex items-center gap-2">
-          <Refrigerator className="h-4 w-4" />
+    <Card className="rounded-3xl bg-glass overflow-hidden">
+      <CardHeader className="pb-3 border-b border-border/30">
+        <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
+          <Refrigerator className="h-4 w-4 text-primary" />
           {t("fridgesTitle")}
         </CardTitle>
         <CardDescription>{t("fridgesHint")}</CardDescription>

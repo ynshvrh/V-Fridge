@@ -87,8 +87,10 @@ export default function Settings() {
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           <section className="md:col-span-4 space-y-4">
-            <div className="p-6 rounded-3xl bg-card border border-border/60 shadow-sm flex flex-col items-center text-center space-y-4">
-              <div className="h-20 w-20 rounded-2xl bg-primary text-primary-foreground grid place-items-center shadow-md shadow-primary/20 text-2xl font-black">
+            <div className="p-6 rounded-3xl bg-glass shadow-lg flex flex-col items-center text-center space-y-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -z-10" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-mistral/10 rounded-full blur-2xl -z-10" />
+              <div className="h-20 w-20 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center shadow-lg shadow-primary/10 text-2xl font-black transition-transform hover:scale-105">
                 {(user?.username || user?.email || "?").slice(0, 1).toUpperCase()}
               </div>
               <div>
@@ -120,10 +122,10 @@ export default function Settings() {
           <main className="md:col-span-8 space-y-5">
             <FridgesCard />
 
-            <Card className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
-              <CardHeader className="bg-muted/40 pb-4">
-                <CardTitle className="text-lg inline-flex items-center gap-2">
-                  <Palette className="h-4 w-4" />
+            <Card className="rounded-3xl bg-glass overflow-hidden">
+              <CardHeader className="pb-3 border-b border-border/30">
+                <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
+                  <Palette className="h-4 w-4 text-primary" />
                   {t("settingsAppearance")}
                 </CardTitle>
                 <CardDescription>{t("settingsAppearanceHint")}</CardDescription>
@@ -140,10 +142,10 @@ export default function Settings() {
               onSaved={refreshUser}
             />
 
-            <Card className="rounded-3xl border-destructive/20 shadow-sm overflow-hidden">
-              <CardHeader className="bg-destructive/5 border-b border-destructive/10 pb-4">
-                <CardTitle className="text-lg text-destructive">{t("settingsDangerZone")}</CardTitle>
-                <CardDescription>{t("settingsCannotBeUndone")}</CardDescription>
+            <Card className="rounded-3xl border-destructive/25 shadow-sm bg-destructive/5 overflow-hidden">
+              <CardHeader className="border-b border-destructive/15 pb-4">
+                <CardTitle className="text-lg text-destructive font-black tracking-tight">{t("settingsDangerZone")}</CardTitle>
+                <CardDescription className="text-destructive/80 font-medium">{t("settingsCannotBeUndone")}</CardDescription>
               </CardHeader>
               <CardContent className="pt-5 flex flex-col sm:flex-row gap-3">
                 <Button
@@ -165,19 +167,24 @@ export default function Settings() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-3xl border-border/60 shadow-sm bg-secondary/30">
+            <Card className="rounded-3xl border-border/30 bg-glass/40 shadow-sm">
               <CardContent className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-full bg-success/15">
-                    <ShieldCheck className="h-5 w-5 text-success" />
+                  <div className="p-2.5 rounded-2xl bg-success/15 text-success">
+                    <ShieldCheck className="h-5 w-5" />
                   </div>
-                  <p className="font-semibold text-sm">
-                    {user?.username || user?.email}
-                  </p>
+                  <div className="space-y-0.5">
+                    <p className="font-black text-sm tracking-tight">
+                      {user?.username || "Guest"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {user?.email || "—"}
+                    </p>
+                  </div>
                 </div>
                 <Button
                   variant="destructive"
-                  className="w-full sm:w-auto px-6 h-11 font-bold rounded-xl shadow-md shadow-destructive/20"
+                  className="w-full sm:w-auto px-6 h-11 font-bold rounded-xl shadow-md shadow-destructive/10"
                   onClick={logout}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
@@ -210,10 +217,10 @@ function LanguageCard({ activeLocale }: { activeLocale: Locale }) {
   };
 
   return (
-    <Card className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
-      <CardHeader className="bg-muted/40 pb-4">
-        <CardTitle className="text-lg inline-flex items-center gap-2">
-          <Languages className="h-4 w-4" />
+    <Card className="rounded-3xl bg-glass overflow-hidden">
+      <CardHeader className="pb-3 border-b border-border/30">
+        <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
+          <Languages className="h-4 w-4 text-primary" />
           {t("settingsLanguage")}
         </CardTitle>
         <CardDescription>{t("settingsLanguageHint")}</CardDescription>
@@ -268,10 +275,10 @@ function CuisineCard({
   };
 
   return (
-    <Card className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
-      <CardHeader className="bg-muted/40 pb-4">
-        <CardTitle className="text-lg inline-flex items-center gap-2">
-          <ChefHat className="h-4 w-4" />
+    <Card className="rounded-3xl bg-glass overflow-hidden">
+      <CardHeader className="pb-3 border-b border-border/30">
+        <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
+          <ChefHat className="h-4 w-4 text-primary" />
           {t("settingsCuisine")}
         </CardTitle>
         <CardDescription>{t("settingsCuisineHint")}</CardDescription>

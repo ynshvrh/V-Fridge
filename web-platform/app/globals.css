@@ -201,4 +201,13 @@
       radial-gradient(50% 35% at 100% 0%, color-mix(in oklch, var(--mistral) 45%, transparent) 0%, transparent 60%),
       var(--background);
   }
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--solara) 100%);
+  }
+  .bg-glass {
+    backdrop-filter: blur(16px);
+    background: color-mix(in oklch, var(--card) 60%, transparent);
+    border: 1px solid color-mix(in oklch, var(--border) 35%, transparent);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  }
 }

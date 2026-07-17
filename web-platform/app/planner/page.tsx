@@ -225,7 +225,7 @@ export default function PlannerPage() {
                   ? t(`mealType${meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1).toLowerCase()}` as any)
                   : "";
                 return (
-                  <Card key={`${meal.day}-${meal.mealType || ""}-${idx}`} className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
+                  <Card key={`${meal.day}-${meal.mealType || ""}-${idx}`} className="rounded-3xl bg-glass overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                     <CardContent className="p-5 space-y-3">
                       <button
                         type="button"
@@ -310,7 +310,7 @@ export default function PlannerPage() {
             </section>
 
             {plan.gapItems.length > 0 && (
-              <section className="rounded-3xl border border-border/60 bg-card p-6 md:p-8 space-y-4">
+              <section className="rounded-3xl bg-glass p-6 md:p-8 space-y-4 shadow-sm">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
                   <div className="space-y-1">
                     <h2 className="text-xl font-black tracking-tight">{t("plannerMissingIngredients")}</h2>
