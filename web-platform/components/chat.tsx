@@ -11,11 +11,13 @@ import { toast } from "sonner";
 import { Message } from "@/interfaces/type";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
+import { useProductStore } from "@/store/useVFridgeStore";
 
 const QUICK_PROMPT_KEYS = ["chatPrompt1", "chatPrompt2", "chatPrompt3", "chatPrompt4"] as const;
 
 export default function Chat() {
   const t = useTranslations();
+  const products = useProductStore((state) => state.products);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -75,6 +77,13 @@ export default function Chat() {
     }
   };
 
+  const promptDetails = [
+    { key: "chatPrompt1", icon: "🍲", bg: "hover:bg-primary/10 hover:border-primary/40" },
+    { key: "chatPrompt2", icon: "⏰", bg: "hover:bg-amber-500/10 hover:border-amber-500/40" },
+    { key: "chatPrompt3", icon: "⚡", bg: "hover:bg-cyan-500/10 hover:border-cyan-500/40" },
+    { key: "chatPrompt4", icon: "🌱", bg: "hover:bg-emerald-500/10 hover:border-emerald-500/40" },
+  ];
+
   return (
     <div className="flex flex-col h-full w-full font-sans">
       <div className="flex-none px-4 py-3 border-b border-border/60 bg-card/80 backdrop-blur flex items-center justify-between">
@@ -100,6 +109,15 @@ export default function Chat() {
         </Button>
       </div>
 
+      {/* Active Inventory Bar */}
+      <div className="flex-none px-4 py-2 bg-primary/10 border-b border-primary/10 text-[11px] font-bold text-primary flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <Sparkles className="h-3 w-3 animate-pulse text-primary" />
+          <span>Шеф бачить ваш холодильник: {products.length} {t("dashboardItemsCount", { count: products.length })}</span>
+        </div>
+        <span className="opacity-80 hidden sm:inline">Аналіз активований</span>
+      </div>
+
       <div
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 bg-muted/30 custom-scrollbar"
@@ -107,7 +125,7 @@ export default function Chat() {
         {messages.length === 0 && !loading && (
           <div className="flex flex-col items-center justify-center min-h-[300px] text-center gap-5 py-8">
             <div className="h-16 w-16 rounded-2xl bg-secondary grid place-items-center shadow-sm">
-              <Sparkles className="h-8 w-8 text-primary" />
+              <Sparkles className="h-8 w-8 text-primary animate-pulse" />
             </div>
             <div className="space-y-1 max-w-sm">
               <h4 className="font-bold text-lg inline-flex items-center gap-2">
@@ -118,16 +136,20 @@ export default function Chat() {
                 {t("chatEmpty")}
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
-              {QUICK_PROMPT_KEYS.map((key) => {
-                const prompt = t(key);
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
+              {promptDetails.map((pd) => {
+                const prompt = t(pd.key as any);
                 return (
                   <button
-                    key={key}
+                    key={pd.key}
+                    type="button"
                     onClick={() => sendMessage(prompt)}
-                    className="text-left text-sm px-4 py-3 rounded-xl border border-border/70 bg-card hover:bg-secondary hover:border-primary/30 transition-colors"
+                    className={`text-left rounded-2xl border border-border/70 bg-glass hover:scale-[1.02] active:scale-[0.98] transition-all p-4 shadow-2xs hover:shadow-xs cursor-pointer flex gap-3 items-start ${pd.bg}`}
                   >
-                    {prompt}
+                    <span className="text-xl shrink-0 leading-none">{pd.icon}</span>
+                    <span className="font-bold text-sm text-foreground leading-tight">
+                      {prompt}
+                    </span>
                   </button>
                 );
               })}

@@ -58,106 +58,106 @@
    Mistral accent. Dark theme pivots to a cool midnight-navy field where
    the same Pulpe reads as a neon citrus pop.                            */
 :root {
-  --radius: 0.75rem;
+  --radius: 0.85rem;
 
   /* Base surfaces */
-  --background: #FFFAF0;            /* barely-tinted ivory, Zéphir wash */
-  --foreground: #2A1810;            /* deep warm brown */
+  --background: #F4FAF6;            /* extremely soft mint/ivory wash */
+  --foreground: #09201A;            /* deep pine green */
   --card: #FFFFFF;
-  --card-foreground: #2A1810;
+  --card-foreground: #09201A;
   --popover: #FFFFFF;
-  --popover-foreground: #2A1810;
+  --popover-foreground: #09201A;
 
   /* Brand quartet */
-  --mistral: #67CEEA;               /* brighter sky-blue */
-  --zephir:  #FFE0AA;               /* warmer cream */
-  --solara:  #FFC065;               /* honey-orange */
-  --pulpe:   #FF8A1F;               /* punchy tangerine */
+  --mistral: #06B6D4;               /* electric cyan */
+  --zephir:  #D1FAE5;               /* pastel mint */
+  --solara:  #34D399;               /* fresh emerald */
+  --pulpe:   #059669;               /* rich forest emerald */
 
   /* Primary = Pulpe, Secondary = Zéphir, Accent = Mistral */
-  --primary: #FF8A1F;
+  --primary: #059669;
   --primary-foreground: #FFFFFF;
-  --secondary: #FFE0AA;
-  --secondary-foreground: #5C3506;
+  --secondary: #D1FAE5;
+  --secondary-foreground: #044E37;
 
-  --muted: #FFF6E6;
-  --muted-foreground: #6E5238;       /* deeper warm brown — readable on ivory/peach, still warm not gray */
-  --accent: #67CEEA;
-  --accent-foreground: #07344B;
+  --muted: #E6F4ED;
+  --muted-foreground: #3B665A;
+  --accent: #06B6D4;
+  --accent-foreground: #FFFFFF;
 
-  /* Outside-palette feedback colours — chosen to harmonise with citrus */
-  --destructive: #E64528;           /* blood-orange red */
-  --success: #4FA866;               /* leaf green, slightly deeper for the brighter primary */
+  /* Outside-palette feedback colours */
+  --destructive: #EF4444;           /* bright rose red */
+  --success: #10B981;               /* active mint green */
   --success-foreground: #FFFFFF;
 
-  --border: #F2D9A8;
-  --input: #F2D9A8;
-  --ring: #FF8A1F;
+  --border: #B2E5CD;
+  --input: #B2E5CD;
+  --ring: #059669;
 
-  --chart-1: #FF8A1F;               /* Pulpe */
-  --chart-2: #67CEEA;               /* Mistral */
-  --chart-3: #FFC065;               /* Solara */
-  --chart-4: #4FA866;               /* leaf green */
-  --chart-5: #E78EA5;               /* dusty pink for contrast */
+  --chart-1: #059669;
+  --chart-2: #06B6D4;
+  --chart-3: #34D399;
+  --chart-4: #10B981;
+  --chart-5: #6366F1;               /* electric indigo */
 
-  /* Sidebar — warm Zéphir wash */
-  --sidebar: #FFF4DE;
-  --sidebar-foreground: #2A1810;
-  --sidebar-primary: #FF8A1F;
+  /* Sidebar */
+  --sidebar: #EBF7F1;
+  --sidebar-foreground: #09201A;
+  --sidebar-primary: #059669;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #FFE0AA;
-  --sidebar-accent-foreground: #5C3506;
-  --sidebar-border: #F2D9A8;
-  --sidebar-ring: #FF8A1F;
+  --sidebar-accent: #D1FAE5;
+  --sidebar-accent-foreground: #044E37;
+  --sidebar-border: #B2E5CD;
+  --sidebar-ring: #059669;
 }
 
 .dark {
-  /* Cold midnight-navy field — Pulpe pops like neon citrus against it.   */
-  --background: #0C141E;            /* midnight navy */
-  --foreground: #E8EEF4;            /* ice */
-  --card: #131C28;                  /* slightly raised navy slab */
-  --card-foreground: #E8EEF4;
-  --popover: #131C28;
-  --popover-foreground: #E8EEF4;
+  /* Obsidian emerald */
+  --background: #050E0C;            /* deep obsidian emerald */
+  --foreground: #ECFDF5;            /* minty ice */
+  --card: #081B16;                  /* deep jade slab */
+  --card-foreground: #ECFDF5;
+  --popover: #081B16;
+  --popover-foreground: #ECFDF5;
 
-  /* Brand quartet — preserved hues, tuned for the cool field */
-  --mistral: #67CEEA;
-  --zephir:  #2A2F3B;               /* desaturated cream → cool slate (secondary surface) */
-  --solara:  #FFD089;
-  --pulpe:   #FF9A33;               /* slightly lighter pulpe so it glows */
+  /* Brand quartet */
+  --mistral: #22D3EE;               /* glow cyan */
+  --zephir:  #132E26;               /* dark slate jade */
+  --solara:  #34D399;
+  --pulpe:   #10B981;               /* neon mint */
 
-  --primary: #FF9A33;
-  --primary-foreground: #0C141E;
-  --secondary: #1F2A38;
-  --secondary-foreground: #E8EEF4;
+  --primary: #10B981;
+  --primary-foreground: #050E0C;
+  --secondary: #132E26;
+  --secondary-foreground: #ECFDF5;
 
-  --muted: #18222F;
-  --muted-foreground: #A6B8CC;       /* brighter slate — clearer on midnight navy */
-  --accent: #67CEEA;
-  --accent-foreground: #062236;
+  --muted: #0B221B;
+  --muted-foreground: #8EB3A7;
+  --accent: #22D3EE;
+  --accent-foreground: #050E0C;
 
-  --destructive: #FF6A4A;
-  --success: #6FDC9C;
-  --success-foreground: #062236;
+  --destructive: #F87171;
+  --success: #34D399;
+  --success-foreground: #050E0C;
 
-  --border: rgba(232, 238, 244, 0.08);
-  --input: rgba(232, 238, 244, 0.12);
-  --ring: #FF9A33;
+  --border: rgba(52, 211, 153, 0.08);
+  --input: rgba(52, 211, 153, 0.12);
+  --ring: #10B981;
 
-  --chart-1: #FF9A33;
-  --chart-2: #67CEEA;
-  --chart-3: #FFD089;
-  --chart-4: #6FDC9C;
-  --chart-5: #EFA0B5;
+  --chart-1: #10B981;
+  --chart-2: #22D3EE;
+  --chart-3: #34D399;
+  --chart-4: #059669;
+  --chart-5: #818CF8;
 
-  --sidebar: #0F1924;
-  --sidebar-foreground: #E8EEF4;
-  --sidebar-primary: #FF9A33;
-  --sidebar-primary-foreground: #0C141E;
-  --sidebar-accent: #1F2A38;
-  --sidebar-accent-foreground: #E8EEF4;
-  --sidebar-border: rgba(232, 238, 244, 0.08);
-  --sidebar-ring: #FF9A33;
+  --sidebar: #061411;
+  --sidebar-foreground: #ECFDF5;
+  --sidebar-primary: #10B981;
+  --sidebar-primary-foreground: #050E0C;
+  --sidebar-accent: #132E26;
+  --sidebar-accent-foreground: #ECFDF5;
+  --sidebar-border: rgba(52, 211, 153, 0.08);
+  --sidebar-ring: #10B981;
 }
 
 @layer base {

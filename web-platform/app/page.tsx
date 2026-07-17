@@ -93,7 +93,7 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             label={t("dashboardStatTotal")}
             value={stats.total}
@@ -114,29 +114,40 @@ export default function Dashboard() {
             hint={t("dashboardStatExpiredHint")}
             icon={<AlertTriangle className="h-5 w-5" />}
           />
-        </section>
-
-        <AnalyticsTile />
-
-        <section className="rounded-3xl border border-border/60 bg-gradient-to-br from-primary/8 via-secondary/30 to-transparent p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-5 justify-between">
-          <div className="flex items-start gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-primary text-primary-foreground grid place-items-center shadow-md shrink-0">
-              <Sparkles className="h-6 w-6" />
+          <Link
+            href="/recipe"
+            className="rounded-2xl border border-primary/20 bg-brand-gradient text-primary-foreground p-5 transition-all hover:scale-[1.02] shadow-md hover:shadow-lg flex flex-col justify-between cursor-pointer min-h-[120px]"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-black uppercase tracking-widest opacity-90">{t("dashboardOpenChef")}</span>
+              <Sparkles className="h-5 w-5 opacity-90" />
             </div>
-            <div className="space-y-1">
-              <h2 className="text-xl md:text-2xl font-black tracking-tight">{t("dashboardChefCtaTitle")}</h2>
-              <p className="text-sm md:text-base text-muted-foreground max-w-xl">
+            <div className="mt-3">
+              <h4 className="font-black text-lg tracking-tight leading-snug">
+                {t("dashboardChefCtaTitle")}
+              </h4>
+              <p className="text-[11px] opacity-80 line-clamp-1 mt-0.5">
                 {t("dashboardChefCtaBody")}
               </p>
             </div>
-          </div>
-          <Button asChild size="lg" className="rounded-xl font-bold shrink-0 shadow-md shadow-primary/20">
-            <Link href="/recipe">
-              {t("dashboardOpenChef")}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+          </Link>
         </section>
+
+        {/* Collapsible Analytics Section */}
+        <div className="rounded-3xl border border-border/60 bg-glass/20 overflow-hidden shadow-xs">
+          <details className="group">
+            <summary className="flex items-center justify-between p-5 md:p-6 cursor-pointer select-none font-bold text-sm text-muted-foreground hover:text-foreground transition-colors list-none">
+              <span className="inline-flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-primary" />
+                Аналітика споживання (показати/приховати)
+              </span>
+              <span className="text-xs transition-transform group-open:rotate-180">▼</span>
+            </summary>
+            <div className="px-5 pb-6 md:px-6 md:pb-8 border-t border-border/40 pt-5 bg-card/10">
+              <AnalyticsTile />
+            </div>
+          </details>
+        </div>
 
         <main className="space-y-4">
           <div className="md:hidden w-full">

@@ -292,58 +292,77 @@ function ShoppingItemGroup({
   return (
     <section className="space-y-2">
       {title && (
-        <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/80 px-1">{title}</h3>
+        <h3 className="text-[11px] font-black uppercase tracking-widest text-primary px-2">{title}</h3>
       )}
-      <div className="space-y-2">
+      <div className="rounded-2xl border border-border/60 bg-glass overflow-hidden shadow-xs divide-y divide-border/60">
         {items.map((item) => (
-          <Card
+          <div
             key={item.id}
-            className={`rounded-2xl border-border/70 shadow-sm transition-colors ${muted ? "opacity-60" : ""}`}
+            className={`flex items-center justify-between p-4 gap-4 hover:bg-secondary/15 transition-all ${
+              muted ? "opacity-60 bg-secondary/5" : "bg-card/40"
+            }`}
           >
-            <CardContent className="p-4 flex items-center gap-4">
+            {/* Status & Name */}
+            <div className="flex items-center gap-3.5 min-w-0 flex-1">
               <button
                 type="button"
                 onClick={() => onToggle(item)}
                 aria-label={item.checked ? t("shoppingAriaUncheck") : t("shoppingAriaCheck")}
                 aria-pressed={item.checked}
-                className="text-primary hover:text-primary/80"
+                className="text-primary hover:text-primary/80 shrink-0 cursor-pointer select-none"
               >
-                {item.checked
-                  ? <CheckSquare className="h-5 w-5" />
-                  : <Square className="h-5 w-5" />}
+                {item.checked ? (
+                  <CheckSquare className="h-5 w-5 fill-primary text-primary-foreground" />
+                ) : (
+                  <Square className="h-5 w-5" />
+                )}
               </button>
-              <div className="flex-1 min-w-0">
-                <p className={`font-bold truncate ${item.checked ? "line-through" : ""}`}>{item.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {item.quantity != null ? `${item.quantity} ${item.unit ?? ""} · ` : ""}
+              <div className="min-w-0">
+                <p className={`font-bold text-sm truncate ${item.checked ? "line-through text-muted-foreground/60" : "text-foreground"}`}>
+                  {item.name}
+                </p>
+                <p className="text-[10px] text-muted-foreground/80 font-medium">
                   {t(categoryLabelKey(item.category))}
                 </p>
               </div>
-              <div className="flex items-center gap-1.5">
-                {!item.checked && (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="rounded-lg gap-1.5"
-                    onClick={() => onPurchase(item)}
-                    title={t("shoppingMoveToFridge")}
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                    {t("shoppingBuyShort")}
-                  </Button>
-                )}
+            </div>
+
+            {/* Quantity */}
+            <div className="shrink-0 text-right">
+              {item.quantity != null ? (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-secondary/60 text-secondary-foreground font-black text-xs">
+                  {item.quantity} {item.unit ?? ""}
+                </span>
+              ) : (
+                <span className="text-[10px] text-muted-foreground">—</span>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-1 shrink-0">
+              {!item.checked && (
                 <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-9 w-9 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => onDelete(item.id)}
-                  title={t("actionDelete")}
+                  size="sm"
+                  variant="secondary"
+                  className="rounded-xl h-8 px-3 font-bold gap-1 shadow-2xs hover:bg-primary hover:text-white transition-colors"
+                  onClick={() => onPurchase(item)}
+                  title={t("shoppingMoveToFridge")}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Check className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t("shoppingBuyShort")}</span>
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
+              )}
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                onClick={() => onDelete(item.id)}
+                title={t("actionDelete")}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
     </section>
