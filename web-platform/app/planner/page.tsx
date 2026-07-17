@@ -19,11 +19,14 @@ type Meal = {
   note: string | null;
   description: string | null;
   steps: string[] | null;
+  mealType: string | null;
 };
 type GapItem = { name: string; quantity: string | null; unit: string | null; category: string };
 type MealPlan = { meals: Meal[]; gapItems: GapItem[]; generatedAt: string };
 
 const DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const MEAL_TYPE_ORDER = ["breakfast", "lunch", "dinner"];
+
 // Slug → translation key. Keeps the day order canonical (Monday = 0) while the
 // label flips with the locale.
 const DAY_KEY: Record<string, string> = {
@@ -36,8 +39,14 @@ const DAY_KEY: Record<string, string> = {
   Sunday: "plannerDaySunday",
 };
 
-function sortByDay(meals: Meal[]): Meal[] {
-  return [...meals].sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day));
+function sortMeals(meals: Meal[]): Meal[] {
+  return [...meals].sort((a, b) => {
+    const dayDiff = DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day);
+    if (dayDiff !== 0) return dayDiff;
+    const typeA = a.mealType?.toLowerCase() || "";
+    const typeB = b.mealType?.toLowerCase() || "";
+    return MEAL_TYPE_ORDER.indexOf(typeA) - MEAL_TYPE_ORDER.indexOf(typeB);
+  });
 }
 
 export default function PlannerPage() {
@@ -45,11 +54,11 @@ export default function PlannerPage() {
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [expandedDay, setExpandedDay] = useState<string | null>(null);
+  const [expandedMealKey, setExpandedMealKey] = useState<string | null>(null);
   const [regeneratingDay, setRegeneratingDay] = useState<string | null>(null);
-  // Which day's recipe is currently being lazily fetched. Used to scope the
+  // Which meal's recipe (day-mealType) is currently being lazily fetched. Used to scope the
   // spinner and to guard against duplicate concurrent fetches.
-  const [loadingRecipeDay, setLoadingRecipeDay] = useState<string | null>(null);
+  const [loadingRecipeMealKey, setLoadingRecipeMealKey] = useState<string | null>(null);
 
   const activeFridgeId = useFridges().active?.id ?? null;
 
@@ -92,14 +101,15 @@ export default function PlannerPage() {
   const mealHasRecipe = (meal: Meal): boolean =>
     !!meal.description || (Array.isArray(meal.steps) && meal.steps.length > 0);
 
-  const fetchRecipe = async (day: string) => {
-    // Guard against duplicate concurrent fetches for the same day.
-    if (loadingRecipeDay === day) return;
-    setLoadingRecipeDay(day);
+  const fetchRecipe = async (day: string, mealType: string) => {
+    const key = `${day}-${mealType}`;
+    // Guard against duplicate concurrent fetches for the same day/mealType.
+    if (loadingRecipeMealKey === key) return;
+    setLoadingRecipeMealKey(key);
     try {
       const updated = await apiFetch<MealPlan>("/meal-plan/recipe", {
         method: "POST",
-        body: { day },
+        body: { day, mealType },
       });
       setPlan(updated);
     } catch (err) {
@@ -110,17 +120,18 @@ export default function PlannerPage() {
       }
       toast.error(getErrorMessage(err, t("plannerRecipeFailed")));
     } finally {
-      setLoadingRecipeDay(null);
+      setLoadingRecipeMealKey(null);
     }
   };
 
   // Toggle a card open/closed. On the first open of a recipe-less meal, kick off
   // the lazy recipe fetch.
-  const toggleDay = (meal: Meal) => {
-    setExpandedDay((prev) => {
-      if (prev === meal.day) return null;
-      if (!mealHasRecipe(meal)) void fetchRecipe(meal.day);
-      return meal.day;
+  const toggleMeal = (meal: Meal) => {
+    const key = `${meal.day}-${meal.mealType || ""}`;
+    setExpandedMealKey((prev) => {
+      if (prev === key) return null;
+      if (!mealHasRecipe(meal)) void fetchRecipe(meal.day, meal.mealType || "");
+      return key;
     });
   };
 
@@ -202,26 +213,30 @@ export default function PlannerPage() {
         ) : (
           <>
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {sortByDay(plan.meals).map((meal, idx) => {
+              {sortMeals(plan.meals).map((meal, idx) => {
                 const dayKey = DAY_KEY[meal.day];
                 const dayLabel = dayKey ? t(dayKey) : (meal.day || t("plannerDayFallback"));
-                const isExpanded = expandedDay === meal.day;
+                const mealKey = `${meal.day}-${meal.mealType || ""}`;
+                const isExpanded = expandedMealKey === mealKey;
                 const isRegenerating = regeneratingDay === meal.day;
-                const isLoadingRecipe = loadingRecipeDay === meal.day;
-                const panelId = `meal-panel-${meal.day}-${idx}`;
+                const isLoadingRecipe = loadingRecipeMealKey === mealKey;
+                const panelId = `meal-panel-${meal.day}-${meal.mealType || ""}-${idx}`;
+                const mealTypeLabel = meal.mealType
+                  ? t(`mealType${meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1).toLowerCase()}` as any)
+                  : "";
                 return (
-                  <Card key={`${meal.day}-${idx}`} className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
+                  <Card key={`${meal.day}-${meal.mealType || ""}-${idx}`} className="rounded-3xl border-border/60 shadow-sm bg-card overflow-hidden">
                     <CardContent className="p-5 space-y-3">
                       <button
                         type="button"
-                        onClick={() => toggleDay(meal)}
+                        onClick={() => toggleMeal(meal)}
                         aria-expanded={isExpanded}
                         aria-controls={panelId}
                         className="flex w-full items-start justify-between gap-2 text-left"
                       >
                         <div className="space-y-1 min-w-0">
                           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                            {dayLabel}
+                            {dayLabel} {mealTypeLabel && `• ${mealTypeLabel}`}
                           </p>
                           <h3 className="text-lg font-black tracking-tight line-clamp-2">{meal.name}</h3>
                         </div>
