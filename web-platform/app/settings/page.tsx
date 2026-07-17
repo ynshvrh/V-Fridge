@@ -30,6 +30,7 @@ import {
   Languages,
   ChefHat,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
@@ -139,6 +140,11 @@ export default function Settings() {
             <LanguageCard activeLocale={activeLocale} />
             <CuisineCard
               currentSlug={user?.cuisinePreference ?? "any"}
+              onSaved={refreshUser}
+            />
+
+            <DietaryProfileCard
+              currentProfile={user?.dietaryProfile ?? ""}
               onSaved={refreshUser}
             />
 
@@ -297,6 +303,95 @@ function CuisineCard({
             ))}
           </SelectContent>
         </Select>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DietaryProfileCard({
+  currentProfile,
+  onSaved,
+}: {
+  currentProfile: string;
+  onSaved: () => Promise<void>;
+}) {
+  const t = useTranslations();
+  const [profile, setProfile] = useState(currentProfile);
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await apiFetch("/auth/me/preferences", {
+        method: "PATCH",
+        body: { dietaryProfile: profile },
+      });
+      await onSaved();
+      toast.success(t("settingsDietarySaved"));
+    } catch (err) {
+      toast.error(getErrorMessage(err, t("settingsPreferencesFailed")));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const PRESETS = [
+    { label: "🥦 Вегетаріанець", text: "Я вегетаріанець (не їм м'ясо та рибу)." },
+    { label: "🌱 Веган", text: "Я веган (не їм жодних продуктів тваринного походження)." },
+    { label: "🥛 Без лактози", text: "У мене непереносимість лактози, уникати молочних продуктів з лактозою." },
+    { label: "🌾 Без глютену", text: "Я не їм глютен." },
+    { label: "🥜 Без горіхів", text: "У мене алергія на горіхи." },
+    { label: "🥩 Кето", text: "Я дотримуюсь кето-дієти (високий вміст жирів, мінімум вуглеводів)." },
+  ];
+
+  const applyPreset = (text: string) => {
+    setProfile((prev) => {
+      const trimmed = prev.trim();
+      if (!trimmed) return text;
+      if (trimmed.includes(text)) return prev;
+      return `${trimmed}\n${text}`;
+    });
+  };
+
+  return (
+    <Card className="rounded-3xl bg-glass overflow-hidden shadow-sm">
+      <CardHeader className="pb-3 border-b border-border/30">
+        <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
+          <Sparkles className="h-4 w-4 text-primary" />
+          {t("settingsDietaryProfile")}
+        </CardTitle>
+        <CardDescription>{t("settingsDietaryHint")}</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-5 space-y-4">
+        <div className="flex flex-wrap gap-2">
+          {PRESETS.map((p) => (
+            <button
+              key={p.label}
+              type="button"
+              onClick={() => applyPreset(p.text)}
+              className="text-xs px-2.5 py-1 rounded-lg border border-border/70 bg-secondary/50 hover:bg-secondary transition-colors text-muted-foreground font-semibold cursor-pointer"
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+        <textarea
+          value={profile}
+          onChange={(e) => setProfile(e.target.value)}
+          placeholder={t("settingsDietaryPlaceholder")}
+          className="w-full min-h-[100px] rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+          maxLength={1000}
+        />
+        <div className="flex justify-end">
+          <Button
+            onClick={handleSave}
+            disabled={saving || profile.trim() === (currentProfile || "").trim()}
+            className="rounded-xl font-bold h-10 px-6 gap-2"
+          >
+            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+            {t("actionSave")}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

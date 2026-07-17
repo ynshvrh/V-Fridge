@@ -11,6 +11,7 @@ export type AuthUser = {
   emailVerified: boolean;
   preferredLanguage: string;
   cuisinePreference: string;
+  dietaryProfile?: string;
 };
 
 type TokenPair = StoredTokens & {
