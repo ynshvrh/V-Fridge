@@ -32,7 +32,11 @@ import {
   Soup,
   Salad,
   Cookie,
+  Refrigerator,
 } from "lucide-react";
+import { useFridges } from "@/providers/fridge-provider";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 type NutritionLog = {
   id: number;
@@ -70,6 +74,8 @@ type DailyNutritionResponse = {
 
 export default function NutritionTrackerPage() {
   const { status } = useAuth();
+  const t = useTranslations();
+  const { fridges, status: fridgesStatus } = useFridges();
   
   const [selectedDate, setSelectedDate] = useState(() => {
     return new Date().toISOString().split("T")[0];
@@ -112,7 +118,7 @@ export default function NutritionTrackerPage() {
       setTargetFat(resp.targets.fat?.toString() ?? "65");
       setTargetCarbs(resp.targets.carbs?.toString() ?? "200");
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to load nutrition log."));
+      toast.error(getErrorMessage(err, t("trackerLoadFailed")));
     } finally {
       setLoading(false);
     }
@@ -184,7 +190,7 @@ export default function NutritionTrackerPage() {
           method: "PUT",
           body: payload,
         });
-        toast.success("Entry updated.");
+        toast.success(t("trackerUpdateSuccess"));
         // local update
         if (data) {
           setData({
@@ -197,7 +203,7 @@ export default function NutritionTrackerPage() {
           method: "POST",
           body: payload,
         });
-        toast.success("Food logged successfully.");
+        toast.success(t("trackerLogSuccess"));
         if (data) {
           setData({
             ...data,
@@ -208,17 +214,17 @@ export default function NutritionTrackerPage() {
       setIsLogOpen(false);
       fetchDailyData(); // Refresh summary totals
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to log food."));
+      toast.error(getErrorMessage(err, t("trackerLogFoodFailed")));
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteLog = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this food entry?")) return;
+    if (!confirm(t("trackerDeleteConfirm"))) return;
     try {
       await apiFetch(`/nutrition/log/${id}`, { method: "DELETE" });
-      toast.success("Entry deleted.");
+      toast.success(t("trackerDeleteSuccess"));
       if (data) {
         setData({
           ...data,
@@ -227,7 +233,7 @@ export default function NutritionTrackerPage() {
       }
       fetchDailyData(); // Refresh summary totals
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to delete food entry."));
+      toast.error(getErrorMessage(err, t("trackerDeleteFailed")));
     }
   };
 
@@ -244,7 +250,7 @@ export default function NutritionTrackerPage() {
           carbs: targetCarbs ? Number(targetCarbs) : null,
         },
       });
-      toast.success("Nutrition targets updated.");
+      toast.success(t("trackerUpdateTargetsSuccess"));
       if (data) {
         setData({
           ...data,
@@ -253,7 +259,7 @@ export default function NutritionTrackerPage() {
       }
       setIsTargetsOpen(false);
     } catch (err) {
-      toast.error(getErrorMessage(err, "Failed to update targets."));
+      toast.error(getErrorMessage(err, t("trackerUpdateTargetsFailed")));
     } finally {
       setSubmitting(false);
     }
@@ -283,6 +289,34 @@ export default function NutritionTrackerPage() {
     items: data?.logs.filter((l) => l.mealType === mType) ?? [],
   }));
 
+  if (fridgesStatus === "ready" && fridges.length === 0) {
+    return (
+      <div className="min-h-full w-full p-4 md:p-8 lg:p-12">
+        <div className="max-w-2xl mx-auto pt-12">
+          <Card className="rounded-3xl border-2 border-dashed border-border bg-muted/20">
+            <CardContent className="py-16 px-8 text-center space-y-5">
+              <div className="h-20 w-20 mx-auto rounded-2xl bg-secondary text-secondary-foreground grid place-items-center shadow-sm">
+                <Refrigerator className="h-10 w-10" />
+              </div>
+              <div className="space-y-1.5">
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight">{t("fridgesNoneTitle")}</h1>
+                <p className="text-sm md:text-base text-muted-foreground max-w-sm mx-auto">
+                  {t("fridgesNoneBody")}
+                </p>
+              </div>
+              <Button asChild size="lg" className="rounded-xl font-bold gap-2 shadow-md shadow-primary/20">
+                <Link href="/settings">
+                  <Settings className="h-4 w-4" />
+                  {t("navSettings")}
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-full w-full p-4 md:p-8 lg:p-12">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -292,11 +326,11 @@ export default function NutritionTrackerPage() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-widest">
               <Activity className="h-3.5 w-3.5" />
-              Журнал харчування
+              {t("trackerJournal")}
             </div>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight">Трекер калорій</h1>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight">{t("trackerTitle")}</h1>
             <p className="text-base md:text-lg text-muted-foreground font-medium">
-              Керуйте щоденними цілями, рахуйте калорії та БЖВ страв
+              {t("trackerSubtitle")}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -304,7 +338,7 @@ export default function NutritionTrackerPage() {
               <Settings className="h-4.5 w-4.5 text-muted-foreground" />
             </Button>
             <Button onClick={handleOpenAddLog} className="rounded-xl font-bold h-10 shadow-sm shadow-primary/20">
-              <Plus className="mr-2 h-4 w-4" /> Додати їжу
+              <Plus className="mr-2 h-4 w-4" /> {t("trackerAddFood")}
             </Button>
           </div>
         </header>
@@ -316,7 +350,7 @@ export default function NutritionTrackerPage() {
           </Button>
           <div className="flex items-center gap-2 font-bold text-sm text-foreground/90">
             <Calendar className="h-4 w-4 text-primary" />
-            <span>{selectedDate === new Date().toISOString().split("T")[0] ? "Сьогодні" : selectedDate}</span>
+            <span>{selectedDate === new Date().toISOString().split("T")[0] ? t("trackerToday") : selectedDate}</span>
           </div>
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={handleNextDay}>
             <ChevronRight className="h-5 w-5" />
@@ -338,15 +372,15 @@ export default function NutritionTrackerPage() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-primary">
                       <Flame className="h-4 w-4 text-primary" />
-                      Калорії
+                      {t("trackerCalories")}
                     </div>
                     <div className="space-y-1">
                       <div className="text-4xl font-black tracking-tight text-foreground">
                         {summary.calories}
-                        <span className="text-xs text-muted-foreground font-bold ml-1">кКал</span>
+                        <span className="text-xs text-muted-foreground font-bold ml-1">{t("trackerKcal")}</span>
                       </div>
                       <p className="text-xs font-medium text-muted-foreground">
-                        ціль: {targets.calories ?? "не встановлено"} кКал
+                        {targets.calories ? t("trackerCaloriesGoal", { goal: targets.calories }) : t("trackerCaloriesGoalNotSet")}
                       </p>
                     </div>
                   </div>
@@ -381,10 +415,10 @@ export default function NutritionTrackerPage() {
               <div className="md:col-span-2 grid grid-cols-3 gap-3">
                 {/* Protein */}
                 <Card className="rounded-2xl border-border/60 bg-glass/25 p-4 flex flex-col justify-between">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Білки</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">{t("trackerProtein")}</div>
                   <div className="my-2">
-                    <div className="text-lg font-black">{Math.round(summary.protein)}<span className="text-[10px] text-muted-foreground font-bold ml-0.5">г</span></div>
-                    <div className="text-[10px] text-muted-foreground font-medium">ціль: {targets.protein ?? "—"}г</div>
+                    <div className="text-lg font-black">{Math.round(summary.protein)}<span className="text-[10px] text-muted-foreground font-bold ml-0.5">{t("trackerGrams")}</span></div>
+                    <div className="text-[10px] text-muted-foreground font-medium">{t("trackerGoalShort", { goal: targets.protein ?? "—" })}</div>
                   </div>
                   <div className="w-full bg-border/40 h-1.5 rounded-full overflow-hidden">
                     <div className="bg-emerald-500 h-full rounded-full transition-all" style={{ width: `${protPercent}%` }} />
@@ -393,10 +427,10 @@ export default function NutritionTrackerPage() {
 
                 {/* Fat */}
                 <Card className="rounded-2xl border-border/60 bg-glass/25 p-4 flex flex-col justify-between">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Жири</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">{t("trackerFat")}</div>
                   <div className="my-2">
-                    <div className="text-lg font-black">{Math.round(summary.fat)}<span className="text-[10px] text-muted-foreground font-bold ml-0.5">г</span></div>
-                    <div className="text-[10px] text-muted-foreground font-medium">ціль: {targets.fat ?? "—"}г</div>
+                    <div className="text-lg font-black">{Math.round(summary.fat)}<span className="text-[10px] text-muted-foreground font-bold ml-0.5">{t("trackerGrams")}</span></div>
+                    <div className="text-[10px] text-muted-foreground font-medium">{t("trackerGoalShort", { goal: targets.fat ?? "—" })}</div>
                   </div>
                   <div className="w-full bg-border/40 h-1.5 rounded-full overflow-hidden">
                     <div className="bg-amber-500 h-full rounded-full transition-all" style={{ width: `${fatPercent}%` }} />
@@ -405,10 +439,10 @@ export default function NutritionTrackerPage() {
 
                 {/* Carbs */}
                 <Card className="rounded-2xl border-border/60 bg-glass/25 p-4 flex flex-col justify-between">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">Вугл.</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-cyan-600 dark:text-cyan-400">{t("trackerCarbsShort")}</div>
                   <div className="my-2">
-                    <div className="text-lg font-black">{Math.round(summary.carbs)}<span className="text-[10px] text-muted-foreground font-bold ml-0.5">г</span></div>
-                    <div className="text-[10px] text-muted-foreground font-medium">ціль: {targets.carbs ?? "—"}г</div>
+                    <div className="text-lg font-black">{Math.round(summary.carbs)}<span className="text-[10px] text-muted-foreground font-bold ml-0.5">{t("trackerGrams")}</span></div>
+                    <div className="text-[10px] text-muted-foreground font-medium">{t("trackerGoalShort", { goal: targets.carbs ?? "—" })}</div>
                   </div>
                   <div className="w-full bg-border/40 h-1.5 rounded-full overflow-hidden">
                     <div className="bg-cyan-500 h-full rounded-full transition-all" style={{ width: `${carbsPercent}%` }} />
@@ -421,16 +455,16 @@ export default function NutritionTrackerPage() {
             {/* Food Log Diary */}
             <div className="space-y-6">
               <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">
-                Щоденник їжі
+                {t("trackerDiary")}
               </h2>
 
               <div className="space-y-4">
                 {groupedLogs.map((group) => {
                   const mealLabelMap: Record<string, string> = {
-                    breakfast: "Сніданок",
-                    lunch: "Обід",
-                    dinner: "Вечеря",
-                    snack: "Перекус",
+                    breakfast: t("trackerBreakfast"),
+                    lunch: t("trackerLunch"),
+                    dinner: t("trackerDinner"),
+                    snack: t("trackerSnack"),
                   };
                   
                   const mealIconMap: Record<string, React.ReactNode> = {
@@ -450,12 +484,12 @@ export default function NutritionTrackerPage() {
                           {mealLabelMap[group.type]}
                         </span>
                         {group.items.length > 0 && (
-                          <span className="text-xs font-black text-primary">{groupCalories} кКал</span>
+                          <span className="text-xs font-black text-primary">{groupCalories} {t("trackerKcal")}</span>
                         )}
                       </div>
 
                       {group.items.length === 0 ? (
-                        <p className="text-xs text-muted-foreground/60 italic pl-8 py-2">Записи відсутні</p>
+                        <p className="text-xs text-muted-foreground/60 italic pl-8 py-2">{t("trackerNoEntries")}</p>
                       ) : (
                         <div className="rounded-2xl border border-border/60 bg-glass/10 overflow-hidden divide-y divide-border/60 shadow-2xs">
                           {group.items.map((log) => (
@@ -463,12 +497,12 @@ export default function NutritionTrackerPage() {
                               <div className="min-w-0 flex-1">
                                 <p className="font-bold text-sm text-foreground/90 truncate">{log.foodName}</p>
                                 <p className="text-[10px] text-muted-foreground/80 font-medium mt-0.5">
-                                  {log.quantity} {log.unit ?? "serving"} · B: {Math.round(log.protein)}г · Ж: {Math.round(log.fat)}г · В: {Math.round(log.carbs)}г
+                                  {log.quantity} {log.unit ?? "serving"} · {t("trackerProtein")[0]}: {Math.round(log.protein)}{t("trackerGrams")} · {t("trackerFat")[0]}: {Math.round(log.fat)}{t("trackerGrams")} · {t("trackerCarbs")[0]}: {Math.round(log.carbs)}{t("trackerGrams")}
                                 </p>
                               </div>
                               
                               <div className="shrink-0 text-right">
-                                <span className="font-black text-sm text-foreground">{log.calories} кКал</span>
+                                <span className="font-black text-sm text-foreground">{log.calories} {t("trackerKcal")}</span>
                               </div>
 
                               <div className="flex items-center gap-1 shrink-0">
@@ -508,18 +542,18 @@ export default function NutritionTrackerPage() {
         <DialogContent className="max-w-md rounded-3xl p-6">
           <DialogHeader>
             <DialogTitle className="text-xl font-black tracking-tight">
-              {editingLog ? "Редагувати запис" : "Записати страву"}
+              {editingLog ? t("trackerEditEntry") : t("trackerLogFood")}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Введіть деталі страви та її харчову цінність.
+              {t("trackerLogFoodDesc")}
             </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={handleLogSubmit} className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Назва страви / продукту</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("trackerFoodName")}</Label>
               <Input
-                placeholder="напр., Грецький салат"
+                placeholder={t("trackerFoodNamePlaceholder")}
                 value={foodName}
                 onChange={(e) => setFoodName(e.target.value)}
                 required
@@ -529,23 +563,23 @@ export default function NutritionTrackerPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Прийом їжі</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("trackerMealType")}</Label>
                 <Select value={mealType} onValueChange={setMealType}>
                   <SelectTrigger className="h-11 rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="breakfast">Сніданок</SelectItem>
-                    <SelectItem value="lunch">Обід</SelectItem>
-                    <SelectItem value="dinner">Вечеря</SelectItem>
-                    <SelectItem value="snack">Перекус</SelectItem>
+                    <SelectItem value="breakfast">{t("trackerBreakfast")}</SelectItem>
+                    <SelectItem value="lunch">{t("trackerLunch")}</SelectItem>
+                    <SelectItem value="dinner">{t("trackerDinner")}</SelectItem>
+                    <SelectItem value="snack">{t("trackerSnack")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">К-сть</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("trackerQty")}</Label>
                   <Input
                     type="number"
                     step="0.1"
@@ -556,7 +590,7 @@ export default function NutritionTrackerPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Од.</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("trackerUnit")}</Label>
                   <Input
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
@@ -568,12 +602,12 @@ export default function NutritionTrackerPage() {
 
             <div className="border-t border-border/40 my-2 pt-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-primary mb-3">
-                Харчова цінність (калорії та БЖВ)
+                {t("trackerNutritionalValue")}
               </h4>
               
               <div className="grid grid-cols-4 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-bold text-muted-foreground">кКал</Label>
+                  <Label className="text-[10px] font-bold text-muted-foreground">{t("trackerKcal")}</Label>
                   <Input
                     type="number"
                     min="0"
@@ -583,7 +617,7 @@ export default function NutritionTrackerPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-bold text-emerald-600">Білки (г)</Label>
+                  <Label className="text-[10px] font-bold text-emerald-600">{t("trackerProteinLabel")}</Label>
                   <Input
                     type="number"
                     step="0.1"
@@ -594,7 +628,7 @@ export default function NutritionTrackerPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-bold text-amber-600">Жири (г)</Label>
+                  <Label className="text-[10px] font-bold text-amber-600">{t("trackerFatLabel")}</Label>
                   <Input
                     type="number"
                     step="0.1"
@@ -605,7 +639,7 @@ export default function NutritionTrackerPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-bold text-cyan-600">Вугл. (г)</Label>
+                  <Label className="text-[10px] font-bold text-cyan-600">{t("trackerCarbsLabel")}</Label>
                   <Input
                     type="number"
                     step="0.1"
@@ -620,11 +654,11 @@ export default function NutritionTrackerPage() {
 
             <div className="flex justify-end gap-2 pt-2 border-t border-border/40">
               <Button type="button" variant="ghost" onClick={() => setIsLogOpen(false)} className="rounded-xl">
-                Скасувати
+                {t("actionCancel")}
               </Button>
               <Button type="submit" disabled={submitting} className="rounded-xl font-bold shadow-xs">
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Зберегти
+                {t("actionSave")}
               </Button>
             </div>
           </form>
@@ -636,16 +670,16 @@ export default function NutritionTrackerPage() {
         <DialogContent className="max-w-md rounded-3xl p-6">
           <DialogHeader>
             <DialogTitle className="text-xl font-black tracking-tight">
-              Добові цілі харчування
+              {t("trackerDailyGoals")}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              Встановіть бажану норму калорій та БЖВ на день.
+              {t("trackerDailyGoalsDesc")}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleTargetsSubmit} className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-primary">Добова калорійність (кКал)</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-primary">{t("trackerDailyCaloriesGoal")}</Label>
               <Input
                 type="number"
                 min="0"
@@ -658,7 +692,7 @@ export default function NutritionTrackerPage() {
 
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-emerald-600">Білки (г)</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-emerald-600">{t("trackerProteinLabel")}</Label>
                 <Input
                   type="number"
                   min="0"
@@ -668,7 +702,7 @@ export default function NutritionTrackerPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-amber-600">Жири (г)</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-amber-600">{t("trackerFatLabel")}</Label>
                 <Input
                   type="number"
                   min="0"
@@ -678,7 +712,7 @@ export default function NutritionTrackerPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-cyan-600">Вуглеводи (г)</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-cyan-600">{t("trackerCarbsLabel")}</Label>
                 <Input
                   type="number"
                   min="0"
@@ -691,11 +725,11 @@ export default function NutritionTrackerPage() {
 
             <div className="flex justify-end gap-2 pt-2 border-t border-border/40">
               <Button type="button" variant="ghost" onClick={() => setIsTargetsOpen(false)} className="rounded-xl">
-                Скасувати
+                {t("actionCancel")}
               </Button>
               <Button type="submit" disabled={submitting} className="rounded-xl font-bold shadow-xs">
                 {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Зберегти
+                {t("actionSave")}
               </Button>
             </div>
           </form>

@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, ChefHat, Loader2, Sparkles, ShoppingBasket, RefreshCw, Check, Flame, Plus, Coffee, Soup, Salad, Lightbulb } from "lucide-react";
+import { CalendarDays, ChefHat, Loader2, Sparkles, ShoppingBasket, RefreshCw, Check, Flame, Plus, Coffee, Soup, Salad, Lightbulb, Refrigerator, Settings as SettingsIcon } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
 import { categoryLabelKey } from "@/interfaces/categories";
 import { useFridges } from "@/providers/fridge-provider";
 import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
+import Link from "next/link";
+import { useProductStore } from "@/store/useVFridgeStore";
 import {
   Sheet,
   SheetContent,
@@ -64,7 +66,9 @@ export default function PlannerPage() {
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
   const [regeneratingMealKey, setRegeneratingMealKey] = useState<string | null>(null);
   const [loggingToTrackerKey, setLoggingToTrackerKey] = useState<string | null>(null);
+  const [loggedMeals, setLoggedMeals] = useState<Record<string, boolean>>({});
 
+  const { fridges, status: fridgesStatus } = useFridges();
   const activeFridgeId = useFridges().active?.id ?? null;
 
   useEffect(() => {
@@ -230,7 +234,81 @@ export default function PlannerPage() {
           carbs: meal.carbs || 0,
         },
       });
+      setLoggedMeals((prev) => ({ ...prev, [key]: true }));
       toast.success(t("plannerLogToTrackerSuccess", { name: meal.name }));
+
+      // Deduct ingredients from the active fridge
+      const { products: currentProducts, removeProduct, updateProduct } = useProductStore.getState();
+      const updatedProductsToSave: Promise<any>[] = [];
+      const localQuantities = new Map<number, number>();
+      currentProducts.forEach((p) => localQuantities.set(p.id, p.quantity));
+
+      if (Array.isArray(meal.ingredients)) {
+        for (const ingredient of meal.ingredients) {
+          const matchingProduct = currentProducts.find((p) => {
+            const pNameLower = p.name.toLowerCase();
+            const ingLower = ingredient.toLowerCase();
+            return ingLower.includes(pNameLower) || pNameLower.includes(ingLower);
+          });
+
+          if (matchingProduct) {
+            const currentQty = localQuantities.get(matchingProduct.id) ?? matchingProduct.quantity;
+            if (currentQty <= 0) continue;
+
+            const match = ingredient.trim().match(/^([\d\.,]+)\s*([a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ]+)?/);
+            let amountToDeduct = 1;
+            let parsedUnit = "";
+            if (match) {
+              const parsedNum = parseFloat(match[1].replace(",", "."));
+              if (!isNaN(parsedNum)) {
+                amountToDeduct = parsedNum;
+              }
+              parsedUnit = match[2] ? match[2].toLowerCase() : "";
+            }
+
+            const productUnit = matchingProduct.unit ? matchingProduct.unit.toLowerCase() : "";
+            const unitMatches =
+              productUnit === parsedUnit ||
+              (productUnit === "pcs" && (parsedUnit === "pcs" || parsedUnit === "шт" || !parsedUnit)) ||
+              (productUnit === "шт" && (parsedUnit === "pcs" || parsedUnit === "шт" || !parsedUnit));
+
+            const deduct = unitMatches ? amountToDeduct : 1;
+            const newQty = Math.max(0, currentQty - deduct);
+            localQuantities.set(matchingProduct.id, newQty);
+          }
+        }
+      }
+
+      for (const [productId, finalQty] of localQuantities.entries()) {
+        const originalProduct = currentProducts.find((p) => p.id === productId);
+        if (!originalProduct || originalProduct.quantity === finalQty) continue;
+
+        if (finalQty <= 0) {
+          updatedProductsToSave.push(
+            apiFetch(`/products/${productId}`, { method: "DELETE" })
+              .then(() => {
+                removeProduct(productId);
+              })
+              .catch((err) => console.error("Failed to delete deducted product:", err))
+          );
+        } else {
+          const updatedProduct = { ...originalProduct, quantity: finalQty };
+          updatedProductsToSave.push(
+            apiFetch(`/products/${productId}`, {
+              method: "PATCH",
+              body: { quantity: finalQty },
+            })
+              .then(() => {
+                updateProduct(updatedProduct);
+              })
+              .catch((err) => console.error("Failed to update product quantity:", err))
+          );
+        }
+      }
+
+      if (updatedProductsToSave.length > 0) {
+        await Promise.all(updatedProductsToSave);
+      }
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to log meal."));
     } finally {
@@ -261,6 +339,34 @@ export default function PlannerPage() {
 
     return targetDate.toISOString().split("T")[0];
   };
+
+  if (fridgesStatus === "ready" && fridges.length === 0) {
+    return (
+      <div className="min-h-full w-full p-4 md:p-8 lg:p-12">
+        <div className="max-w-2xl mx-auto pt-12">
+          <Card className="rounded-3xl border-2 border-dashed border-border bg-muted/20">
+            <CardContent className="py-16 px-8 text-center space-y-5">
+              <div className="h-20 w-20 mx-auto rounded-2xl bg-secondary text-secondary-foreground grid place-items-center shadow-sm">
+                <Refrigerator className="h-10 w-10" />
+              </div>
+              <div className="space-y-1.5">
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight">{t("fridgesNoneTitle")}</h1>
+                <p className="text-sm md:text-base text-muted-foreground max-w-sm mx-auto">
+                  {t("fridgesNoneBody")}
+                </p>
+              </div>
+              <Button asChild size="lg" className="rounded-xl font-bold gap-2 shadow-md shadow-primary/20">
+                <Link href="/settings">
+                  <SettingsIcon className="h-4 w-4" />
+                  {t("navSettings")}
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full w-full p-4 md:p-8 lg:p-12">
@@ -497,16 +603,20 @@ export default function PlannerPage() {
                         <Button
                           type="button"
                           onClick={() => logMealToTracker(selectedMeal)}
-                          disabled={loggingToTrackerKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}`}
+                          disabled={loggedMeals[`${selectedMeal.day}-${selectedMeal.mealType || ""}`] || loggingToTrackerKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}`}
                           className="w-full h-9 rounded-xl gap-1.5 text-xs font-black shadow-xs hover:scale-[1.01] active:scale-[0.99] transition-all"
                         >
                           {loggingToTrackerKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}` ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : loggedMeals[`${selectedMeal.day}-${selectedMeal.mealType || ""}`] ? (
+                            <Check className="h-3.5 w-3.5" />
                           ) : (
                             <Plus className="h-3.5 w-3.5" />
                           )}
                           {loggingToTrackerKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}`
                             ? t("plannerLogToTrackerBusy")
+                            : loggedMeals[`${selectedMeal.day}-${selectedMeal.mealType || ""}`]
+                            ? t("plannerLogToTrackerDone")
                             : t("plannerLogToTracker")}
                         </Button>
                       </div>
