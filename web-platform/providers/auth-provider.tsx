@@ -12,6 +12,7 @@ export type AuthUser = {
   preferredLanguage: string;
   cuisinePreference: string;
   dietaryProfile?: string;
+  avatar?: string;
 };
 
 type TokenPair = StoredTokens & {

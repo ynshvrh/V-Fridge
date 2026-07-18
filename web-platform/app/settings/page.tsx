@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuth } from "@/providers/auth-provider";
+import { useAuth, type AuthUser } from "@/providers/auth-provider";
 import { apiFetch } from "@/lib/api-client";
 import {
   Trash2,
@@ -151,8 +151,8 @@ export default function Settings() {
 
             {/* Sticky user badge info in sidebar */}
             <div className="p-5 rounded-3xl bg-glass border border-border/60 shadow-sm flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center text-sm font-black shrink-0">
-                {(user?.username || user?.email || "?").slice(0, 1).toUpperCase()}
+              <div className="h-10 w-10 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center text-lg font-black shrink-0">
+                {user?.avatar ? user.avatar : (user?.username || user?.email || "?").slice(0, 1).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-sm truncate">{user?.username || "Guest"}</p>
@@ -165,44 +165,30 @@ export default function Settings() {
           <main className="md:col-span-8 space-y-5">
             {activeTab === "profile" && (
               <div className="space-y-5 animate-in fade-in duration-200">
-                {/* Profile Detail Card */}
-                <Card className="rounded-3xl bg-glass overflow-hidden shadow-sm">
-                  <CardHeader className="pb-3 border-b border-border/30">
-                    <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
-                      <User className="h-4 w-4 text-primary" />
-                      Ваш Профіль
-                    </CardTitle>
-                    <CardDescription>Основна інформація про ваш акаунт.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-5 space-y-4">
-                    <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-secondary/15 border border-border/30">
-                      <div className="h-16 w-16 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center shadow-md text-xl font-black">
-                        {(user?.username || user?.email || "?").slice(0, 1).toUpperCase()}
+                <ProfileCard user={user} onSaved={refreshUser} />
+
+                {/* Email Verification Banner if not verified */}
+                {user && !user.emailVerified && (
+                  <Card className="rounded-3xl bg-glass border border-solara/30 overflow-hidden shadow-sm animate-in fade-in duration-200">
+                    <CardContent className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <MailWarning className="h-5 w-5 text-solara shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="font-bold text-sm">Ваш Email не верифіковано</h4>
+                          <p className="text-xs text-muted-foreground">Підтвердіть вашу пошту для повної безпеки акаунту.</p>
+                        </div>
                       </div>
-                      <div className="space-y-1 text-center sm:text-left">
-                        <h4 className="font-black text-lg tracking-tight">{user?.username || "Guest"}</h4>
-                        <p className="text-xs text-muted-foreground">{user?.email || "—"}</p>
-                      </div>
-                      <div className="sm:ml-auto">
-                        {user?.emailVerified ? (
-                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success/15 text-success text-[10px] font-bold uppercase tracking-widest">
-                            <MailCheck className="h-3 w-3" />
-                            {t("settingsEmailVerified")}
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={resendVerification}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-solara/20 text-foreground dark:bg-solara/15 text-[10px] font-bold uppercase tracking-widest hover:bg-solara/30 transition-colors"
-                          >
-                            <MailWarning className="h-3 w-3 text-solara" />
-                            {t("settingsEmailNotVerified")}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <button
+                        type="button"
+                        onClick={resendVerification}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-solara/20 text-foreground dark:bg-solara/15 text-[10px] font-bold uppercase tracking-widest hover:bg-solara/30 transition-colors cursor-pointer"
+                      >
+                        <MailWarning className="h-3 w-3 text-solara" />
+                        {t("settingsEmailNotVerified")}
+                      </button>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             )}
 
@@ -313,6 +299,214 @@ export default function Settings() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ProfileCard({
+  user,
+  onSaved,
+}: {
+  user: AuthUser | null;
+  onSaved: () => Promise<void>;
+}) {
+  const t = useTranslations();
+  const [username, setUsername] = useState(user?.username || "");
+  const [selectedAvatar, setSelectedAvatar] = useState(user?.avatar || "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  // Sync state if user changes
+  useEffect(() => {
+    if (user) {
+      setUsername(user.username);
+      setSelectedAvatar(user.avatar || "");
+    }
+  }, [user]);
+
+  const AVATARS = [
+    "🥗", "🍕", "🍣", "🥞", "🍩", "🥑", "🍔",
+    "🌶️", "🍉", "🍇", "🧀", "🧁", "🍎", "🥕"
+  ];
+
+  const hasChanges = useMemo(() => {
+    const isUsernameDiff = username.trim() !== (user?.username || "").trim();
+    const isAvatarDiff = selectedAvatar !== (user?.avatar || "");
+    const isPasswordDiff = newPassword.length > 0;
+    return isUsernameDiff || isAvatarDiff || isPasswordDiff;
+  }, [username, selectedAvatar, newPassword, user]);
+
+  const handleSave = async () => {
+    if (newPassword && newPassword !== confirmPassword) {
+      toast.error("Паролі не співпадають!");
+      return;
+    }
+    if (newPassword && !currentPassword) {
+      toast.error("Введіть поточний пароль для зміни на новий!");
+      return;
+    }
+    if (!username.trim()) {
+      toast.error("Ім'я користувача не може бути порожнім!");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const body: Record<string, any> = {};
+      if (username.trim() !== user?.username) {
+        body.username = username.trim();
+      }
+      if (selectedAvatar !== (user?.avatar || "")) {
+        body.avatar = selectedAvatar || null;
+      }
+      if (newPassword) {
+        body.newPassword = newPassword;
+        body.currentPassword = currentPassword;
+      }
+
+      await apiFetch("/auth/me", {
+        method: "PATCH",
+        body,
+      });
+
+      await onSaved();
+      toast.success("Профіль успішно оновлено!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Помилка при оновленні профілю"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="rounded-3xl bg-glass overflow-hidden shadow-sm">
+      <CardHeader className="pb-3 border-b border-border/30">
+        <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
+          <User className="h-4 w-4 text-primary" />
+          Ваш Профіль
+        </CardTitle>
+        <CardDescription>Налаштуйте ім'я, аватарку та пароль вашого акаунту.</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-5 space-y-6">
+        {/* Avatar Selection Section */}
+        <div className="space-y-3">
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
+            Виберіть аватарку (емодзі)
+          </label>
+          <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl bg-secondary/15 border border-border/30">
+            <div className="h-20 w-20 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center shadow-md text-4xl font-black shrink-0 relative group">
+              {selectedAvatar ? selectedAvatar : (username || user?.email || "?").slice(0, 1).toUpperCase()}
+              {selectedAvatar && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedAvatar("")}
+                  className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-[10px] font-bold shadow-xs hover:bg-destructive/95 cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-7 gap-2 max-w-[320px]">
+              {AVATARS.map((emoji) => {
+                const active = selectedAvatar === emoji;
+                return (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setSelectedAvatar(emoji)}
+                    className={`h-9 w-9 rounded-xl border text-xl flex items-center justify-center transition-all cursor-pointer ${
+                      active
+                        ? "bg-primary/10 border-primary scale-110 shadow-xs"
+                        : "bg-card border-border/60 hover:scale-105"
+                    }`}
+                  >
+                    {emoji}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Username section */}
+        <div className="space-y-2">
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
+            Ім'я користувача
+          </label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full h-11 rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            placeholder="Юзернейм"
+            maxLength={50}
+          />
+        </div>
+
+        {/* Password change section */}
+        <div className="space-y-4 pt-2 border-t border-border/20">
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
+            Зміна паролю
+          </label>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <span className="text-xs text-muted-foreground font-medium">Новий пароль</span>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full h-10 rounded-xl border border-input bg-transparent px-3 py-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                placeholder="Мінімум 6 символів"
+                minLength={6}
+              />
+            </div>
+            
+            <div className="space-y-1.5">
+              <span className="text-xs text-muted-foreground font-medium">Підтвердження паролю</span>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full h-10 rounded-xl border border-input bg-transparent px-3 py-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                placeholder="Повторіть пароль"
+              />
+            </div>
+          </div>
+
+          {newPassword && (
+            <div className="space-y-1.5 animate-in slide-in-from-top-1 duration-200">
+              <span className="text-xs text-destructive font-bold">Поточний пароль (необхідно для підтвердження)</span>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full h-10 rounded-xl border border-destructive bg-transparent px-3 py-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-destructive"
+                placeholder="Введіть ваш поточний пароль"
+                required
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Save button */}
+        <div className="flex justify-end pt-2 border-t border-border/40">
+          <Button
+            onClick={handleSave}
+            disabled={saving || !hasChanges}
+            className="rounded-xl font-bold h-10 px-6 gap-2"
+          >
+            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+            {t("actionSave")}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
