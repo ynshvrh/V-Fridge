@@ -65,7 +65,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <SidebarProvider defaultOpen={false} className="h-full">
                 <AppSidebar />
                 <SidebarInset className="h-full flex flex-col">
-                  <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/70 backdrop-blur px-4 lg:hidden">
+                  <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/70 backdrop-blur px-4">
                     <SidebarTrigger />
                     <Separator orientation="vertical" className="mr-2 h-4" />
                     <div className="flex items-center gap-2">
