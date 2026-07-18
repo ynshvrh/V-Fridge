@@ -22,16 +22,7 @@ import { PRODUCT_CATEGORIES, categoryLabelKey } from "@/interfaces/categories";
 import { useFridges } from "@/providers/fridge-provider";
 import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
 import Link from "next/link";
-
-type ShoppingItem = {
-  id: number;
-  name: string;
-  quantity: number | null;
-  unit: string | null;
-  category: string;
-  checked: boolean;
-  createdAt: string | null;
-};
+import { useShoppingStore, type ShoppingItem } from "@/store/useVFridgeStore";
 
 type ProductResponse = {
   id: number;
@@ -40,16 +31,21 @@ type ProductResponse = {
 
 export default function ShoppingPage() {
   const t = useTranslations();
-  const [items, setItems] = useState<ShoppingItem[]>([]);
+  const { items, setItems, addItem, toggleItem, removeItem } = useShoppingStore();
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [unit, setUnit] = useState("pcs");
   const [category, setCategory] = useState("other");
   const [adding, setAdding] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const { fridges, status: fridgesStatus } = useFridges();
   const activeFridgeId = useFridges().active?.id ?? null;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (activeFridgeId == null) {
@@ -61,7 +57,7 @@ export default function ShoppingPage() {
       .then((data) => setItems(Array.isArray(data) ? data : []))
       .catch((err) => toast.error(getErrorMessage(err, t("shoppingLoadFailed"))))
       .finally(() => setLoading(false));
-  }, [activeFridgeId, t]);
+  }, [activeFridgeId, t, setItems]);
 
   if (fridgesStatus === "ready" && fridges.length === 0) {
     return (
@@ -105,7 +101,7 @@ export default function ShoppingPage() {
           category,
         },
       });
-      setItems((prev) => [...prev, created]);
+      addItem(created);
       setName("");
       setQuantity("1");
     } catch (err) {
@@ -117,18 +113,18 @@ export default function ShoppingPage() {
 
   const handleToggle = async (item: ShoppingItem) => {
     const next = !item.checked;
-    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, checked: next } : i)));
+    toggleItem(item.id, next);
     try {
       await apiFetch(`/shopping/${item.id}`, { method: "PATCH", body: { checked: next } });
     } catch (err) {
-      setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, checked: !next } : i)));
+      toggleItem(item.id, !next);
       toast.error(getErrorMessage(err, t("shoppingUpdateFailed")));
     }
   };
 
   const handleDelete = async (id: number) => {
     const prev = items;
-    setItems((items) => items.filter((i) => i.id !== id));
+    removeItem(id);
     try {
       await apiFetch(`/shopping/${id}`, { method: "DELETE" });
     } catch (err) {
@@ -138,14 +134,15 @@ export default function ShoppingPage() {
   };
 
   const handlePurchase = async (item: ShoppingItem) => {
+    removeItem(item.id);
     try {
       const product = await apiFetch<ProductResponse>(`/shopping/${item.id}/purchase`, {
         method: "POST",
         body: { expiryDate: null },
       });
-      setItems((prev) => prev.filter((i) => i.id !== item.id));
       toast.success(t("shoppingAddedToFridge", { name: product.name }));
     } catch (err) {
+      addItem(item);
       toast.error(getErrorMessage(err, t("shoppingPurchaseFailed")));
     }
   };
@@ -252,7 +249,7 @@ export default function ShoppingPage() {
           </CardContent>
         </Card>
 
-        {loading ? (
+        {!mounted || (loading && items.length === 0) ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>

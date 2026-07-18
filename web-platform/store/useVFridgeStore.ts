@@ -34,3 +34,42 @@ export const useProductStore = create<ProductState>()(
     }
   )
 );
+
+export interface ShoppingItem {
+  id: number;
+  name: string;
+  quantity: number | null;
+  unit: string | null;
+  category: string;
+  checked: boolean;
+  createdAt: string | null;
+}
+
+interface ShoppingState {
+  items: ShoppingItem[];
+  setItems: (items: ShoppingItem[]) => void;
+  addItem: (item: ShoppingItem) => void;
+  toggleItem: (id: number, checked: boolean) => void;
+  removeItem: (id: number) => void;
+}
+
+export const useShoppingStore = create<ShoppingState>()(
+  persist(
+    (set) => ({
+      items: [],
+      setItems: (items) => set({ items }),
+      addItem: (item) => set((state) => ({
+        items: [...state.items, item],
+      })),
+      toggleItem: (id, checked) => set((state) => ({
+        items: state.items.map((item) => item.id === id ? { ...item, checked } : item),
+      })),
+      removeItem: (id) => set((state) => ({
+        items: state.items.filter((item) => item.id !== id),
+      })),
+    }),
+    {
+      name: 'vfridge-shopping-storage',
+    }
+  )
+);
