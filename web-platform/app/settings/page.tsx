@@ -51,7 +51,7 @@ export default function Settings() {
   const t = useTranslations();
   const activeLocale = useLocale() as Locale;
   const { user, logout, refreshUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<"profile" | "fridges" | "interface" | "danger">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "preferences" | "fridges" | "interface" | "danger">("profile");
 
   const clearData = async (type: "chat" | "products") => {
     const confirmKey = type === "chat" ? "settingsDeleteChatConfirm" : "settingsClearProductsConfirm";
@@ -80,7 +80,8 @@ export default function Settings() {
   };
 
   const tabItems = [
-    { id: "profile", label: "Профіль та смаки", icon: User },
+    { id: "profile", label: "Профіль", icon: User },
+    { id: "preferences", label: "Смаки та уподобання", icon: ChefHat },
     { id: "fridges", label: "Спільні холодильники", icon: Refrigerator },
     { id: "interface", label: "Налаштування інтерфейсу", icon: Palette },
     { id: "danger", label: "Безпека та дані", icon: Trash2 },
@@ -163,7 +164,7 @@ export default function Settings() {
           {/* Active Tab Panel Content */}
           <main className="md:col-span-8 space-y-5">
             {activeTab === "profile" && (
-              <div className="space-y-5">
+              <div className="space-y-5 animate-in fade-in duration-200">
                 {/* Profile Detail Card */}
                 <Card className="rounded-3xl bg-glass overflow-hidden shadow-sm">
                   <CardHeader className="pb-3 border-b border-border/30">
@@ -202,7 +203,11 @@ export default function Settings() {
                     </div>
                   </CardContent>
                 </Card>
+              </div>
+            )}
 
+            {activeTab === "preferences" && (
+              <div className="space-y-5 animate-in fade-in duration-200">
                 {/* Cuisine Preference Card */}
                 <CuisineCard
                   currentSlug={user?.cuisinePreference ?? "any"}
