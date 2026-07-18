@@ -73,3 +73,53 @@ export const useShoppingStore = create<ShoppingState>()(
     }
   )
 );
+
+export interface DailyNutritionResponse {
+  date: string;
+  targets: {
+    calories: number | null;
+    protein: number | null;
+    fat: number | null;
+    carbs: number | null;
+  };
+  summary: {
+    calories: number;
+    protein: number;
+    fat: number;
+    carbs: number;
+  };
+  logs: {
+    id: number;
+    mealType: string;
+    foodName: string;
+    quantity: number | null;
+    unit: string | null;
+    calories: number;
+    protein: number;
+    fat: number;
+    carbs: number;
+    loggedAt: string;
+  }[];
+}
+
+interface NutritionState {
+  dailyCache: Record<string, DailyNutritionResponse>;
+  setDailyData: (date: string, data: DailyNutritionResponse) => void;
+}
+
+export const useNutritionStore = create<NutritionState>()(
+  persist(
+    (set) => ({
+      dailyCache: {},
+      setDailyData: (date, data) => set((state) => ({
+        dailyCache: {
+          ...state.dailyCache,
+          [date]: data,
+        },
+      })),
+    }),
+    {
+      name: 'vfridge-nutrition-storage',
+    }
+  )
+);

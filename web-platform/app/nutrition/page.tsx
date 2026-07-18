@@ -37,6 +37,7 @@ import {
 import { useFridges } from "@/providers/fridge-provider";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useNutritionStore } from "@/store/useVFridgeStore";
 
 type NutritionLog = {
   id: number;
@@ -76,6 +77,8 @@ export default function NutritionTrackerPage() {
   const { status } = useAuth();
   const t = useTranslations();
   const { fridges, status: fridgesStatus } = useFridges();
+  const { dailyCache, setDailyData } = useNutritionStore();
+  const [mounted, setMounted] = useState(false);
   
   const [selectedDate, setSelectedDate] = useState(() => {
     return new Date().toISOString().split("T")[0];
@@ -106,11 +109,16 @@ export default function NutritionTrackerPage() {
   const [targetFat, setTargetFat] = useState("65");
   const [targetCarbs, setTargetCarbs] = useState("200");
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const fetchDailyData = useCallback(async () => {
     setLoading(true);
     try {
       const resp = await apiFetch<DailyNutritionResponse>(`/nutrition/daily?date=${selectedDate}`);
       setData(resp);
+      setDailyData(selectedDate, resp as any);
       
       // Prefill targets form
       setTargetCalories(resp.targets.calories?.toString() ?? "2000");
@@ -122,12 +130,32 @@ export default function NutritionTrackerPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedDate]);
+  }, [selectedDate, setDailyData, t]);
 
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (status !== "authenticated" || !mounted) return;
+    
+    // Instantly load from cache to prevent blank screens/loaders
+    const cached = dailyCache[selectedDate];
+    if (cached) {
+      setData(cached as any);
+      setTargetCalories(cached.targets.calories?.toString() ?? "2000");
+      setTargetProtein(cached.targets.protein?.toString() ?? "120");
+      setTargetFat(cached.targets.fat?.toString() ?? "65");
+      setTargetCarbs(cached.targets.carbs?.toString() ?? "200");
+    } else {
+      setData(null);
+    }
+    
     fetchDailyData();
-  }, [selectedDate, status, fetchDailyData]);
+  }, [selectedDate, status, mounted, fetchDailyData, dailyCache]);
+
+  // Keep local edits in sync with Zustand cache
+  useEffect(() => {
+    if (data && data.date === selectedDate) {
+      setDailyData(selectedDate, data as any);
+    }
+  }, [data, selectedDate, setDailyData]);
 
   const handlePrevDay = () => {
     const d = new Date(selectedDate);
@@ -265,7 +293,7 @@ export default function NutritionTrackerPage() {
     }
   };
 
-  if (status === "loading") {
+  if (status === "loading" || !mounted || (loading && !data)) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
