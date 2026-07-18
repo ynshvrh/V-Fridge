@@ -68,8 +68,17 @@ export function ProductList() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Product | null>(null);
   const activeFridgeId = useFridges().active?.id ?? null;
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (activeFridgeId == null) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     async function loadProducts() {
       setLoading(true);
@@ -107,7 +116,7 @@ export function ProductList() {
     }
   };
 
-  if (loading) {
+  if (!mounted || (loading && products.length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <div className="relative">
