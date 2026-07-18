@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CalendarDays, ChefHat, Loader2, Sparkles, ShoppingBasket, ChevronDown, RefreshCw, Check } from "lucide-react";
+import { CalendarDays, ChefHat, Loader2, Sparkles, ShoppingBasket, ChevronDown, RefreshCw, Check, Flame, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
@@ -27,6 +27,10 @@ type Meal = {
   description: string | null;
   steps: string[] | null;
   mealType: string | null;
+  calories?: number;
+  protein?: number;
+  fat?: number;
+  carbs?: number;
 };
 type GapItem = { name: string; quantity: string | null; unit: string | null; category: string };
 type MealPlan = { meals: Meal[]; gapItems: GapItem[]; generatedAt: string };
@@ -70,6 +74,7 @@ export default function PlannerPage() {
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
   const [regeneratingMealKey, setRegeneratingMealKey] = useState<string | null>(null);
+  const [loggingToTrackerKey, setLoggingToTrackerKey] = useState<string | null>(null);
 
   const activeFridgeId = useFridges().active?.id ?? null;
 
@@ -266,6 +271,57 @@ export default function PlannerPage() {
     }));
   };
 
+  const logMealToTracker = async (meal: Meal) => {
+    const key = `${meal.day}-${meal.mealType || ""}`;
+    setLoggingToTrackerKey(key);
+    try {
+      const dateStr = getLocalDateForWeekday(meal.day);
+      await apiFetch("/nutrition/log", {
+        method: "POST",
+        body: {
+          date: dateStr,
+          mealType: meal.mealType || "lunch",
+          foodName: meal.name,
+          quantity: 1,
+          unit: "serving",
+          calories: meal.calories || 0,
+          protein: meal.protein || 0,
+          fat: meal.fat || 0,
+          carbs: meal.carbs || 0,
+        },
+      });
+      toast.success(t("plannerLogToTrackerSuccess" as any, { name: meal.name }));
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to log meal."));
+    } finally {
+      setLoggingToTrackerKey(null);
+    }
+  };
+
+  const getLocalDateForWeekday = (weekday: string): string => {
+    const today = new Date();
+    const currentDay = today.getDay(); // 0 = Sunday, 1 = Monday, 2 = Tuesday, ...
+    const currentDayNormalized = currentDay === 0 ? 7 : currentDay;
+
+    const dayMap: Record<string, number> = {
+      monday: 1,
+      tuesday: 2,
+      wednesday: 3,
+      thursday: 4,
+      friday: 5,
+      saturday: 6,
+      sunday: 7,
+    };
+
+    const targetDayNormalized = dayMap[weekday.toLowerCase()] || currentDayNormalized;
+    const diff = targetDayNormalized - currentDayNormalized;
+
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + diff);
+
+    return targetDate.toISOString().split("T")[0];
+  };
+
   return (
     <div className="min-h-full w-full p-4 md:p-8 lg:p-12">
       <div className="max-w-6xl mx-auto space-y-8">
@@ -446,6 +502,64 @@ export default function PlannerPage() {
                     {selectedMeal.note && (
                       <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 text-xs italic text-primary/90 leading-relaxed">
                         💡 {selectedMeal.note}
+                      </div>
+                    )}
+
+                    {/* Nutritional Value */}
+                    {selectedMeal.calories !== undefined && selectedMeal.calories > 0 && (
+                      <div className="p-4 rounded-2xl bg-secondary/15 border border-border/40 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+                            <Flame className="h-3.5 w-3.5 text-primary" />
+                            {t("plannerNutrientsTitle" as any)}
+                          </h4>
+                          <span className="text-xs font-black text-primary">
+                            {selectedMeal.calories} {t("plannerCaloriesUnit" as any)}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                          <div className="p-2 rounded-xl bg-background/60 border border-border/25">
+                            <span className="block text-[9px] uppercase font-bold text-emerald-600 dark:text-emerald-400">
+                              {t("plannerProtein" as any)}
+                            </span>
+                            <span className="font-black text-foreground">
+                              {Math.round(selectedMeal.protein ?? 0)}g
+                            </span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-background/60 border border-border/25">
+                            <span className="block text-[9px] uppercase font-bold text-amber-600 dark:text-amber-400">
+                              {t("plannerFat" as any)}
+                            </span>
+                            <span className="font-black text-foreground">
+                              {Math.round(selectedMeal.fat ?? 0)}g
+                            </span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-background/60 border border-border/25">
+                            <span className="block text-[9px] uppercase font-bold text-cyan-600 dark:text-cyan-400">
+                              {t("plannerCarbs" as any)}
+                            </span>
+                            <span className="font-black text-foreground">
+                              {Math.round(selectedMeal.carbs ?? 0)}g
+                            </span>
+                          </div>
+                        </div>
+
+                        <Button
+                          type="button"
+                          onClick={() => logMealToTracker(selectedMeal)}
+                          disabled={loggingToTrackerKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}`}
+                          className="w-full h-9 rounded-xl gap-1.5 text-xs font-black shadow-xs hover:scale-[1.01] active:scale-[0.99] transition-all"
+                        >
+                          {loggingToTrackerKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}` ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Plus className="h-3.5 w-3.5" />
+                          )}
+                          {loggingToTrackerKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}`
+                            ? t("plannerLogToTrackerBusy" as any)
+                            : t("plannerLogToTracker" as any)}
+                        </Button>
                       </div>
                     )}
 

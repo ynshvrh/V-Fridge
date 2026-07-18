@@ -22,6 +22,7 @@ import {
   Refrigerator,
   ShoppingBasket,
   CalendarDays,
+  Flame,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -33,6 +34,7 @@ const NAV_ITEMS = [
   { href: "/shopping", icon: ShoppingBasket,  labelKey: "navShopping" },
   { href: "/planner",  icon: CalendarDays,    labelKey: "navPlanner" },
   { href: "/recipe",   icon: UtensilsCrossed, labelKey: "navChef" },
+  { href: "/nutrition",icon: Flame,           labelKey: "navNutrition" },
 ] as const;
 
 export function AppSidebar() {

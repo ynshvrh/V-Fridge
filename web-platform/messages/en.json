@@ -17,6 +17,7 @@
   "navShopping": "Shopping",
   "navPlanner": "Planner",
   "navChef": "Chef",
+  "navNutrition": "Tracker",
   "navSettings": "Settings",
 
   "signinTitle": "Welcome back",
@@ -142,6 +143,14 @@
   "plannerRecipeLoading": "Loading the recipe…",
   "plannerRecipeFailed": "Couldn't load the recipe. Try again.",
   "plannerRecipeRateLimit": "Too many requests. Wait a moment and try again.",
+  "plannerNutrientsTitle": "Nutritional Value",
+  "plannerCaloriesUnit": "kcal",
+  "plannerProtein": "Protein",
+  "plannerFat": "Fat",
+  "plannerCarbs": "Carbs",
+  "plannerLogToTracker": "Log to Tracker",
+  "plannerLogToTrackerBusy": "Logging…",
+  "plannerLogToTrackerSuccess": "\"{name}\" logged to tracker!",
 
   "settingsTitle": "Settings",
   "settingsHeroSubtitle": "Profile, appearance, language, cuisine, and shared fridges.",

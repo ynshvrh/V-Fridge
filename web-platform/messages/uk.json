@@ -17,6 +17,7 @@
   "navShopping": "Покупки",
   "navPlanner": "Планер",
   "navChef": "Шеф",
+  "navNutrition": "Трекер",
   "navSettings": "Налаштування",
 
   "signinTitle": "З поверненням",
@@ -142,6 +143,14 @@
   "plannerRecipeLoading": "Завантаження рецепта…",
   "plannerRecipeFailed": "Не вдалося завантажити рецепт. Спробуйте ще раз.",
   "plannerRecipeRateLimit": "Забагато запитів. Зачекайте трохи та спробуйте знову.",
+  "plannerNutrientsTitle": "Харчова цінність",
+  "plannerCaloriesUnit": "кКал",
+  "plannerProtein": "Білки",
+  "plannerFat": "Жири",
+  "plannerCarbs": "Вуглеводи",
+  "plannerLogToTracker": "Записати в трекер",
+  "plannerLogToTrackerBusy": "Запис…",
+  "plannerLogToTrackerSuccess": "Страва «{name}» записана в трекер!",
 
   "settingsTitle": "Налаштування",
   "settingsHeroSubtitle": "Профіль, вигляд, мова, кухня та спільні холодильники.",
