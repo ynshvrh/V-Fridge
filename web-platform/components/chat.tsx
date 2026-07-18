@@ -15,7 +15,7 @@ import { useProductStore } from "@/store/useVFridgeStore";
 
 
 export default function Chat() {
-  const t = useTranslations();
+  const t = useTranslations() as unknown as (key: string, values?: Record<string, string | number>) => string;
   const products = useProductStore((state) => state.products);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -137,7 +137,7 @@ export default function Chat() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
               {promptDetails.map((pd) => {
-                const prompt = t(pd.key as never);
+                const prompt = t(pd.key);
                 return (
                   <button
                     key={pd.key}

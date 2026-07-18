@@ -53,7 +53,7 @@ const DAY_KEY: Record<string, string> = {
 
 
 export default function PlannerPage() {
-  const t = useTranslations();
+  const t = useTranslations() as unknown as (key: string, values?: Record<string, string | number>) => string;
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -280,7 +280,7 @@ export default function PlannerPage() {
           carbs: meal.carbs || 0,
         },
       });
-      toast.success(t("plannerLogToTrackerSuccess" as never, { name: meal.name }));
+      toast.success(t("plannerLogToTrackerSuccess", { name: meal.name }));
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to log meal."));
     } finally {
@@ -348,7 +348,7 @@ export default function PlannerPage() {
             <div className="space-y-4">
               {weekdays.map((day) => {
                 const dayKey = DAY_KEY[day];
-                const dayLabel = dayKey ? t(dayKey as never) : day;
+                const dayLabel = dayKey ? t(dayKey) : day;
                 const dayMeals = plan.meals.filter((m) => m.day === day);
 
                 return (
@@ -371,7 +371,7 @@ export default function PlannerPage() {
                       {mealTypes.map((mealType) => {
                         const meal = dayMeals.find((m) => m.mealType?.toLowerCase() === mealType);
                         const mealKey = `${day}-${mealType}`;
-                        const mealTypeLabel = t(`mealType${mealType.charAt(0).toUpperCase() + mealType.slice(1)}` as never);
+                        const mealTypeLabel = t(`mealType${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
 
                         if (!meal) {
                           return (
@@ -466,8 +466,8 @@ export default function PlannerPage() {
                     </span>
                     <span className="text-[11px] font-black uppercase tracking-widest text-primary">
                       {selectedMeal.mealType
-                        ? t(`mealType${selectedMeal.mealType.charAt(0).toUpperCase() + selectedMeal.mealType.slice(1).toLowerCase()}` as never)
-                        : ""} • {DAY_KEY[selectedMeal.day] ? t(DAY_KEY[selectedMeal.day] as never) : selectedMeal.day}
+                        ? t(`mealType${selectedMeal.mealType.charAt(0).toUpperCase() + selectedMeal.mealType.slice(1).toLowerCase()}`)
+                        : ""} • {DAY_KEY[selectedMeal.day] ? t(DAY_KEY[selectedMeal.day]) : selectedMeal.day}
                     </span>
                   </div>
                   <SheetTitle className="text-2xl font-black tracking-tight leading-tight mt-1">
@@ -501,17 +501,17 @@ export default function PlannerPage() {
                         <div className="flex items-center justify-between">
                           <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
                             <Flame className="h-3.5 w-3.5 text-primary" />
-                            {t("plannerNutrientsTitle" as never)}
+                            {t("plannerNutrientsTitle")}
                           </h4>
                           <span className="text-xs font-black text-primary">
-                            {selectedMeal.calories} {t("plannerCaloriesUnit" as never)}
+                            {selectedMeal.calories} {t("plannerCaloriesUnit")}
                           </span>
                         </div>
                         
                         <div className="grid grid-cols-3 gap-2 text-center text-xs">
                           <div className="p-2 rounded-xl bg-background/60 border border-border/25">
                             <span className="block text-[9px] uppercase font-bold text-emerald-600 dark:text-emerald-400">
-                              {t("plannerProtein" as never)}
+                              {t("plannerProtein")}
                             </span>
                             <span className="font-black text-foreground">
                               {Math.round(selectedMeal.protein ?? 0)}g
@@ -519,7 +519,7 @@ export default function PlannerPage() {
                           </div>
                           <div className="p-2 rounded-xl bg-background/60 border border-border/25">
                             <span className="block text-[9px] uppercase font-bold text-amber-600 dark:text-amber-400">
-                              {t("plannerFat" as never)}
+                              {t("plannerFat")}
                             </span>
                             <span className="font-black text-foreground">
                               {Math.round(selectedMeal.fat ?? 0)}g
@@ -527,7 +527,7 @@ export default function PlannerPage() {
                           </div>
                           <div className="p-2 rounded-xl bg-background/60 border border-border/25">
                             <span className="block text-[9px] uppercase font-bold text-cyan-600 dark:text-cyan-400">
-                              {t("plannerCarbs" as never)}
+                              {t("plannerCarbs")}
                             </span>
                             <span className="font-black text-foreground">
                               {Math.round(selectedMeal.carbs ?? 0)}g
@@ -547,8 +547,8 @@ export default function PlannerPage() {
                             <Plus className="h-3.5 w-3.5" />
                           )}
                           {loggingToTrackerKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}`
-                            ? t("plannerLogToTrackerBusy" as never)
-                            : t("plannerLogToTracker" as never)}
+                            ? t("plannerLogToTrackerBusy")
+                            : t("plannerLogToTracker")}
                         </Button>
                       </div>
                     )}
