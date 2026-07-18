@@ -8,8 +8,12 @@ This repository holds the Next.js single-page client. The backend lives in a sep
 
 ## Features
 
-* **AI Chef** — recipe suggestions powered by OpenRouter, grounded in the user's current inventory.
-* **Inventory** — products with quantity, unit, and expiry date; dashboard surfaces what is expiring soon vs already expired.
+* **AI Chef** — recipe suggestions powered by OpenRouter, grounded in the user's current inventory and dietary profiles.
+* **Inventory & Shared Fridges** — track items with quantities, units, and expiry dates; split grocery lists across shared household fridges.
+* **Weekly Meal Planner** — generate weekly plans (breakfast, lunch, dinner), dynamically calculate missing ingredients ("gaps"), and import them to the shopping list.
+* **Calorie & Macro Tracker** — set daily calorie, protein, fat, and carb goals; log planned meals or custom food items directly.
+* **Localization** — full multi-language support (English and Ukrainian) using `next-intl`.
+* **Theme System** — premium dual themes: **Citrus Splash** (light mode) and **Blueberry Night** (dark mode).
 * **Self-clearing chat history** — the assistant drops anything older than 24 hours so the prompt stays focused.
 * **Server-side rate limiting** — the API enforces 5 chat requests per 60 s per user.
 * **Email verification** — accounts are unusable until the verification link is clicked.
@@ -17,8 +21,9 @@ This repository holds the Next.js single-page client. The backend lives in a sep
 ## Tech stack
 
 * **Framework:** Next.js 16 (App Router) on React 19
+* **Localization:** `next-intl` (i18n translation engine)
 * **State:** Zustand
-* **Styling:** Tailwind CSS v4 + shadcn-style primitives + lucide-react icons
+* **Styling:** Tailwind CSS v4 + custom themed CSS variables + lucide-react icons
 * **Validation:** Zod
 * **Auth:** Bearer JWT stored in `localStorage`, single-flight refresh in `lib/api-client.ts` (no cookies, no NextAuth)
 * **Backend API:** see [`v-fridge-api`](https://github.com/ynshvrh/v-fridge-api) — ASP.NET Core 10 Minimal API + PostgreSQL, schema in C# migrations
@@ -65,11 +70,11 @@ V-Fridge/
     ├── hooks/           # React hooks
     ├── interfaces/      # Shared TypeScript types / Zod schemas
     ├── lib/             # api-client, utils
+    ├── messages/        # Translation JSON bundles (en.json, uk.json)
     ├── providers/       # AuthProvider, etc.
     └── store/           # Zustand stores
 ```
 
 ## Notes
 
-* All UI copy, log lines, and server payloads are in English; the client may eventually layer i18n on top of the API responses.
 * The fridge database schema is owned by the C# API (see `v-fridge-api/src/VFridge.Api/Migrations`). This repo no longer carries Drizzle, NextAuth, Upstash, Neon-specific helpers, or Gemini SDKs.
