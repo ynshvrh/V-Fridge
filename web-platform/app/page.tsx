@@ -21,12 +21,61 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AnalyticsTile } from "@/components/analytics-tile";
 import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
 import { useFridges } from "@/providers/fridge-provider";
+import { usePreferencesStore } from "@/store/usePreferencesStore";
 
 export default function Dashboard() {
   const t = useTranslations();
   const { user } = useAuth();
   const { fridges, status: fridgesStatus } = useFridges();
   const products = useProductStore((state) => state.products);
+  const { quickActions } = usePreferencesStore();
+
+  const allActions = [
+    {
+      key: "fridge",
+      href: "/fridge",
+      icon: Refrigerator,
+      title: t("dashboardQuickFridgeTitle"),
+      description: t("dashboardQuickFridgeDesc"),
+      badge: `${products.length} ${t("dashboardItemsCount", { count: products.length })}`,
+    },
+    {
+      key: "recipe",
+      href: "/recipe",
+      icon: UtensilsCrossed,
+      title: t("dashboardQuickChefTitle"),
+      description: t("dashboardQuickChefDesc"),
+      featured: true,
+    },
+    {
+      key: "planner",
+      href: "/planner",
+      icon: CalendarDays,
+      title: t("dashboardQuickPlannerTitle"),
+      description: t("dashboardQuickPlannerDesc"),
+    },
+    {
+      key: "shopping",
+      href: "/shopping",
+      icon: ShoppingBasket,
+      title: t("dashboardQuickShoppingTitle"),
+      description: t("dashboardQuickShoppingDesc"),
+    },
+    {
+      key: "nutrition",
+      href: "/nutrition",
+      icon: Flame,
+      title: t("dashboardQuickNutritionTitle"),
+      description: t("dashboardQuickNutritionDesc"),
+    },
+    {
+      key: "settings",
+      href: "/settings",
+      icon: SettingsIcon,
+      title: t("dashboardQuickSettingsTitle"),
+      description: t("dashboardQuickSettingsDesc"),
+    },
+  ];
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -127,44 +176,19 @@ export default function Dashboard() {
             Швидкі дії
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <QuickActionCard
-              href="/fridge"
-              icon={Refrigerator}
-              title={t("dashboardQuickFridgeTitle")}
-              description={t("dashboardQuickFridgeDesc")}
-              badge={`${products.length} ${t("dashboardItemsCount", { count: products.length })}`}
-            />
-            <QuickActionCard
-              href="/recipe"
-              icon={UtensilsCrossed}
-              title={t("dashboardQuickChefTitle")}
-              description={t("dashboardQuickChefDesc")}
-              featured
-            />
-            <QuickActionCard
-              href="/planner"
-              icon={CalendarDays}
-              title={t("dashboardQuickPlannerTitle")}
-              description={t("dashboardQuickPlannerDesc")}
-            />
-            <QuickActionCard
-              href="/shopping"
-              icon={ShoppingBasket}
-              title={t("dashboardQuickShoppingTitle")}
-              description={t("dashboardQuickShoppingDesc")}
-            />
-            <QuickActionCard
-              href="/nutrition"
-              icon={Flame}
-              title={t("dashboardQuickNutritionTitle")}
-              description={t("dashboardQuickNutritionDesc")}
-            />
-            <QuickActionCard
-              href="/settings"
-              icon={SettingsIcon}
-              title={t("dashboardQuickSettingsTitle")}
-              description={t("dashboardQuickSettingsDesc")}
-            />
+            {allActions
+              .filter((act) => quickActions.includes(act.key))
+              .map((act) => (
+                <QuickActionCard
+                  key={act.key}
+                  href={act.href}
+                  icon={act.icon}
+                  title={act.title}
+                  description={act.description}
+                  badge={act.badge}
+                  featured={act.featured}
+                />
+              ))}
           </div>
         </section>
 

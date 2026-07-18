@@ -62,7 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ThemeProvider>
             <AuthProvider>
               <FridgeProvider>
-              <SidebarProvider className="h-full">
+              <SidebarProvider defaultOpen={false} className="h-full">
                 <AppSidebar />
                 <SidebarInset className="h-full flex flex-col">
                   <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/60 bg-background/70 backdrop-blur px-4 lg:hidden">

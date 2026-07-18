@@ -31,6 +31,13 @@ import {
   ChefHat,
   Loader2,
   Sparkles,
+  Check,
+  Refrigerator,
+  UtensilsCrossed,
+  CalendarDays,
+  ShoppingBasket,
+  Flame,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
@@ -38,6 +45,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { FridgesCard } from "@/components/fridges-card";
 import { SUPPORTED_LOCALES, switchLocale, type Locale } from "@/lib/locale";
 import { CUISINE_SLUGS, cuisineLabelKey } from "@/interfaces/cuisines";
+import { usePreferencesStore } from "@/store/usePreferencesStore";
 
 export default function Settings() {
   const t = useTranslations();
@@ -136,6 +144,8 @@ export default function Settings() {
                 <ThemeToggle />
               </CardContent>
             </Card>
+
+            <QuickActionsCustomizer />
 
             <LanguageCard activeLocale={activeLocale} />
             <CuisineCard
@@ -391,6 +401,70 @@ function DietaryProfileCard({
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             {t("actionSave")}
           </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function QuickActionsCustomizer() {
+  const t = useTranslations();
+  const { quickActions, setQuickActions } = usePreferencesStore();
+
+  const options = [
+    { key: "fridge", title: t("dashboardQuickFridgeTitle"), icon: Refrigerator },
+    { key: "recipe", title: t("dashboardQuickChefTitle"), icon: UtensilsCrossed },
+    { key: "planner", title: t("dashboardQuickPlannerTitle"), icon: CalendarDays },
+    { key: "shopping", title: t("dashboardQuickShoppingTitle"), icon: ShoppingBasket },
+    { key: "nutrition", title: t("dashboardQuickNutritionTitle"), icon: Flame },
+    { key: "settings", title: t("dashboardQuickSettingsTitle"), icon: SettingsIcon },
+  ];
+
+  const toggle = (key: string) => {
+    if (quickActions.includes(key)) {
+      if (quickActions.length <= 1) {
+        toast.warning("Оберіть хоча б одну швидку дію");
+        return;
+      }
+      setQuickActions(quickActions.filter((k) => k !== key));
+    } else {
+      setQuickActions([...quickActions, key]);
+    }
+  };
+
+  return (
+    <Card className="rounded-3xl bg-glass overflow-hidden shadow-sm">
+      <CardHeader className="pb-3 border-b border-border/30">
+        <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
+          <Sparkles className="h-4 w-4 text-primary" />
+          Налаштування швидких дій
+        </CardTitle>
+        <CardDescription>
+          Оберіть, які розділи показувати на головній сторінці як швидкі дії.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {options.map((opt) => {
+            const isChecked = quickActions.includes(opt.key);
+            const Icon = opt.icon;
+            return (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => toggle(opt.key)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-secondary/10 hover:bg-secondary/20 transition-all text-left text-xs cursor-pointer select-none"
+              >
+                <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 transition-colors ${isChecked ? "bg-success border-success text-white" : "border-border/80"}`}>
+                  {isChecked && <Check className="h-3 w-3" />}
+                </div>
+                <Icon className="h-4 w-4 text-primary shrink-0" />
+                <span className="font-bold text-foreground">
+                  {opt.title}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </CardContent>
     </Card>
