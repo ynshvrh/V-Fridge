@@ -51,6 +51,7 @@ export default function Settings() {
   const t = useTranslations();
   const activeLocale = useLocale() as Locale;
   const { user, logout, refreshUser } = useAuth();
+  const [activeTab, setActiveTab] = useState<"profile" | "fridges" | "interface" | "danger">("profile");
 
   const clearData = async (type: "chat" | "products") => {
     const confirmKey = type === "chat" ? "settingsDeleteChatConfirm" : "settingsClearProductsConfirm";
@@ -78,13 +79,20 @@ export default function Settings() {
     }
   };
 
+  const tabItems = [
+    { id: "profile", label: "Профіль та смаки", icon: User },
+    { id: "fridges", label: "Спільні холодильники", icon: Refrigerator },
+    { id: "interface", label: "Налаштування інтерфейсу", icon: Palette },
+    { id: "danger", label: "Безпека та дані", icon: Trash2 },
+  ] as const;
+
   return (
     <div className="min-h-full w-full p-4 md:p-8 lg:p-12">
       <div className="max-w-5xl mx-auto space-y-8">
         <header className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-widest">
-            <User className="h-3 w-3" />
-            {t("settingsProfile")}
+            <SettingsIcon className="h-3 w-3" />
+            {t("settingsTitle")}
           </div>
           <h1 className="text-3xl md:text-5xl font-black tracking-tight">{t("settingsTitle")}</h1>
           <p className="text-base md:text-lg text-muted-foreground font-medium">
@@ -94,120 +102,208 @@ export default function Settings() {
 
         <Separator className="bg-border/60" />
 
+        {/* Mobile Horizontal Tabs */}
+        <div className="flex overflow-x-auto gap-2 pb-2 md:hidden no-scrollbar">
+          {tabItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-card border border-border/60 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          <section className="md:col-span-4 space-y-4">
-            <div className="p-6 rounded-3xl bg-glass shadow-lg flex flex-col items-center text-center space-y-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -z-10" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-mistral/10 rounded-full blur-2xl -z-10" />
-              <div className="h-20 w-20 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center shadow-lg shadow-primary/10 text-2xl font-black transition-transform hover:scale-105">
+          {/* Desktop Vertical Sidebar Tabs */}
+          <aside className="hidden md:block md:col-span-4 space-y-4">
+            <Card className="rounded-3xl bg-glass border border-border/60 shadow-sm overflow-hidden p-3 space-y-1">
+              {tabItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all text-left cursor-pointer ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/10"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </Card>
+
+            {/* Sticky user badge info in sidebar */}
+            <div className="p-5 rounded-3xl bg-glass border border-border/60 shadow-sm flex items-center gap-3">
+              <div className="h-10 w-10 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center text-sm font-black shrink-0">
                 {(user?.username || user?.email || "?").slice(0, 1).toUpperCase()}
               </div>
-              <div>
-                <h3 className="font-black text-xl tracking-tight">
-                  {user?.username || "Guest"}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {user?.email || "—"}
-                </p>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-sm truncate">{user?.username || "Guest"}</p>
+                <p className="text-[10px] text-muted-foreground truncate">{user?.email || "—"}</p>
               </div>
-              {user?.emailVerified ? (
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/15 text-success text-[10px] font-bold uppercase tracking-widest">
-                  <MailCheck className="h-3 w-3" />
-                  {t("settingsEmailVerified")}
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={resendVerification}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-solara/20 text-foreground dark:bg-solara/15 text-[11px] font-bold uppercase tracking-widest hover:bg-solara/30 transition-colors"
-                >
-                  <MailWarning className="h-3.5 w-3.5 text-solara" />
-                  {t("settingsEmailNotVerified")}
-                </button>
-              )}
             </div>
-          </section>
+          </aside>
 
+          {/* Active Tab Panel Content */}
           <main className="md:col-span-8 space-y-5">
-            <FridgesCard />
+            {activeTab === "profile" && (
+              <div className="space-y-5">
+                {/* Profile Detail Card */}
+                <Card className="rounded-3xl bg-glass overflow-hidden shadow-sm">
+                  <CardHeader className="pb-3 border-b border-border/30">
+                    <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
+                      <User className="h-4 w-4 text-primary" />
+                      Ваш Профіль
+                    </CardTitle>
+                    <CardDescription>Основна інформація про ваш акаунт.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-5 space-y-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-secondary/15 border border-border/30">
+                      <div className="h-16 w-16 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center shadow-md text-xl font-black">
+                        {(user?.username || user?.email || "?").slice(0, 1).toUpperCase()}
+                      </div>
+                      <div className="space-y-1 text-center sm:text-left">
+                        <h4 className="font-black text-lg tracking-tight">{user?.username || "Guest"}</h4>
+                        <p className="text-xs text-muted-foreground">{user?.email || "—"}</p>
+                      </div>
+                      <div className="sm:ml-auto">
+                        {user?.emailVerified ? (
+                          <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-success/15 text-success text-[10px] font-bold uppercase tracking-widest">
+                            <MailCheck className="h-3 w-3" />
+                            {t("settingsEmailVerified")}
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={resendVerification}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-solara/20 text-foreground dark:bg-solara/15 text-[10px] font-bold uppercase tracking-widest hover:bg-solara/30 transition-colors"
+                          >
+                            <MailWarning className="h-3 w-3 text-solara" />
+                            {t("settingsEmailNotVerified")}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-            <Card className="rounded-3xl bg-glass overflow-hidden">
-              <CardHeader className="pb-3 border-b border-border/30">
-                <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
-                  <Palette className="h-4 w-4 text-primary" />
-                  {t("settingsAppearance")}
-                </CardTitle>
-                <CardDescription>{t("settingsAppearanceHint")}</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-5 flex items-center justify-between gap-4">
-                <span className="text-sm font-medium text-muted-foreground">{t("settingsThemeLabel")}</span>
-                <ThemeToggle />
-              </CardContent>
-            </Card>
+                {/* Cuisine Preference Card */}
+                <CuisineCard
+                  currentSlug={user?.cuisinePreference ?? "any"}
+                  onSaved={refreshUser}
+                />
 
-            <QuickActionsCustomizer />
+                {/* Dietary Profile Card */}
+                <DietaryProfileCard
+                  currentProfile={user?.dietaryProfile ?? ""}
+                  onSaved={refreshUser}
+                />
+              </div>
+            )}
 
-            <LanguageCard activeLocale={activeLocale} />
-            <CuisineCard
-              currentSlug={user?.cuisinePreference ?? "any"}
-              onSaved={refreshUser}
-            />
+            {activeTab === "fridges" && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <FridgesCard />
+              </div>
+            )}
 
-            <DietaryProfileCard
-              currentProfile={user?.dietaryProfile ?? ""}
-              onSaved={refreshUser}
-            />
+            {activeTab === "interface" && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                {/* Appearance Theme Card */}
+                <Card className="rounded-3xl bg-glass overflow-hidden shadow-sm">
+                  <CardHeader className="pb-3 border-b border-border/30">
+                    <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
+                      <Palette className="h-4 w-4 text-primary" />
+                      {t("settingsAppearance")}
+                    </CardTitle>
+                    <CardDescription>{t("settingsAppearanceHint")}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-5 flex items-center justify-between gap-4">
+                    <span className="text-sm font-medium text-muted-foreground">{t("settingsThemeLabel")}</span>
+                    <ThemeToggle />
+                  </CardContent>
+                </Card>
 
-            <Card className="rounded-3xl border-destructive/25 shadow-sm bg-destructive/5 overflow-hidden">
-              <CardHeader className="border-b border-destructive/15 pb-4">
-                <CardTitle className="text-lg text-destructive font-black tracking-tight">{t("settingsDangerZone")}</CardTitle>
-                <CardDescription className="text-destructive/80 font-medium">{t("settingsCannotBeUndone")}</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-5 flex flex-col sm:flex-row gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-12 text-destructive border-destructive/30 hover:bg-destructive hover:text-white rounded-xl"
-                  onClick={() => clearData("products")}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  {t("settingsClearProducts")}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1 h-12 text-destructive border-destructive/30 hover:bg-destructive hover:text-white rounded-xl"
-                  onClick={() => clearData("chat")}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  {t("settingsDeleteChat")}
-                </Button>
-              </CardContent>
-            </Card>
+                {/* Quick Actions Preferences Customizer */}
+                <QuickActionsCustomizer />
 
-            <Card className="rounded-3xl border-border/30 bg-glass/40 shadow-sm">
-              <CardContent className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-2xl bg-success/15 text-success">
-                    <ShieldCheck className="h-5 w-5" />
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="font-black text-sm tracking-tight">
-                      {user?.username || "Guest"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {user?.email || "—"}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="destructive"
-                  className="w-full sm:w-auto px-6 h-11 font-bold rounded-xl shadow-md shadow-destructive/10"
-                  onClick={logout}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {t("settingsSignOut")}
-                </Button>
-              </CardContent>
-            </Card>
+                {/* Language Settings Card */}
+                <LanguageCard activeLocale={activeLocale} />
+              </div>
+            )}
+
+            {activeTab === "danger" && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                {/* Danger Actions Card */}
+                <Card className="rounded-3xl border-destructive/25 shadow-sm bg-destructive/5 overflow-hidden">
+                  <CardHeader className="border-b border-destructive/15 pb-4">
+                    <CardTitle className="text-lg text-destructive font-black tracking-tight">{t("settingsDangerZone")}</CardTitle>
+                    <CardDescription className="text-destructive/80 font-medium">{t("settingsCannotBeUndone")}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-5 flex flex-col sm:flex-row gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-12 text-destructive border-destructive/30 hover:bg-destructive hover:text-white rounded-xl font-bold transition-colors"
+                      onClick={() => clearData("products")}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      {t("settingsClearProducts")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 h-12 text-destructive border-destructive/30 hover:bg-destructive hover:text-white rounded-xl font-bold transition-colors"
+                      onClick={() => clearData("chat")}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      {t("settingsDeleteChat")}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Account Sign Out Card */}
+                <Card className="rounded-3xl border-border/30 bg-glass/40 shadow-sm">
+                  <CardContent className="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-2xl bg-success/15 text-success">
+                        <ShieldCheck className="h-5 w-5" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <p className="font-black text-sm tracking-tight">
+                          {user?.username || "Guest"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {user?.email || "—"}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      className="w-full sm:w-auto px-6 h-11 font-bold rounded-xl shadow-md shadow-destructive/10"
+                      onClick={logout}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      {t("settingsSignOut")}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </main>
         </div>
       </div>
@@ -224,8 +320,6 @@ function LanguageCard({ activeLocale }: { activeLocale: Locale }) {
     setBusy(locale);
     try {
       await switchLocale(locale);
-      // switchLocale forces a reload; control never returns here. Setting
-      // busy state is mostly belt-and-braces in case the navigation stalls.
     } catch (err) {
       setBusy(null);
       toast.error(getErrorMessage(err, t("settingsPreferencesFailed")));
@@ -233,7 +327,7 @@ function LanguageCard({ activeLocale }: { activeLocale: Locale }) {
   };
 
   return (
-    <Card className="rounded-3xl bg-glass overflow-hidden">
+    <Card className="rounded-3xl bg-glass overflow-hidden shadow-sm">
       <CardHeader className="pb-3 border-b border-border/30">
         <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
           <Languages className="h-4 w-4 text-primary" />
@@ -291,7 +385,7 @@ function CuisineCard({
   };
 
   return (
-    <Card className="rounded-3xl bg-glass overflow-hidden">
+    <Card className="rounded-3xl bg-glass overflow-hidden shadow-sm">
       <CardHeader className="pb-3 border-b border-border/30">
         <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
           <ChefHat className="h-4 w-4 text-primary" />

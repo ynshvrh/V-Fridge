@@ -32,7 +32,22 @@ export function AnalyticsTile() {
     data.mostWasted.length === 0 &&
     data.fastestConsumed.length === 0 &&
     data.weeklyTrends.length === 0;
-  if (isEmpty) return null;
+
+  if (isEmpty) {
+    return (
+      <div className="flex flex-col items-center justify-center text-center py-8 px-4 space-y-4">
+        <div className="h-14 w-14 rounded-2xl bg-secondary text-secondary-foreground flex items-center justify-center shadow-sm">
+          <TrendingDown className="h-7 w-7 text-primary" />
+        </div>
+        <div className="space-y-1.5 max-w-md mx-auto">
+          <h3 className="font-bold text-lg tracking-tight">Аналітика поки що порожня</h3>
+          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+            {"Додавайте продукти у ваш холодильник, готуйте з AI Шефом та відзначайте використані інгредієнти, щоб тут з'явилися інтерактивні графіки споживання та аналіз харчових відходів."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
