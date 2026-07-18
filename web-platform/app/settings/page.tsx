@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   Card,
@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth, type AuthUser } from "@/providers/auth-provider";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, API_BASE } from "@/lib/api-client";
 import {
   Trash2,
   LogOut,
@@ -37,6 +37,7 @@ import {
   CalendarDays,
   ShoppingBasket,
   Flame,
+  Plus,
   Settings as SettingsIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -151,8 +152,16 @@ export default function Settings() {
 
             {/* Sticky user badge info in sidebar */}
             <div className="p-5 rounded-3xl bg-glass border border-border/60 shadow-sm flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center text-lg font-black shrink-0">
-                {user?.avatar ? user.avatar : (user?.username || user?.email || "?").slice(0, 1).toUpperCase()}
+              <div className="h-10 w-10 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center text-lg font-black shrink-0 overflow-hidden">
+                {user?.avatar && (user.avatar.startsWith("/") || user.avatar.startsWith("http")) ? (
+                  <img
+                    src={user.avatar.startsWith("/") ? `${API_BASE}${user.avatar}` : user.avatar}
+                    alt={user.username || "User avatar"}
+                    className="h-full w-full object-cover rounded-2xl"
+                  />
+                ) : (
+                  <span>{user?.avatar ? user.avatar : (user?.username || user?.email || "?").slice(0, 1).toUpperCase()}</span>
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-sm truncate">{user?.username || "Guest"}</p>
@@ -312,18 +321,32 @@ function ProfileCard({
   const t = useTranslations();
   const [username, setUsername] = useState(user?.username || "");
   const [selectedAvatar, setSelectedAvatar] = useState(user?.avatar || "");
+  const [localAvatarFile, setLocalAvatarFile] = useState<File | null>(null);
+  const [localAvatarPreview, setLocalAvatarPreview] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync state if user changes
   useEffect(() => {
     if (user) {
       setUsername(user.username);
       setSelectedAvatar(user.avatar || "");
+      setLocalAvatarFile(null);
+      setLocalAvatarPreview("");
     }
   }, [user]);
+
+  // Clean up object URL memory leaks
+  useEffect(() => {
+    return () => {
+      if (localAvatarPreview) {
+        URL.revokeObjectURL(localAvatarPreview);
+      }
+    };
+  }, [localAvatarPreview]);
 
   const AVATARS = [
     "🥗", "🍕", "🍣", "🥞", "🍩", "🥑", "🍔",
@@ -332,10 +355,26 @@ function ProfileCard({
 
   const hasChanges = useMemo(() => {
     const isUsernameDiff = username.trim() !== (user?.username || "").trim();
-    const isAvatarDiff = selectedAvatar !== (user?.avatar || "");
+    const isAvatarDiff = selectedAvatar !== (user?.avatar || "") && !localAvatarFile;
+    const isFileDiff = localAvatarFile !== null;
     const isPasswordDiff = newPassword.length > 0;
-    return isUsernameDiff || isAvatarDiff || isPasswordDiff;
-  }, [username, selectedAvatar, newPassword, user]);
+    return isUsernameDiff || isAvatarDiff || isFileDiff || isPasswordDiff;
+  }, [username, selectedAvatar, localAvatarFile, newPassword, user]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Файл занадто великий! Ліміт 5МБ.");
+      return;
+    }
+
+    setLocalAvatarFile(file);
+    setLocalAvatarPreview(URL.createObjectURL(file));
+    setSelectedAvatar(""); // reset emoji selection
+  };
 
   const handleSave = async () => {
     if (newPassword && newPassword !== confirmPassword) {
@@ -353,25 +392,40 @@ function ProfileCard({
 
     setSaving(true);
     try {
-      const body: Record<string, any> = {};
-      if (username.trim() !== user?.username) {
-        body.username = username.trim();
-      }
-      if (selectedAvatar !== (user?.avatar || "")) {
-        body.avatar = selectedAvatar || null;
-      }
-      if (newPassword) {
-        body.newPassword = newPassword;
-        body.currentPassword = currentPassword;
+      // 1. Upload custom avatar if file is chosen
+      if (localAvatarFile) {
+        const formData = new FormData();
+        formData.append("file", localAvatarFile);
+        await apiFetch("/auth/me/avatar", {
+          method: "POST",
+          body: formData,
+        });
       }
 
-      await apiFetch("/auth/me", {
-        method: "PATCH",
-        body,
-      });
+      // 2. Perform other profile updates if anything else changed
+      const isUsernameDiff = username.trim() !== user?.username;
+      const isEmojiAvatarDiff = selectedAvatar !== (user?.avatar || "") && !localAvatarFile;
+      const isPasswordDiff = newPassword.length > 0;
+
+      if (isUsernameDiff || isEmojiAvatarDiff || isPasswordDiff) {
+        const body: Record<string, any> = {};
+        if (isUsernameDiff) body.username = username.trim();
+        if (isEmojiAvatarDiff) body.avatar = selectedAvatar || null;
+        if (isPasswordDiff) {
+          body.newPassword = newPassword;
+          body.currentPassword = currentPassword;
+        }
+
+        await apiFetch("/auth/me", {
+          method: "PATCH",
+          body,
+        });
+      }
 
       await onSaved();
       toast.success("Профіль успішно оновлено!");
+      setLocalAvatarFile(null);
+      setLocalAvatarPreview("");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -395,40 +449,87 @@ function ProfileCard({
         {/* Avatar Selection Section */}
         <div className="space-y-3">
           <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
-            Виберіть аватарку (емодзі)
+            Виберіть аватарку (емодзі або фото)
           </label>
           <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl bg-secondary/15 border border-border/30">
-            <div className="h-20 w-20 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center shadow-md text-4xl font-black shrink-0 relative group">
-              {selectedAvatar ? selectedAvatar : (username || user?.email || "?").slice(0, 1).toUpperCase()}
-              {selectedAvatar && (
+            <div className="h-20 w-20 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center shadow-md text-4xl font-black shrink-0 relative group overflow-hidden">
+              {localAvatarPreview ? (
+                <img
+                  src={localAvatarPreview}
+                  alt="Local preview"
+                  className="h-full w-full object-cover rounded-2xl"
+                />
+              ) : selectedAvatar && (selectedAvatar.startsWith("/") || selectedAvatar.startsWith("http")) ? (
+                <img
+                  src={selectedAvatar.startsWith("/") ? `${API_BASE}${selectedAvatar}` : selectedAvatar}
+                  alt={username || "User avatar"}
+                  className="h-full w-full object-cover rounded-2xl"
+                />
+              ) : selectedAvatar ? (
+                <span>{selectedAvatar}</span>
+              ) : (
+                <span>{(username || user?.email || "?").slice(0, 1).toUpperCase()}</span>
+              )}
+              
+              {(localAvatarPreview || selectedAvatar) && (
                 <button
                   type="button"
-                  onClick={() => setSelectedAvatar("")}
-                  className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-[10px] font-bold shadow-xs hover:bg-destructive/95 cursor-pointer"
+                  onClick={() => {
+                    setSelectedAvatar("");
+                    setLocalAvatarFile(null);
+                    setLocalAvatarPreview("");
+                  }}
+                  className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-[10px] font-bold shadow-xs hover:bg-destructive/95 cursor-pointer z-10"
                 >
                   ✕
                 </button>
               )}
             </div>
             
-            <div className="grid grid-cols-7 gap-2 max-w-[320px]">
-              {AVATARS.map((emoji) => {
-                const active = selectedAvatar === emoji;
-                return (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => setSelectedAvatar(emoji)}
-                    className={`h-9 w-9 rounded-xl border text-xl flex items-center justify-center transition-all cursor-pointer ${
-                      active
-                        ? "bg-primary/10 border-primary scale-110 shadow-xs"
-                        : "bg-card border-border/60 hover:scale-105"
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                );
-              })}
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-7 gap-2 max-w-[320px]">
+                {AVATARS.map((emoji) => {
+                  const active = selectedAvatar === emoji && !localAvatarPreview;
+                  return (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => {
+                        setSelectedAvatar(emoji);
+                        setLocalAvatarFile(null);
+                        setLocalAvatarPreview("");
+                      }}
+                      className={`h-9 w-9 rounded-xl border text-xl flex items-center justify-center transition-all cursor-pointer ${
+                        active
+                          ? "bg-primary/10 border-primary scale-110 shadow-xs"
+                          : "bg-card border-border/60 hover:scale-105"
+                      }`}
+                    >
+                      {emoji}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-xl font-bold gap-1 text-xs h-9 cursor-pointer"
+                >
+                  <Plus className="h-3 w-3" />
+                  Завантажити власне фото
+                </Button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                />
+              </div>
             </div>
           </div>
         </div>

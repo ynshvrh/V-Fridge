@@ -1,6 +1,6 @@
 "use client";
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5080").replace(/\/$/, "");
+export const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5080").replace(/\/$/, "");
 
 const ACCESS_KEY = "vf_access_token";
 const REFRESH_KEY = "vf_refresh_token";
