@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   Card,
@@ -425,15 +425,87 @@ function DietaryProfileCard({
   onSaved: () => Promise<void>;
 }) {
   const t = useTranslations();
-  const [profile, setProfile] = useState(currentProfile);
+  
+  // Parse initial values from serialized string
+  const initial = useMemo(() => {
+    let complexity: "easy" | "normal" | "gourmet" = "normal";
+    const excluded: string[] = [];
+    let additional = "";
+
+    if (currentProfile) {
+      const complexityMatch = currentProfile.match(/Складність:\s*(легкі|звичайні|складні)/i);
+      const excludedMatch = currentProfile.match(/Не їм:\s*([^.\n]+)/i);
+
+      if (complexityMatch) {
+        const val = complexityMatch[1].toLowerCase();
+        if (val === "легкі") complexity = "easy";
+        else if (val === "складні") complexity = "gourmet";
+        else complexity = "normal";
+      }
+
+      if (excludedMatch) {
+        const items = excludedMatch[1].split(",").map(i => i.trim()).filter(Boolean);
+        excluded.push(...items);
+      }
+
+      const additionalMatch = currentProfile.match(/Додатково:\s*([\s\S]*)/i);
+      if (additionalMatch) {
+        additional = additionalMatch[1].trim();
+      } else if (!complexityMatch && !excludedMatch) {
+        additional = currentProfile.trim();
+      }
+    }
+    return { complexity, excluded, additional };
+  }, [currentProfile]);
+
+  const [complexity, setComplexity] = useState<"easy" | "normal" | "gourmet">(initial.complexity);
+  const [excluded, setExcluded] = useState<string[]>(initial.excluded);
+  const [additional, setAdditional] = useState(initial.additional);
   const [saving, setSaving] = useState(false);
+
+  // Sync state if initial changes (e.g. after refreshUser)
+  useEffect(() => {
+    setComplexity(initial.complexity);
+    setExcluded(initial.excluded);
+    setAdditional(initial.additional);
+  }, [initial]);
+
+  const EXCLUDED_PRESETS = [
+    { label: "🐟 Риба", val: "Риба" },
+    { label: "🐖 Свинина", val: "Свинина" },
+    { label: "🥩 Яловичина", val: "Яловичина" },
+    { label: "🍄 Гриби", val: "Гриби" },
+    { label: "🥛 Лактоза", val: "Лактоза" },
+    { label: "🥜 Горіхи", val: "Горіхи" },
+    { label: "🥚 Яйця", val: "Яйця" },
+    { label: "🐔 Птиця", val: "Птиця" },
+    { label: "🧅 Цибуля", val: "Цибуля" },
+    { label: "🧄 Часник", val: "Часник" },
+  ];
+
+  const handleToggleExclude = (val: string) => {
+    setExcluded(prev =>
+      prev.includes(val) ? prev.filter(item => item !== val) : [...prev, val]
+    );
+  };
 
   const handleSave = async () => {
     setSaving(true);
+    
+    // Construct serialized profile string
+    const complexityLabel = complexity === "easy" ? "легкі" : complexity === "gourmet" ? "складні" : "звичайні";
+    let serialized = `Складність: ${complexityLabel}.`;
+    if (excluded.length > 0) {
+      serialized += ` Не їм: ${excluded.join(", ")}.`;
+    }
+    if (additional.trim()) {
+      serialized += ` Додатково: ${additional.trim()}`;
+    }
+
     try {
       await apiFetch("/auth/me/preferences", {
         method: "PATCH",
-        body: { dietaryProfile: profile },
+        body: { dietaryProfile: serialized },
       });
       await onSaved();
       toast.success(t("settingsDietarySaved"));
@@ -444,57 +516,103 @@ function DietaryProfileCard({
     }
   };
 
-  const PRESETS = [
-    { label: "🥦 Вегетаріанець", text: "Я вегетаріанець (не їм м'ясо та рибу)." },
-    { label: "🌱 Веган", text: "Я веган (не їм жодних продуктів тваринного походження)." },
-    { label: "🥛 Без лактози", text: "У мене непереносимість лактози, уникати молочних продуктів з лактозою." },
-    { label: "🌾 Без глютену", text: "Я не їм глютен." },
-    { label: "🥜 Без горіхів", text: "У мене алергія на горіхи." },
-    { label: "🥩 Кето", text: "Я дотримуюсь кето-дієти (високий вміст жирів, мінімум вуглеводів)." },
-  ];
-
-  const applyPreset = (text: string) => {
-    setProfile((prev) => {
-      const trimmed = prev.trim();
-      if (!trimmed) return text;
-      if (trimmed.includes(text)) return prev;
-      return `${trimmed}\n${text}`;
-    });
-  };
+  // Compare if current local inputs are different from cached database values
+  const hasChanges = useMemo(() => {
+    const isComplexityDiff = complexity !== initial.complexity;
+    const isAdditionalDiff = additional.trim() !== initial.additional.trim();
+    const isExcludedDiff =
+      excluded.length !== initial.excluded.length ||
+      !excluded.every(item => initial.excluded.includes(item));
+    return isComplexityDiff || isAdditionalDiff || isExcludedDiff;
+  }, [complexity, excluded, additional, initial]);
 
   return (
     <Card className="rounded-3xl bg-glass overflow-hidden shadow-sm">
       <CardHeader className="pb-3 border-b border-border/30">
         <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
           <Sparkles className="h-4 w-4 text-primary" />
-          {t("settingsDietaryProfile")}
+          Харчові уподобання та дієтичний профіль
         </CardTitle>
-        <CardDescription>{t("settingsDietaryHint")}</CardDescription>
+        <CardDescription>Налаштуйте складність рецептів та продукти, які ви не їсте. ШІ-шеф автоматично враховуватиме це при складанні планів.</CardDescription>
       </CardHeader>
-      <CardContent className="pt-5 space-y-4">
-        <div className="flex flex-wrap gap-2">
-          {PRESETS.map((p) => (
-            <button
-              key={p.label}
-              type="button"
-              onClick={() => applyPreset(p.text)}
-              className="text-xs px-2.5 py-1 rounded-lg border border-border/70 bg-secondary/50 hover:bg-secondary transition-colors text-muted-foreground font-semibold cursor-pointer"
-            >
-              {p.label}
-            </button>
-          ))}
+      
+      <CardContent className="pt-5 space-y-6">
+        {/* Recipe Complexity Section */}
+        <div className="space-y-2.5">
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
+            Складність рецептів у планувальнику
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: "easy", label: "🟢 Легкі страви", desc: "Швидко й просто" },
+              { id: "normal", label: "🟡 Звичайні страви", desc: "Збалансовані" },
+              { id: "gourmet", label: "🔴 Складні страви", desc: "Вишукані / Довгі" }
+            ].map(c => {
+              const active = complexity === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setComplexity(c.id as any)}
+                  className={`flex-1 min-w-[130px] flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer ${
+                    active
+                      ? "bg-primary/10 border-primary text-foreground font-bold shadow-xs"
+                      : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <span className="text-sm font-bold">{c.label}</span>
+                  <span className="text-[10px] text-muted-foreground/80 font-normal mt-0.5">{c.desc}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <textarea
-          value={profile}
-          onChange={(e) => setProfile(e.target.value)}
-          placeholder={t("settingsDietaryPlaceholder")}
-          className="w-full min-h-[100px] rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-          maxLength={1000}
-        />
-        <div className="flex justify-end">
+
+        {/* Excluded Products Section */}
+        <div className="space-y-2.5">
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
+            Які продукти ви НЕ їсте? (Шеф виключить їх)
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {EXCLUDED_PRESETS.map((p) => {
+              const active = excluded.includes(p.val);
+              return (
+                <button
+                  key={p.val}
+                  type="button"
+                  onClick={() => handleToggleExclude(p.val)}
+                  className={`text-xs px-3.5 py-2.5 rounded-xl border transition-all font-bold cursor-pointer ${
+                    active
+                      ? "bg-destructive/10 border-destructive text-destructive font-extrabold shadow-2xs"
+                      : "bg-secondary/40 border-border/60 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Text Area for Additional Wishes */}
+        <div className="space-y-2.5">
+          <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
+            Додаткові побажання чи улюблені страви
+          </label>
+          <textarea
+            value={additional}
+            onChange={(e) => setAdditional(e.target.value)}
+            placeholder="Наприклад: 'Люблю макарони з сиром', 'Не їм гостру їжу', 'Маю алергію на морепродукти'..."
+            className="w-full min-h-[100px] rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            maxLength={1000}
+          />
+        </div>
+
+        {/* Action Save Button */}
+        <div className="flex justify-end pt-2 border-t border-border/40">
           <Button
             onClick={handleSave}
-            disabled={saving || profile.trim() === (currentProfile || "").trim()}
+            disabled={saving || !hasChanges}
             className="rounded-xl font-bold h-10 px-6 gap-2"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
