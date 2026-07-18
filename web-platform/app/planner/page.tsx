@@ -12,7 +12,7 @@ import { categoryLabelKey } from "@/interfaces/categories";
 import { useFridges } from "@/providers/fridge-provider";
 import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
 import Link from "next/link";
-import { useProductStore } from "@/store/useVFridgeStore";
+import { useProductStore, usePlannerStore, type Meal, type GapItem, type MealPlan } from "@/store/useVFridgeStore";
 import {
   Sheet,
   SheetContent,
@@ -20,22 +20,6 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-
-type Meal = {
-  name: string;
-  day: string;
-  ingredients: string[];
-  note: string | null;
-  description: string | null;
-  steps: string[] | null;
-  mealType: string | null;
-  calories?: number;
-  protein?: number;
-  fat?: number;
-  carbs?: number;
-};
-type GapItem = { name: string; quantity: string | null; unit: string | null; category: string };
-type MealPlan = { meals: Meal[]; gapItems: GapItem[]; generatedAt: string };
 
 const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const mealTypes = ["breakfast", "lunch", "dinner"];
@@ -56,10 +40,11 @@ const DAY_KEY: Record<string, string> = {
 
 export default function PlannerPage() {
   const t = useTranslations() as unknown as (key: string, values?: Record<string, string | number>) => string;
-  const [plan, setPlan] = useState<MealPlan | null>(null);
+  const { plan, setPlan } = usePlannerStore();
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
   const [loadingRecipeMealKey, setLoadingRecipeMealKey] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Sheet state
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
@@ -70,6 +55,10 @@ export default function PlannerPage() {
 
   const { fridges, status: fridgesStatus } = useFridges();
   const activeFridgeId = useFridges().active?.id ?? null;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (activeFridgeId == null) {
@@ -86,7 +75,7 @@ export default function PlannerPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [activeFridgeId, t]);
+  }, [activeFridgeId, t, setPlan]);
 
   const generate = async () => {
     setLoading(true);
@@ -339,6 +328,14 @@ export default function PlannerPage() {
 
     return targetDate.toISOString().split("T")[0];
   };
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (fridgesStatus === "ready" && fridges.length === 0) {
     return (

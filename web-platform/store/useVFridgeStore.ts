@@ -123,3 +123,47 @@ export const useNutritionStore = create<NutritionState>()(
     }
   )
 );
+
+export interface Meal {
+  name: string;
+  day: string;
+  ingredients: string[];
+  note: string | null;
+  description: string | null;
+  steps: string[] | null;
+  mealType: string | null;
+  calories?: number;
+  protein?: number;
+  fat?: number;
+  carbs?: number;
+}
+
+export interface GapItem {
+  name: string;
+  quantity: string | null;
+  unit: string | null;
+  category: string;
+}
+
+export interface MealPlan {
+  meals: Meal[];
+  gapItems: GapItem[];
+  generatedAt: string;
+}
+
+interface PlannerState {
+  plan: MealPlan | null;
+  setPlan: (plan: MealPlan | null) => void;
+}
+
+export const usePlannerStore = create<PlannerState>()(
+  persist(
+    (set) => ({
+      plan: null,
+      setPlan: (plan) => set({ plan }),
+    }),
+    {
+      name: 'vfridge-planner-storage',
+    }
+  )
+);
