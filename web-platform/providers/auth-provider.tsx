@@ -38,12 +38,25 @@ const PROTECTED_PATHS = ["/", "/recipe", "/settings", "/shopping", "/planner"];
 const AUTH_ONLY_GUEST_PATHS = ["/signin", "/signup"];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [status, setStatus] = useState<AuthContextValue["status"]>("loading");
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (typeof window === "undefined") return null;
+    const cached = localStorage.getItem("vfridge_auth_user");
+    return cached ? JSON.parse(cached) : null;
+  });
+  const [status, setStatus] = useState<AuthContextValue["status"]>(() => {
+    if (typeof window === "undefined") return "loading";
+    const tokens = tokenStore.get();
+    if (!tokens) return "unauthenticated";
+    const cachedUser = localStorage.getItem("vfridge_auth_user");
+    return cachedUser ? "authenticated" : "loading";
+  });
   const router = useRouter();
   const pathname = usePathname();
 
   const handleSessionLost = useCallback(() => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("vfridge_auth_user");
+    }
     setUser(null);
     setStatus("unauthenticated");
   }, []);
@@ -58,7 +71,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const bootstrap = async () => {
       const tokens = tokenStore.get();
       if (!tokens) {
-        if (!cancelled) setStatus("unauthenticated");
+        if (!cancelled) {
+          localStorage.removeItem("vfridge_auth_user");
+          setStatus("unauthenticated");
+        }
         return;
       }
       try {
@@ -66,10 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!cancelled) {
           setUser(me);
           setStatus("authenticated");
+          localStorage.setItem("vfridge_auth_user", JSON.stringify(me));
         }
       } catch {
         if (!cancelled) {
           tokenStore.clear();
+          localStorage.removeItem("vfridge_auth_user");
           setStatus("unauthenticated");
         }
       }
@@ -91,6 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tokenStore.set({ accessToken: pair.accessToken, refreshToken: pair.refreshToken });
     setUser(pair.user);
     setStatus("authenticated");
+    if (typeof window !== "undefined") {
+      localStorage.setItem("vfridge_auth_user", JSON.stringify(pair.user));
+    }
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -128,6 +149,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       catch { /* best-effort */ }
     }
     tokenStore.clear();
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("vfridge_auth_user");
+    }
     setUser(null);
     setStatus("unauthenticated");
     router.replace("/signin");
@@ -138,7 +162,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const me = await apiFetch<AuthUser>("/auth/me");
       setUser(me);
       setStatus("authenticated");
+      if (typeof window !== "undefined") {
+        localStorage.setItem("vfridge_auth_user", JSON.stringify(me));
+      }
     } catch {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("vfridge_auth_user");
+      }
       setUser(null);
       setStatus("unauthenticated");
     }
