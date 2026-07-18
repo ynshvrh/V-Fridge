@@ -35,7 +35,7 @@ type Meal = {
 type GapItem = { name: string; quantity: string | null; unit: string | null; category: string };
 type MealPlan = { meals: Meal[]; gapItems: GapItem[]; generatedAt: string };
 
-const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const mealTypes = ["breakfast", "lunch", "dinner"];
 
 // Slug → translation key. Keeps the day order canonical (Monday = 0) while the
@@ -88,7 +88,9 @@ export default function PlannerPage() {
   const generate = async () => {
     setLoading(true);
     try {
-      const data = await apiFetch<MealPlan>("/meal-plan", { method: "POST" });
+      const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const currentDayName = days[new Date().getDay()];
+      const data = await apiFetch<MealPlan>(`/meal-plan?currentDay=${currentDayName}`, { method: "POST" });
       setPlan(data);
     } catch (err) {
       toast.error(getErrorMessage(err, t("plannerGenerateFailed")));
@@ -460,7 +462,7 @@ export default function PlannerPage() {
 
         {/* Recipe details Slide-out Sheet */}
         <Sheet open={!!selectedMeal} onOpenChange={(open) => { if (!open) setSelectedMeal(null); }}>
-          <SheetContent className="w-full sm:max-w-md p-6 bg-glass/95 backdrop-blur-md overflow-y-auto flex flex-col gap-6">
+          <SheetContent className="w-full sm:max-w-md p-6 bg-card/95 backdrop-blur-md overflow-y-auto flex flex-col gap-6 border-l border-border/60">
             {selectedMeal && (
               <>
                 <SheetHeader className="p-0 text-left">

@@ -30,7 +30,8 @@ import { SidebarFridgeSwitcher } from "@/components/sidebar-fridge-switcher";
 import { useTranslations } from "next-intl";
 
 const NAV_ITEMS = [
-  { href: "/",         icon: LayoutDashboard, labelKey: "navFridge" },
+  { href: "/",         icon: LayoutDashboard, labelKey: "navDashboard" },
+  { href: "/fridge",   icon: Refrigerator,    labelKey: "navFridge" },
   { href: "/shopping", icon: ShoppingBasket,  labelKey: "navShopping" },
   { href: "/planner",  icon: CalendarDays,    labelKey: "navPlanner" },
   { href: "/recipe",   icon: UtensilsCrossed, labelKey: "navChef" },

@@ -1,12 +1,21 @@
 "use client";
-import { AddProducts } from "@/components/add-products";
-import { ProductList } from "@/components/ProductList";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
 import { useProductStore } from "@/store/useVFridgeStore";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Refrigerator, AlertTriangle, Sparkles, CalendarClock, Settings as SettingsIcon } from "lucide-react";
+import {
+  LayoutDashboard,
+  Refrigerator,
+  ShoppingBasket,
+  CalendarDays,
+  UtensilsCrossed,
+  Flame,
+  Settings as SettingsIcon,
+  AlertTriangle,
+  CalendarClock,
+  Sparkles
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnalyticsTile } from "@/components/analytics-tile";
@@ -35,9 +44,6 @@ export default function Dashboard() {
     return { total: products.length, expired, soon };
   }, [products]);
 
-  // Without a fridge there's nothing for the products list to scope to.
-  // Surface a CTA that points to /settings instead of letting the rest of the
-  // page silently 401 every backend call.
   if (fridgesStatus === "ready" && fridges.length === 0) {
     return (
       <div className="min-h-full w-full p-4 md:p-8 lg:p-12">
@@ -72,8 +78,8 @@ export default function Dashboard() {
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-widest">
-              <Refrigerator className="h-3 w-3" />
-              {t("navFridge")}
+              <LayoutDashboard className="h-3 w-3" />
+              {t("navDashboard")}
             </div>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight">
               {user?.username
@@ -81,19 +87,17 @@ export default function Dashboard() {
                     name: user.username,
                     primary: (chunks) => <span className="text-primary">{chunks}</span>,
                   })
-                : t("dashboardTitle")}
+                : t("appTitle")}
             </h1>
             <p className="text-base md:text-lg text-muted-foreground font-medium">
               {t("dashboardHeroSubtitle")}
             </p>
             <ActiveFridgeBanner icon={Refrigerator} label={t("dashboardActiveFor")} />
           </div>
-          <div className="hidden md:block">
-            <AddProducts />
-          </div>
         </header>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Overview Stats section */}
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
             label={t("dashboardStatTotal")}
             value={stats.total}
@@ -114,63 +118,66 @@ export default function Dashboard() {
             hint={t("dashboardStatExpiredHint")}
             icon={<AlertTriangle className="h-5 w-5" />}
           />
-          <Link
-            href="/recipe"
-            className="rounded-2xl border border-primary/20 bg-brand-gradient text-primary-foreground p-5 transition-all hover:scale-[1.02] shadow-md hover:shadow-lg flex flex-col justify-between cursor-pointer min-h-[120px]"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase tracking-widest opacity-90">{t("dashboardOpenChef")}</span>
-              <Sparkles className="h-5 w-5 opacity-90" />
-            </div>
-            <div className="mt-3">
-              <h4 className="font-black text-lg tracking-tight leading-snug">
-                {t("dashboardChefCtaTitle")}
-              </h4>
-              <p className="text-[11px] opacity-80 line-clamp-1 mt-0.5">
-                {t("dashboardChefCtaBody")}
-              </p>
-            </div>
-          </Link>
         </section>
 
-        {/* Collapsible Analytics Section */}
-        <div className="rounded-3xl border border-border/60 bg-glass/20 overflow-hidden shadow-xs">
-          <details className="group">
-            <summary className="flex items-center justify-between p-5 md:p-6 cursor-pointer select-none font-bold text-sm text-muted-foreground hover:text-foreground transition-colors list-none">
-              <span className="inline-flex items-center gap-2">
-                <CalendarClock className="h-4 w-4 text-primary" />
-                Аналітика споживання (показати/приховати)
-              </span>
-              <span className="text-xs transition-transform group-open:rotate-180">▼</span>
-            </summary>
-            <div className="px-5 pb-6 md:px-6 md:pb-8 border-t border-border/40 pt-5 bg-card/10">
-              <AnalyticsTile />
-            </div>
-          </details>
-        </div>
-
-        <main className="space-y-4">
-          <div className="md:hidden w-full">
-            <AddProducts />
+        {/* Quick Actions Grid */}
+        <section className="space-y-4">
+          <h2 className="text-xl md:text-2xl font-black tracking-tight flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Швидкі дії
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <QuickActionCard
+              href="/fridge"
+              icon={Refrigerator}
+              title={t("dashboardQuickFridgeTitle")}
+              description={t("dashboardQuickFridgeDesc")}
+              badge={`${products.length} ${t("dashboardItemsCount", { count: products.length })}`}
+            />
+            <QuickActionCard
+              href="/recipe"
+              icon={UtensilsCrossed}
+              title={t("dashboardQuickChefTitle")}
+              description={t("dashboardQuickChefDesc")}
+              featured
+            />
+            <QuickActionCard
+              href="/planner"
+              icon={CalendarDays}
+              title={t("dashboardQuickPlannerTitle")}
+              description={t("dashboardQuickPlannerDesc")}
+            />
+            <QuickActionCard
+              href="/shopping"
+              icon={ShoppingBasket}
+              title={t("dashboardQuickShoppingTitle")}
+              description={t("dashboardQuickShoppingDesc")}
+            />
+            <QuickActionCard
+              href="/nutrition"
+              icon={Flame}
+              title={t("dashboardQuickNutritionTitle")}
+              description={t("dashboardQuickNutritionDesc")}
+            />
+            <QuickActionCard
+              href="/settings"
+              icon={SettingsIcon}
+              title={t("dashboardQuickSettingsTitle")}
+              description={t("dashboardQuickSettingsDesc")}
+            />
           </div>
+        </section>
 
-          <div className="rounded-3xl border border-border/60 shadow-xl bg-card overflow-hidden">
-            <div className="p-5 md:p-6 border-b border-border/60 bg-muted/40 flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-lg">{t("dashboardInventory")}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {t("dashboardInventorySortHint")}
-                </p>
-              </div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2.5 py-1 rounded-full bg-background border border-border/60">
-                {t("dashboardItemsCount", { count: stats.total })}
-              </span>
-            </div>
-            <div className="p-4 md:p-6 min-h-[24rem]">
-              <ProductList />
-            </div>
+        {/* Always visible Analytics Section */}
+        <section className="space-y-4">
+          <h2 className="text-xl md:text-2xl font-black tracking-tight flex items-center gap-2">
+            <CalendarClock className="h-5 w-5 text-primary" />
+            Аналітика споживання
+          </h2>
+          <div className="rounded-3xl border border-border/60 bg-glass/25 p-5 md:p-6 shadow-xs">
+            <AnalyticsTile />
           </div>
-        </main>
+        </section>
       </div>
     </div>
   );
@@ -189,10 +196,6 @@ function StatCard({
   tone: "primary" | "warning" | "danger";
   icon: React.ReactNode;
 }) {
-  // All three tones stay on the citrus palette — no off-brand tailwind yellows.
-  // "warning" leans on Solara (honey-orange) so expiring-soon reads warm, not alien.
-  // Text stays on the standard foreground for readability in both themes; the tone
-  // colour lives in the surface, border and icon, not the body text.
   const tones = {
     primary: "bg-secondary/60 border-secondary text-secondary-foreground",
     warning: "bg-solara/20 border-solara/50 text-foreground dark:bg-solara/10 dark:border-solara/30",
@@ -209,5 +212,73 @@ function StatCard({
         {hint && <span className="text-xs font-medium opacity-70">{hint}</span>}
       </div>
     </div>
+  );
+}
+
+function QuickActionCard({
+  href,
+  icon: Icon,
+  title,
+  description,
+  badge,
+  featured = false,
+}: {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  badge?: string;
+  featured?: boolean;
+}) {
+  if (featured) {
+    return (
+      <Link
+        href={href}
+        className="group relative rounded-3xl border border-primary/20 bg-brand-gradient text-primary-foreground p-6 shadow-md hover:shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] flex flex-col justify-between min-h-[150px] cursor-pointer"
+      >
+        <div className="flex items-start justify-between">
+          <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Icon className="h-6 w-6 text-white" />
+          </div>
+          <span className="text-[9px] font-black uppercase tracking-widest bg-white/30 text-white px-2 py-0.5 rounded-full">
+            AI Рекомендовано
+          </span>
+        </div>
+        <div className="mt-4">
+          <h3 className="font-black text-lg tracking-tight leading-snug">
+            {title}
+          </h3>
+          <p className="text-xs opacity-90 mt-1">
+            {description}
+          </p>
+        </div>
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className="group relative rounded-3xl border border-border/60 bg-card p-6 shadow-xs hover:shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] flex flex-col justify-between min-h-[150px] cursor-pointer"
+    >
+      <div className="flex items-start justify-between">
+        <div className="h-12 w-12 rounded-2xl bg-secondary text-secondary-foreground flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
+          <Icon className="h-6 w-6" />
+        </div>
+        {badge && (
+          <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground bg-secondary/35 px-2.5 py-0.5 rounded-full">
+            {badge}
+          </span>
+        )}
+      </div>
+      <div className="mt-4">
+        <h3 className="font-black text-lg tracking-tight leading-snug group-hover:text-primary transition-colors">
+          {title}
+        </h3>
+        <p className="text-xs text-muted-foreground mt-1">
+          {description}
+        </p>
+      </div>
+    </Link>
   );
 }
