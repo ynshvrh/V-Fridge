@@ -57,7 +57,6 @@ export default function PlannerPage() {
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [regeneratingDay, setRegeneratingDay] = useState<string | null>(null);
   const [loadingRecipeMealKey, setLoadingRecipeMealKey] = useState<string | null>(null);
 
   // Sheet state
@@ -133,58 +132,7 @@ export default function PlannerPage() {
     }
   };
 
-  const handleRegenerateInSheet = async (day: string) => {
-    if (!selectedMeal) return;
-    const currentMealType = selectedMeal.mealType;
-    setRegeneratingDay(day);
-    try {
-      const updated = await apiFetch<MealPlan>("/meal-plan/regenerate-day", {
-        method: "POST",
-        body: { day },
-      });
-      setPlan(updated);
 
-      const newMeal = updated.meals.find(
-        (m) => m.day === day && m.mealType === currentMealType
-      );
-      if (newMeal) {
-        setSelectedMeal(newMeal);
-        setCheckedIngredients({});
-
-        const key = `${newMeal.day}-${newMeal.mealType || ""}`;
-        setLoadingRecipeMealKey(key);
-        try {
-          const recipeUpdated = await apiFetch<MealPlan>("/meal-plan/recipe", {
-            method: "POST",
-            body: { day: newMeal.day, mealType: newMeal.mealType },
-          });
-          setPlan(recipeUpdated);
-          const finalMeal = recipeUpdated.meals.find(
-            (m) => m.day === day && m.mealType === currentMealType
-          );
-          if (finalMeal) setSelectedMeal(finalMeal);
-        } catch (err) {
-          toast.error(getErrorMessage(err, t("plannerRecipeFailed")));
-        } finally {
-          setLoadingRecipeMealKey(null);
-        }
-      }
-    } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.status === 404) {
-          toast.error(t("plannerRegenerateNotFound"));
-          return;
-        }
-        if (err.status === 429) {
-          toast.error(t("plannerRegenerateRateLimit"));
-          return;
-        }
-      }
-      toast.error(getErrorMessage(err, t("plannerRegenerateFailed")));
-    } finally {
-      setRegeneratingDay(null);
-    }
-  };
 
   const handleRegenerateMeal = async (day: string, mealType: string) => {
     const key = `${day}-${mealType}`;
@@ -621,7 +569,6 @@ export default function PlannerPage() {
                     onClick={() => handleRegenerateMeal(selectedMeal.day, selectedMeal.mealType || "")}
                     disabled={
                       regeneratingMealKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}` ||
-                      regeneratingDay === selectedMeal.day ||
                       loadingRecipeMealKey != null
                     }
                   >
@@ -633,27 +580,6 @@ export default function PlannerPage() {
                     {regeneratingMealKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}`
                       ? t("plannerRegenerateMealBusy")
                       : t("plannerRegenerateMeal")}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full h-11 rounded-xl gap-2 font-semibold text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-all"
-                    onClick={() => handleRegenerateInSheet(selectedMeal.day)}
-                    disabled={
-                      regeneratingMealKey != null ||
-                      regeneratingDay === selectedMeal.day ||
-                      loadingRecipeMealKey != null
-                    }
-                  >
-                    {regeneratingDay === selectedMeal.day ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-3 w-3" />
-                    )}
-                    {regeneratingDay === selectedMeal.day
-                      ? t("plannerRegenerateDayBusy")
-                      : t("plannerRegenerateDay")}
                   </Button>
                 </div>
               </>
