@@ -28,6 +28,10 @@ import {
   Loader2,
   Activity,
   Calendar,
+  Coffee,
+  Soup,
+  Salad,
+  Cookie,
 } from "lucide-react";
 
 type NutritionLog = {
@@ -429,11 +433,11 @@ export default function NutritionTrackerPage() {
                     snack: "Перекус",
                   };
                   
-                  const mealEmojiMap: Record<string, string> = {
-                    breakfast: "🍳",
-                    lunch: "🍲",
-                    dinner: "🥗",
-                    snack: "🍌",
+                  const mealIconMap: Record<string, React.ReactNode> = {
+                    breakfast: <Coffee className="h-4 w-4 text-primary shrink-0" />,
+                    lunch: <Soup className="h-4 w-4 text-primary shrink-0" />,
+                    dinner: <Salad className="h-4 w-4 text-primary shrink-0" />,
+                    snack: <Cookie className="h-4 w-4 text-primary shrink-0" />,
                   };
 
                   const groupCalories = group.items.reduce((acc, i) => acc + i.calories, 0);
@@ -441,8 +445,8 @@ export default function NutritionTrackerPage() {
                   return (
                     <div key={group.type} className="space-y-2">
                       <div className="flex items-center justify-between px-2 py-1 border-b border-border/40">
-                        <span className="text-sm font-bold text-foreground/90 inline-flex items-center gap-1.5">
-                          <span className="text-base">{mealEmojiMap[group.type]}</span>
+                        <span className="text-sm font-bold text-foreground/90 inline-flex items-center gap-2">
+                          {mealIconMap[group.type]}
                           {mealLabelMap[group.type]}
                         </span>
                         {group.items.length > 0 && (

@@ -61,103 +61,103 @@
   --radius: 0.85rem;
 
   /* Base surfaces */
-  --background: #F4FAF6;            /* extremely soft mint/ivory wash */
-  --foreground: #09201A;            /* deep pine green */
+  --background: #FFFDF9;            /* very soft warm ivory/citrus wash */
+  --foreground: #2B1600;            /* deep warm dark brown/amber */
   --card: #FFFFFF;
-  --card-foreground: #09201A;
+  --card-foreground: #2B1600;
   --popover: #FFFFFF;
-  --popover-foreground: #09201A;
+  --popover-foreground: #2B1600;
 
   /* Brand quartet */
-  --mistral: #06B6D4;               /* electric cyan */
-  --zephir:  #D1FAE5;               /* pastel mint */
-  --solara:  #34D399;               /* fresh emerald */
-  --pulpe:   #059669;               /* rich forest emerald */
+  --mistral: #F59E0B;               /* warm amber */
+  --zephir:  #FEF3C7;               /* pastel orange-yellow */
+  --solara:  #FBBF24;               /* sunny amber */
+  --pulpe:   #EA580C;               /* rich tangerine orange */
 
   /* Primary = Pulpe, Secondary = Zéphir, Accent = Mistral */
-  --primary: #059669;
+  --primary: #EA580C;
   --primary-foreground: #FFFFFF;
-  --secondary: #D1FAE5;
-  --secondary-foreground: #044E37;
+  --secondary: #FEF3C7;
+  --secondary-foreground: #78350F;
 
-  --muted: #E6F4ED;
-  --muted-foreground: #3B665A;
-  --accent: #06B6D4;
+  --muted: #FFFBEB;
+  --muted-foreground: #783F04;
+  --accent: #D97706;
   --accent-foreground: #FFFFFF;
 
   /* Outside-palette feedback colours */
-  --destructive: #EF4444;           /* bright rose red */
-  --success: #10B981;               /* active mint green */
+  --destructive: #EF4444;
+  --success: #10B981;
   --success-foreground: #FFFFFF;
 
-  --border: #B2E5CD;
-  --input: #B2E5CD;
-  --ring: #059669;
+  --border: #FCD34D;
+  --input: #FCD34D;
+  --ring: #EA580C;
 
-  --chart-1: #059669;
-  --chart-2: #06B6D4;
-  --chart-3: #34D399;
+  --chart-1: #EA580C;
+  --chart-2: #F59E0B;
+  --chart-3: #FBBF24;
   --chart-4: #10B981;
-  --chart-5: #6366F1;               /* electric indigo */
+  --chart-5: #6366F1;
 
   /* Sidebar */
-  --sidebar: #EBF7F1;
-  --sidebar-foreground: #09201A;
-  --sidebar-primary: #059669;
+  --sidebar: #FFFDF5;
+  --sidebar-foreground: #2B1600;
+  --sidebar-primary: #EA580C;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #D1FAE5;
-  --sidebar-accent-foreground: #044E37;
-  --sidebar-border: #B2E5CD;
-  --sidebar-ring: #059669;
+  --sidebar-accent: #FEF3C7;
+  --sidebar-accent-foreground: #78350F;
+  --sidebar-border: #FCD34D;
+  --sidebar-ring: #EA580C;
 }
 
 .dark {
-  /* Obsidian emerald */
-  --background: #050E0C;            /* deep obsidian emerald */
-  --foreground: #ECFDF5;            /* minty ice */
-  --card: #081B16;                  /* deep jade slab */
-  --card-foreground: #ECFDF5;
-  --popover: #081B16;
-  --popover-foreground: #ECFDF5;
+  /* Blueberry dark mode */
+  --background: #0B0F19;            /* deep dark blueberry midnight */
+  --foreground: #E0E7FF;            /* indigo ice */
+  --card: #111827;                  /* dark slate / blueberry slab */
+  --card-foreground: #E0E7FF;
+  --popover: #111827;
+  --popover-foreground: #E0E7FF;
 
   /* Brand quartet */
-  --mistral: #22D3EE;               /* glow cyan */
-  --zephir:  #132E26;               /* dark slate jade */
-  --solara:  #34D399;
-  --pulpe:   #10B981;               /* neon mint */
+  --mistral: #38BDF8;               /* glow cyan */
+  --zephir:  #1E293B;               /* dark slate blue */
+  --solara:  #6366F1;               /* electric indigo */
+  --pulpe:   #818CF8;               /* neon blueberry/indigo */
 
-  --primary: #10B981;
-  --primary-foreground: #050E0C;
-  --secondary: #132E26;
-  --secondary-foreground: #ECFDF5;
+  --primary: #818CF8;
+  --primary-foreground: #0B0F19;
+  --secondary: #1E293B;
+  --secondary-foreground: #E0E7FF;
 
-  --muted: #0B221B;
-  --muted-foreground: #8EB3A7;
-  --accent: #22D3EE;
-  --accent-foreground: #050E0C;
+  --muted: #1F2937;
+  --muted-foreground: #9CA3AF;
+  --accent: #38BDF8;
+  --accent-foreground: #0B0F19;
 
   --destructive: #F87171;
   --success: #34D399;
-  --success-foreground: #050E0C;
+  --success-foreground: #0B0F19;
 
-  --border: rgba(52, 211, 153, 0.08);
-  --input: rgba(52, 211, 153, 0.12);
-  --ring: #10B981;
+  --border: rgba(129, 140, 248, 0.1);
+  --input: rgba(129, 140, 248, 0.15);
+  --ring: #818CF8;
 
-  --chart-1: #10B981;
-  --chart-2: #22D3EE;
-  --chart-3: #34D399;
-  --chart-4: #059669;
-  --chart-5: #818CF8;
+  --chart-1: #818CF8;
+  --chart-2: #38BDF8;
+  --chart-3: #6366F1;
+  --chart-4: #EA580C;
+  --chart-5: #10B981;
 
-  --sidebar: #061411;
-  --sidebar-foreground: #ECFDF5;
-  --sidebar-primary: #10B981;
-  --sidebar-primary-foreground: #050E0C;
-  --sidebar-accent: #132E26;
-  --sidebar-accent-foreground: #ECFDF5;
-  --sidebar-border: rgba(52, 211, 153, 0.08);
-  --sidebar-ring: #10B981;
+  --sidebar: #090D16;
+  --sidebar-foreground: #E0E7FF;
+  --sidebar-primary: #818CF8;
+  --sidebar-primary-foreground: #0B0F19;
+  --sidebar-accent: #1E293B;
+  --sidebar-accent-foreground: #E0E7FF;
+  --sidebar-border: rgba(129, 140, 248, 0.1);
+  --sidebar-ring: #818CF8;
 }
 
 @layer base {

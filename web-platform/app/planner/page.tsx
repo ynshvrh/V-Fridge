@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, ChefHat, Loader2, Sparkles, ShoppingBasket, RefreshCw, Check, Flame, Plus } from "lucide-react";
+import { CalendarDays, ChefHat, Loader2, Sparkles, ShoppingBasket, RefreshCw, Check, Flame, Plus, Coffee, Soup, Salad, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
@@ -398,9 +398,13 @@ export default function PlannerPage() {
                           >
                             <div className="space-y-1">
                               <div className="flex items-center gap-1.5">
-                                <span className="text-xs">
-                                  {mealType === "breakfast" ? "🍳" : mealType === "lunch" ? "🍜" : "🥩"}
-                                </span>
+                                  {mealType === "breakfast" ? (
+                                    <Coffee className="h-3.5 w-3.5 text-primary shrink-0" />
+                                  ) : mealType === "lunch" ? (
+                                    <Soup className="h-3.5 w-3.5 text-primary shrink-0" />
+                                  ) : (
+                                    <Salad className="h-3.5 w-3.5 text-primary shrink-0" />
+                                  )}
                                 <span className="text-[10px] font-black uppercase tracking-widest text-primary/80">
                                   {mealTypeLabel}
                                 </span>
@@ -461,9 +465,13 @@ export default function PlannerPage() {
               <>
                 <SheetHeader className="p-0 text-left">
                   <div className="flex items-center gap-2">
-                    <span className="text-base">
-                      {selectedMeal.mealType === "breakfast" ? "🍳" : selectedMeal.mealType === "lunch" ? "🍜" : "🥩"}
-                    </span>
+                      {selectedMeal.mealType === "breakfast" ? (
+                        <Coffee className="h-4 w-4 text-primary shrink-0" />
+                      ) : selectedMeal.mealType === "lunch" ? (
+                        <Soup className="h-4 w-4 text-primary shrink-0" />
+                      ) : (
+                        <Salad className="h-4 w-4 text-primary shrink-0" />
+                      )}
                     <span className="text-[11px] font-black uppercase tracking-widest text-primary">
                       {selectedMeal.mealType
                         ? t(`mealType${selectedMeal.mealType.charAt(0).toUpperCase() + selectedMeal.mealType.slice(1).toLowerCase()}`)
@@ -490,8 +498,9 @@ export default function PlannerPage() {
                 ) : (
                   <div className="space-y-6 flex-1">
                     {selectedMeal.note && (
-                      <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 text-xs italic text-primary/90 leading-relaxed">
-                        💡 {selectedMeal.note}
+                      <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 text-xs italic text-primary/90 leading-relaxed flex items-start gap-2">
+                        <Lightbulb className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                        <span>{selectedMeal.note}</span>
                       </div>
                     )}
 
