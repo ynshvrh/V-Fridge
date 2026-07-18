@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CalendarDays, ChefHat, Loader2, Sparkles, ShoppingBasket, ChevronDown, RefreshCw, Check, Flame, Plus } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { CalendarDays, ChefHat, Loader2, Sparkles, ShoppingBasket, RefreshCw, Check, Flame, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
@@ -35,8 +35,6 @@ type Meal = {
 type GapItem = { name: string; quantity: string | null; unit: string | null; category: string };
 type MealPlan = { meals: Meal[]; gapItems: GapItem[]; generatedAt: string };
 
-const DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const MEAL_TYPE_ORDER = ["breakfast", "lunch", "dinner"];
 const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const mealTypes = ["breakfast", "lunch", "dinner"];
 
@@ -52,15 +50,7 @@ const DAY_KEY: Record<string, string> = {
   Sunday: "plannerDaySunday",
 };
 
-function sortMeals(meals: Meal[]): Meal[] {
-  return [...meals].sort((a, b) => {
-    const dayDiff = DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day);
-    if (dayDiff !== 0) return dayDiff;
-    const typeA = a.mealType?.toLowerCase() || "";
-    const typeB = b.mealType?.toLowerCase() || "";
-    return MEAL_TYPE_ORDER.indexOf(typeA) - MEAL_TYPE_ORDER.indexOf(typeB);
-  });
-}
+
 
 export default function PlannerPage() {
   const t = useTranslations();
@@ -290,7 +280,7 @@ export default function PlannerPage() {
           carbs: meal.carbs || 0,
         },
       });
-      toast.success(t("plannerLogToTrackerSuccess" as any, { name: meal.name }));
+      toast.success(t("plannerLogToTrackerSuccess" as never, { name: meal.name }));
     } catch (err) {
       toast.error(getErrorMessage(err, "Failed to log meal."));
     } finally {
@@ -358,7 +348,7 @@ export default function PlannerPage() {
             <div className="space-y-4">
               {weekdays.map((day) => {
                 const dayKey = DAY_KEY[day];
-                const dayLabel = dayKey ? t(dayKey as any) : day;
+                const dayLabel = dayKey ? t(dayKey as never) : day;
                 const dayMeals = plan.meals.filter((m) => m.day === day);
 
                 return (
@@ -381,7 +371,7 @@ export default function PlannerPage() {
                       {mealTypes.map((mealType) => {
                         const meal = dayMeals.find((m) => m.mealType?.toLowerCase() === mealType);
                         const mealKey = `${day}-${mealType}`;
-                        const mealTypeLabel = t(`mealType${mealType.charAt(0).toUpperCase() + mealType.slice(1)}` as any);
+                        const mealTypeLabel = t(`mealType${mealType.charAt(0).toUpperCase() + mealType.slice(1)}` as never);
 
                         if (!meal) {
                           return (
@@ -476,8 +466,8 @@ export default function PlannerPage() {
                     </span>
                     <span className="text-[11px] font-black uppercase tracking-widest text-primary">
                       {selectedMeal.mealType
-                        ? t(`mealType${selectedMeal.mealType.charAt(0).toUpperCase() + selectedMeal.mealType.slice(1).toLowerCase()}` as any)
-                        : ""} • {DAY_KEY[selectedMeal.day] ? t(DAY_KEY[selectedMeal.day] as any) : selectedMeal.day}
+                        ? t(`mealType${selectedMeal.mealType.charAt(0).toUpperCase() + selectedMeal.mealType.slice(1).toLowerCase()}` as never)
+                        : ""} • {DAY_KEY[selectedMeal.day] ? t(DAY_KEY[selectedMeal.day] as never) : selectedMeal.day}
                     </span>
                   </div>
                   <SheetTitle className="text-2xl font-black tracking-tight leading-tight mt-1">
@@ -511,17 +501,17 @@ export default function PlannerPage() {
                         <div className="flex items-center justify-between">
                           <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1">
                             <Flame className="h-3.5 w-3.5 text-primary" />
-                            {t("plannerNutrientsTitle" as any)}
+                            {t("plannerNutrientsTitle" as never)}
                           </h4>
                           <span className="text-xs font-black text-primary">
-                            {selectedMeal.calories} {t("plannerCaloriesUnit" as any)}
+                            {selectedMeal.calories} {t("plannerCaloriesUnit" as never)}
                           </span>
                         </div>
                         
                         <div className="grid grid-cols-3 gap-2 text-center text-xs">
                           <div className="p-2 rounded-xl bg-background/60 border border-border/25">
                             <span className="block text-[9px] uppercase font-bold text-emerald-600 dark:text-emerald-400">
-                              {t("plannerProtein" as any)}
+                              {t("plannerProtein" as never)}
                             </span>
                             <span className="font-black text-foreground">
                               {Math.round(selectedMeal.protein ?? 0)}g
@@ -529,7 +519,7 @@ export default function PlannerPage() {
                           </div>
                           <div className="p-2 rounded-xl bg-background/60 border border-border/25">
                             <span className="block text-[9px] uppercase font-bold text-amber-600 dark:text-amber-400">
-                              {t("plannerFat" as any)}
+                              {t("plannerFat" as never)}
                             </span>
                             <span className="font-black text-foreground">
                               {Math.round(selectedMeal.fat ?? 0)}g
@@ -537,7 +527,7 @@ export default function PlannerPage() {
                           </div>
                           <div className="p-2 rounded-xl bg-background/60 border border-border/25">
                             <span className="block text-[9px] uppercase font-bold text-cyan-600 dark:text-cyan-400">
-                              {t("plannerCarbs" as any)}
+                              {t("plannerCarbs" as never)}
                             </span>
                             <span className="font-black text-foreground">
                               {Math.round(selectedMeal.carbs ?? 0)}g
@@ -557,8 +547,8 @@ export default function PlannerPage() {
                             <Plus className="h-3.5 w-3.5" />
                           )}
                           {loggingToTrackerKey === `${selectedMeal.day}-${selectedMeal.mealType || ""}`
-                            ? t("plannerLogToTrackerBusy" as any)
-                            : t("plannerLogToTracker" as any)}
+                            ? t("plannerLogToTrackerBusy" as never)
+                            : t("plannerLogToTracker" as never)}
                         </Button>
                       </div>
                     )}

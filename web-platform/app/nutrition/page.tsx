@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/providers/auth-provider";
-import { apiFetch, ApiError } from "@/lib/api-client";
+import { apiFetch } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -66,7 +65,6 @@ type DailyNutritionResponse = {
 };
 
 export default function NutritionTrackerPage() {
-  const t = useTranslations();
   const { status } = useAuth();
   
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -98,12 +96,7 @@ export default function NutritionTrackerPage() {
   const [targetFat, setTargetFat] = useState("65");
   const [targetCarbs, setTargetCarbs] = useState("200");
 
-  useEffect(() => {
-    if (status !== "authenticated") return;
-    fetchDailyData();
-  }, [selectedDate, status]);
-
-  const fetchDailyData = async () => {
+  const fetchDailyData = useCallback(async () => {
     setLoading(true);
     try {
       const resp = await apiFetch<DailyNutritionResponse>(`/nutrition/daily?date=${selectedDate}`);
@@ -119,7 +112,12 @@ export default function NutritionTrackerPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    fetchDailyData();
+  }, [selectedDate, status, fetchDailyData]);
 
   const handlePrevDay = () => {
     const d = new Date(selectedDate);

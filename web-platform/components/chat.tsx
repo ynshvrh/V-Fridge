@@ -13,7 +13,6 @@ import { apiFetch, ApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
 import { useProductStore } from "@/store/useVFridgeStore";
 
-const QUICK_PROMPT_KEYS = ["chatPrompt1", "chatPrompt2", "chatPrompt3", "chatPrompt4"] as const;
 
 export default function Chat() {
   const t = useTranslations();
@@ -138,7 +137,7 @@ export default function Chat() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
               {promptDetails.map((pd) => {
-                const prompt = t(pd.key as any);
+                const prompt = t(pd.key as never);
                 return (
                   <button
                     key={pd.key}

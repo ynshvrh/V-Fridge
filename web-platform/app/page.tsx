@@ -6,7 +6,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { useProductStore } from "@/store/useVFridgeStore";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Refrigerator, AlertTriangle, Sparkles, ArrowRight, CalendarClock, Settings as SettingsIcon } from "lucide-react";
+import { Refrigerator, AlertTriangle, Sparkles, CalendarClock, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnalyticsTile } from "@/components/analytics-tile";
