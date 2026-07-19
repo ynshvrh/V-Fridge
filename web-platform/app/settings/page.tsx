@@ -38,11 +38,67 @@ import {
   Flame,
   Plus,
   Settings as SettingsIcon,
+  Pizza,
+  Coffee,
+  Apple,
+  Heart,
+  Star,
+  Zap,
+  Crown,
+  Trophy,
+  Shield,
+  Smile,
+  Gift,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useTheme } from "@/providers/theme-provider";
+
+// Icon avatar mapping
+const AVATAR_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  user: User,
+  chefHat: ChefHat,
+  pizza: Pizza,
+  coffee: Coffee,
+  apple: Apple,
+  heart: Heart,
+  star: Star,
+  zap: Zap,
+  crown: Crown,
+  trophy: Trophy,
+  shield: Shield,
+  smile: Smile,
+  gift: Gift,
+  flame: Flame,
+  refrigerator: Refrigerator,
+};
+
+const renderAvatar = (avatar: string | null | undefined, initial: string, iconClassName = "h-5 w-5") => {
+  if (!avatar) {
+    return <span>{initial}</span>;
+  }
+
+  // If it's a URL or base64 (if the user still has one, or for legacy)
+  if (avatar.startsWith("/") || avatar.startsWith("http")) {
+    return (
+      <img
+        src={avatar.startsWith("/") ? `${API_BASE}${avatar}` : avatar}
+        alt="Avatar"
+        className="h-full w-full object-cover rounded-2xl"
+      />
+    );
+  }
+
+  // If it's one of our defined icons
+  const IconComp = AVATAR_ICONS[avatar];
+  if (IconComp) {
+    return <IconComp className={iconClassName} />;
+  }
+
+  // Fallback to text/emoji if it's anything else
+  return <span>{avatar}</span>;
+};
 import { FridgesCard } from "@/components/fridges-card";
 import { SUPPORTED_LOCALES, switchLocale, type Locale } from "@/lib/locale";
 import { CUISINE_SLUGS, cuisineLabelKey } from "@/interfaces/cuisines";
@@ -166,15 +222,7 @@ export default function Settings() {
             {/* Sticky user badge info in sidebar */}
             <div className="p-5 rounded-3xl bg-glass border border-border/60 shadow-sm flex items-center gap-3">
               <div className="h-10 w-10 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center text-lg font-black shrink-0 overflow-hidden">
-                {user?.avatar && (user.avatar.startsWith("/") || user.avatar.startsWith("http")) ? (
-                  <img
-                    src={user.avatar.startsWith("/") ? `${API_BASE}${user.avatar}` : user.avatar}
-                    alt={user.username || "User avatar"}
-                    className="h-full w-full object-cover rounded-2xl"
-                  />
-                ) : (
-                  <span>{user?.avatar ? user.avatar : (user?.username || user?.email || "?").slice(0, 1).toUpperCase()}</span>
-                )}
+                {renderAvatar(user?.avatar, (user?.username || user?.email || "?").slice(0, 1).toUpperCase(), "h-5 w-5")}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-sm truncate">{user?.username || "Guest"}</p>
@@ -478,60 +526,29 @@ function ProfileCard({
   const t = useTranslations();
   const [username, setUsername] = useState(user?.username || "");
   const [selectedAvatar, setSelectedAvatar] = useState(user?.avatar || "");
-  const [localAvatarFile, setLocalAvatarFile] = useState<File | null>(null);
-  const [localAvatarPreview, setLocalAvatarPreview] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sync state if user changes
   useEffect(() => {
     if (user) {
       setUsername(user.username);
       setSelectedAvatar(user.avatar || "");
-      setLocalAvatarFile(null);
-      setLocalAvatarPreview("");
     }
   }, [user]);
 
-  // Clean up object URL memory leaks
-  useEffect(() => {
-    return () => {
-      if (localAvatarPreview) {
-        URL.revokeObjectURL(localAvatarPreview);
-      }
-    };
-  }, [localAvatarPreview]);
-
   const AVATARS = [
-    "🥗", "🍕", "🍣", "🥞", "🍩", "🥑", "🍔",
-    "🌶️", "🍉", "🍇", "🧀", "🧁", "🍎", "🥕"
+    "user", "chefHat", "pizza", "coffee", "apple", "heart", "star", "zap", "crown", "trophy", "shield", "smile", "gift", "flame", "refrigerator"
   ];
 
   const hasChanges = useMemo(() => {
     const isUsernameDiff = username.trim() !== (user?.username || "").trim();
-    const isAvatarDiff = selectedAvatar !== (user?.avatar || "") && !localAvatarFile;
-    const isFileDiff = localAvatarFile !== null;
+    const isAvatarDiff = selectedAvatar !== (user?.avatar || "");
     const isPasswordDiff = newPassword.length > 0;
-    return isUsernameDiff || isAvatarDiff || isFileDiff || isPasswordDiff;
-  }, [username, selectedAvatar, localAvatarFile, newPassword, user]);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error(t("settingsFileTooLarge"));
-      return;
-    }
-
-    setLocalAvatarFile(file);
-    setLocalAvatarPreview(URL.createObjectURL(file));
-    setSelectedAvatar(""); // reset emoji selection
-  };
+    return isUsernameDiff || isAvatarDiff || isPasswordDiff;
+  }, [username, selectedAvatar, newPassword, user]);
 
   const handleSave = async () => {
     if (newPassword && newPassword !== confirmPassword) {
@@ -549,25 +566,14 @@ function ProfileCard({
 
     setSaving(true);
     try {
-      // 1. Upload custom avatar if file is chosen
-      if (localAvatarFile) {
-        const formData = new FormData();
-        formData.append("file", localAvatarFile);
-        await apiFetch("/auth/me/avatar", {
-          method: "POST",
-          body: formData,
-        });
-      }
-
-      // 2. Perform other profile updates if anything else changed
       const isUsernameDiff = username.trim() !== user?.username;
-      const isEmojiAvatarDiff = selectedAvatar !== (user?.avatar || "") && !localAvatarFile;
+      const isAvatarDiff = selectedAvatar !== (user?.avatar || "");
       const isPasswordDiff = newPassword.length > 0;
 
-      if (isUsernameDiff || isEmojiAvatarDiff || isPasswordDiff) {
+      if (isUsernameDiff || isAvatarDiff || isPasswordDiff) {
         const body: Record<string, any> = {};
         if (isUsernameDiff) body.username = username.trim();
-        if (isEmojiAvatarDiff) body.avatar = selectedAvatar || null;
+        if (isAvatarDiff) body.avatar = selectedAvatar || null;
         if (isPasswordDiff) {
           body.newPassword = newPassword;
           body.currentPassword = currentPassword;
@@ -581,8 +587,6 @@ function ProfileCard({
 
       await onSaved();
       toast.success(t("settingsProfileSuccess"));
-      setLocalAvatarFile(null);
-      setLocalAvatarPreview("");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -609,33 +613,13 @@ function ProfileCard({
             {t("settingsProfileAvatarLabel")}
           </label>
           <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl bg-secondary/15 border border-border/30">
-            <div className="h-20 w-20 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center shadow-md text-4xl font-black shrink-0 relative group overflow-hidden">
-              {localAvatarPreview ? (
-                <img
-                  src={localAvatarPreview}
-                  alt="Local preview"
-                  className="h-full w-full object-cover rounded-2xl"
-                />
-              ) : selectedAvatar && (selectedAvatar.startsWith("/") || selectedAvatar.startsWith("http")) ? (
-                <img
-                  src={selectedAvatar.startsWith("/") ? `${API_BASE}${selectedAvatar}` : selectedAvatar}
-                  alt={username || "User avatar"}
-                  className="h-full w-full object-cover rounded-2xl"
-                />
-              ) : selectedAvatar ? (
-                <span>{selectedAvatar}</span>
-              ) : (
-                <span>{(username || user?.email || "?").slice(0, 1).toUpperCase()}</span>
-              )}
+            <div className="h-20 w-20 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center shadow-md text-2xl font-black shrink-0 relative group overflow-hidden">
+              {renderAvatar(selectedAvatar, (username || user?.email || "?").slice(0, 1).toUpperCase(), "h-9 w-9")}
               
-              {(localAvatarPreview || selectedAvatar) && (
+              {selectedAvatar && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedAvatar("");
-                    setLocalAvatarFile(null);
-                    setLocalAvatarPreview("");
-                  }}
+                  onClick={() => setSelectedAvatar("")}
                   className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center text-[10px] font-bold shadow-xs hover:bg-destructive/95 cursor-pointer z-10"
                 >
                   ✕
@@ -644,48 +628,26 @@ function ProfileCard({
             </div>
             
             <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-7 gap-2 max-w-[320px]">
-                {AVATARS.map((emoji) => {
-                  const active = selectedAvatar === emoji && !localAvatarPreview;
+              <div className="grid grid-cols-5 gap-2 max-w-[240px]">
+                {AVATARS.map((iconName) => {
+                  const active = selectedAvatar === iconName;
+                  const IconComp = AVATAR_ICONS[iconName];
                   return (
                     <button
-                      key={emoji}
+                      key={iconName}
                       type="button"
-                      onClick={() => {
-                        setSelectedAvatar(emoji);
-                        setLocalAvatarFile(null);
-                        setLocalAvatarPreview("");
-                      }}
-                      className={`h-9 w-9 rounded-xl border text-xl flex items-center justify-center transition-all cursor-pointer ${
+                      onClick={() => setSelectedAvatar(iconName)}
+                      className={`h-9 w-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
                         active
-                          ? "bg-primary/10 border-primary scale-110 shadow-xs"
-                          : "bg-card border-border/60 hover:scale-105"
+                          ? "bg-primary/10 border-primary scale-110 shadow-xs text-primary"
+                          : "bg-card border-border/60 hover:scale-105 text-muted-foreground hover:text-foreground"
                       }`}
+                      title={iconName}
                     >
-                      {emoji}
+                      {IconComp && <IconComp className="h-4 w-4" />}
                     </button>
                   );
                 })}
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="rounded-xl font-bold gap-1 text-xs h-9 cursor-pointer"
-                >
-                  <Plus className="h-3 w-3" />
-                  {t("settingsProfileUploadPhoto")}
-                </Button>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  className="hidden"
-                />
               </div>
             </div>
           </div>
