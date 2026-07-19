@@ -4,8 +4,10 @@ import { persist } from 'zustand/middleware';
 interface PreferencesState {
   quickActions: string[];
   setQuickActions: (actions: string[]) => void;
-  accentTheme: 'citrus' | 'strawberry' | 'blueberry' | 'lime';
-  setAccentTheme: (theme: 'citrus' | 'strawberry' | 'blueberry' | 'lime') => void;
+  lightAccentTheme: 'citrus' | 'strawberry';
+  setLightAccentTheme: (theme: 'citrus' | 'strawberry') => void;
+  darkAccentTheme: 'blueberry' | 'lime';
+  setDarkAccentTheme: (theme: 'blueberry' | 'lime') => void;
   shoppingMode: 'buttons' | 'swipe';
   setShoppingMode: (mode: 'buttons' | 'swipe') => void;
   ambientGlow: boolean;
@@ -21,8 +23,10 @@ export const usePreferencesStore = create<PreferencesState>()(
     (set) => ({
       quickActions: ['fridge', 'recipe', 'planner', 'shopping', 'nutrition', 'settings'],
       setQuickActions: (quickActions) => set({ quickActions }),
-      accentTheme: 'citrus',
-      setAccentTheme: (accentTheme) => set({ accentTheme }),
+      lightAccentTheme: 'citrus',
+      setLightAccentTheme: (lightAccentTheme) => set({ lightAccentTheme }),
+      darkAccentTheme: 'blueberry',
+      setDarkAccentTheme: (darkAccentTheme) => set({ darkAccentTheme }),
       shoppingMode: 'buttons',
       setShoppingMode: (shoppingMode) => set({ shoppingMode }),
       ambientGlow: true,

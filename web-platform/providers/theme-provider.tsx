@@ -68,7 +68,7 @@ import { usePreferencesStore } from "@/store/usePreferencesStore";
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const mode = useSyncExternalStore(subscribeToStoredMode, readStoredMode, getStoredModeServer);
   const systemPref = useSyncExternalStore(subscribeToSystemPref, getSystemPref, getSystemPrefServer);
-  const { accentTheme, setAccentTheme, ambientGlow, hoverGlow, highContrast } = usePreferencesStore();
+  const { lightAccentTheme, darkAccentTheme, ambientGlow, hoverGlow, highContrast } = usePreferencesStore();
 
   const resolved: "light" | "dark" = mode === "system" ? systemPref : mode;
 
@@ -84,23 +84,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     root.classList.remove("accent-citrus", "accent-strawberry", "accent-blueberry", "accent-lime");
     
-    let activeAccent = accentTheme;
-    if (resolved === "dark") {
-      if (activeAccent !== "blueberry" && activeAccent !== "lime") {
-        activeAccent = "blueberry";
-      }
-    } else {
-      if (activeAccent !== "citrus" && activeAccent !== "strawberry") {
-        activeAccent = "citrus";
-      }
-    }
-
-    if (activeAccent !== accentTheme) {
-      setAccentTheme(activeAccent);
-    }
-    
+    const activeAccent = resolved === "dark" ? darkAccentTheme : lightAccentTheme;
     root.classList.add(`accent-${activeAccent}`);
-  }, [resolved, accentTheme, setAccentTheme]);
+  }, [resolved, lightAccentTheme, darkAccentTheme]);
 
   // Apply other interactive preferences
   useEffect(() => {

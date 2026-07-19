@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   Card,
@@ -36,7 +36,6 @@ import {
   CalendarDays,
   ShoppingBasket,
   Flame,
-  Plus,
   Settings as SettingsIcon,
   Pizza,
   Coffee,
@@ -937,8 +936,10 @@ function InterfaceSettingsCard() {
   const t = useTranslations();
   const { resolved } = useTheme();
   const {
-    accentTheme,
-    setAccentTheme,
+    lightAccentTheme,
+    setLightAccentTheme,
+    darkAccentTheme,
+    setDarkAccentTheme,
     shoppingMode,
     setShoppingMode,
     ambientGlow,
@@ -949,15 +950,20 @@ function InterfaceSettingsCard() {
     setHighContrast,
   } = usePreferencesStore();
 
-  const [tempAccent, setTempAccent] = useState(accentTheme);
+  const [tempLightAccent, setTempLightAccent] = useState(lightAccentTheme);
+  const [tempDarkAccent, setTempDarkAccent] = useState(darkAccentTheme);
   const [tempShoppingMode, setTempShoppingMode] = useState(shoppingMode);
   const [tempAmbientGlow, setTempAmbientGlow] = useState(ambientGlow);
   const [tempHoverGlow, setTempHoverGlow] = useState(hoverGlow);
   const [tempHighContrast, setTempHighContrast] = useState(highContrast);
 
   useEffect(() => {
-    setTempAccent(accentTheme);
-  }, [accentTheme]);
+    setTempLightAccent(lightAccentTheme);
+  }, [lightAccentTheme]);
+
+  useEffect(() => {
+    setTempDarkAccent(darkAccentTheme);
+  }, [darkAccentTheme]);
 
   useEffect(() => {
     setTempShoppingMode(shoppingMode);
@@ -976,7 +982,8 @@ function InterfaceSettingsCard() {
   }, [highContrast]);
 
   const handleSave = () => {
-    setAccentTheme(tempAccent);
+    setLightAccentTheme(tempLightAccent);
+    setDarkAccentTheme(tempDarkAccent);
     setShoppingMode(tempShoppingMode);
     setAmbientGlow(tempAmbientGlow);
     setHoverGlow(tempHoverGlow);
@@ -985,7 +992,8 @@ function InterfaceSettingsCard() {
   };
 
   const hasChanges =
-    tempAccent !== accentTheme ||
+    tempLightAccent !== lightAccentTheme ||
+    tempDarkAccent !== darkAccentTheme ||
     tempShoppingMode !== shoppingMode ||
     tempAmbientGlow !== ambientGlow ||
     tempHoverGlow !== hoverGlow ||
@@ -1015,9 +1023,9 @@ function InterfaceSettingsCard() {
               <>
                 <button
                   type="button"
-                  onClick={() => setTempAccent("citrus")}
+                  onClick={() => setTempLightAccent("citrus")}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                    tempAccent === "citrus"
+                    tempLightAccent === "citrus"
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
                   }`}
@@ -1026,9 +1034,9 @@ function InterfaceSettingsCard() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setTempAccent("strawberry")}
+                  onClick={() => setTempLightAccent("strawberry")}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                    tempAccent === "strawberry"
+                    tempLightAccent === "strawberry"
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
                   }`}
@@ -1040,9 +1048,9 @@ function InterfaceSettingsCard() {
               <>
                 <button
                   type="button"
-                  onClick={() => setTempAccent("blueberry")}
+                  onClick={() => setTempDarkAccent("blueberry")}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                    tempAccent === "blueberry"
+                    tempDarkAccent === "blueberry"
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
                   }`}
@@ -1051,9 +1059,9 @@ function InterfaceSettingsCard() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setTempAccent("lime")}
+                  onClick={() => setTempDarkAccent("lime")}
                   className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                    tempAccent === "lime"
+                    tempDarkAccent === "lime"
                       ? "bg-primary text-primary-foreground border-primary"
                       : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
                   }`}
