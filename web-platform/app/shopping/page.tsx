@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, ShoppingBasket, Loader2, Trash2, Check, Square, CheckSquare, Refrigerator, Settings as SettingsIcon } from "lucide-react";
+import { Plus, ShoppingBasket, Loader2, Trash2, Check, Refrigerator, Settings as SettingsIcon } from "lucide-react";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
@@ -23,6 +23,7 @@ import { useFridges } from "@/providers/fridge-provider";
 import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
 import Link from "next/link";
 import { useShoppingStore, type ShoppingItem } from "@/store/useVFridgeStore";
+import { usePreferencesStore } from "@/store/usePreferencesStore";
 
 type ProductResponse = {
   id: number;
@@ -111,16 +112,7 @@ export default function ShoppingPage() {
     }
   };
 
-  const handleToggle = async (item: ShoppingItem) => {
-    const next = !item.checked;
-    toggleItem(item.id, next);
-    try {
-      await apiFetch(`/shopping/${item.id}`, { method: "PATCH", body: { checked: next } });
-    } catch (err) {
-      toggleItem(item.id, !next);
-      toast.error(getErrorMessage(err, t("shoppingUpdateFailed")));
-    }
-  };
+
 
   const handleDelete = async (id: number) => {
     const prev = items;
@@ -274,7 +266,6 @@ export default function ShoppingPage() {
                       key={group.category}
                       title={t(categoryLabelKey(group.category))}
                       items={group.items}
-                      onToggle={handleToggle}
                       onDelete={handleDelete}
                       onPurchase={handlePurchase}
                     />
@@ -290,7 +281,6 @@ export default function ShoppingPage() {
                 <ShoppingItemGroup
                   title=""
                   items={checked}
-                  onToggle={handleToggle}
                   onDelete={handleDelete}
                   onPurchase={handlePurchase}
                   muted
@@ -304,97 +294,225 @@ export default function ShoppingPage() {
   );
 }
 
+import { useCallback } from "react";
+
+function SwipeableItem({
+  item,
+  onDelete,
+  onPurchase,
+  children,
+}: {
+  item: ShoppingItem;
+  onDelete: (id: number) => void;
+  onPurchase: (i: ShoppingItem) => void;
+  children: React.ReactNode;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const startX = useRef(0);
+  const currentX = useRef(0);
+  const isDragging = useRef(false);
+
+  const resetPosition = () => {
+    if (containerRef.current) {
+      containerRef.current.style.transform = "translateX(0px)";
+      containerRef.current.style.transition = "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)";
+    }
+  };
+
+  const handleStart = (clientX: number) => {
+    startX.current = clientX;
+    isDragging.current = true;
+    if (containerRef.current) {
+      containerRef.current.style.transition = "none";
+    }
+  };
+
+  const handleMove = useCallback((clientX: number) => {
+    if (!isDragging.current) return;
+    const deltaX = clientX - startX.current;
+    
+    // Restrict boundaries to -120px to 120px
+    const constrainedX = Math.max(-120, Math.min(120, deltaX));
+    currentX.current = constrainedX;
+
+    if (containerRef.current) {
+      containerRef.current.style.transform = `translateX(${constrainedX}px)`;
+    }
+  }, []);
+
+  const handleEnd = useCallback(() => {
+    if (!isDragging.current) return;
+    isDragging.current = false;
+    
+    const delta = currentX.current;
+    if (delta > 85) {
+      // Swipe Right to Buy
+      if (containerRef.current) {
+        containerRef.current.style.transform = "translateX(100%)";
+        containerRef.current.style.transition = "transform 0.2s ease-out";
+      }
+      setTimeout(() => onPurchase(item), 180);
+    } else if (delta < -85) {
+      // Swipe Left to Delete
+      if (containerRef.current) {
+        containerRef.current.style.transform = "translateX(-100%)";
+        containerRef.current.style.transition = "transform 0.2s ease-out";
+      }
+      setTimeout(() => onDelete(item.id), 180);
+    } else {
+      resetPosition();
+    }
+    currentX.current = 0;
+  }, [item, onDelete, onPurchase]);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (isDragging.current) handleMove(e.clientX);
+    };
+    const onMouseUp = () => {
+      if (isDragging.current) handleEnd();
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [handleMove, handleEnd]);
+
+  return (
+    <div className="relative overflow-hidden bg-muted/30 rounded-xl select-none">
+      {/* Swipe Right Background (Buy) */}
+      <div className="absolute inset-y-0 left-0 bg-success text-success-foreground flex items-center pl-5 gap-2 rounded-l-xl pointer-events-none w-1/2">
+        <Check className="h-4 w-4" />
+        <span className="text-xs font-bold uppercase tracking-wider">Куплено</span>
+      </div>
+
+      {/* Swipe Left Background (Delete) */}
+      <div className="absolute inset-y-0 right-0 bg-destructive text-destructive-foreground flex items-center justify-end pr-5 gap-2 rounded-r-xl pointer-events-none w-1/2">
+        <span className="text-xs font-bold uppercase tracking-wider">Видалити</span>
+        <Trash2 className="h-4 w-4" />
+      </div>
+
+      {/* Foreground container */}
+      <div
+        ref={containerRef}
+        onTouchStart={(e) => handleStart(e.touches[0].clientX)}
+        onTouchMove={(e) => handleMove(e.touches[0].clientX)}
+        onTouchEnd={handleEnd}
+        onMouseDown={(e) => {
+          if (e.button === 0) handleStart(e.clientX);
+        }}
+        className="relative bg-card flex items-center justify-between p-4 gap-4 border border-border/60 rounded-xl cursor-grab active:cursor-grabbing"
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function ShoppingItemGroup({
   title,
   items,
-  onToggle,
   onDelete,
   onPurchase,
   muted = false,
 }: {
   title: string;
   items: ShoppingItem[];
-  onToggle: (i: ShoppingItem) => void;
   onDelete: (id: number) => void;
   onPurchase: (i: ShoppingItem) => void;
   muted?: boolean;
 }) {
   const t = useTranslations();
+  const { shoppingMode } = usePreferencesStore();
+
   return (
     <section className="space-y-2">
       {title && (
         <h3 className="text-[11px] font-black uppercase tracking-widest text-primary px-2">{title}</h3>
       )}
-      <div className="rounded-2xl border border-border/60 bg-glass overflow-hidden shadow-xs divide-y divide-border/60">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className={`flex items-center justify-between p-4 gap-4 hover:bg-secondary/15 transition-all ${
-              muted ? "opacity-60 bg-secondary/5" : "bg-card/40"
-            }`}
-          >
-            {/* Status & Name */}
-            <div className="flex items-center gap-3.5 min-w-0 flex-1">
-              <button
-                type="button"
-                onClick={() => onToggle(item)}
-                aria-label={item.checked ? t("shoppingAriaUncheck") : t("shoppingAriaCheck")}
-                aria-pressed={item.checked}
-                className="text-primary hover:text-primary/80 shrink-0 cursor-pointer select-none"
-              >
-                {item.checked ? (
-                  <CheckSquare className="h-5 w-5 fill-primary text-primary-foreground" />
-                ) : (
-                  <Square className="h-5 w-5" />
-                )}
-              </button>
-              <div className="min-w-0">
-                <p className={`font-bold text-sm truncate ${item.checked ? "line-through text-muted-foreground/60" : "text-foreground"}`}>
+      <div className="space-y-2">
+        {items.map((item) => {
+          const isSwipe = shoppingMode === "swipe" && !muted;
+
+          const content = (
+            <>
+              {/* Name & Category */}
+              <div className="min-w-0 flex-1">
+                <p className={`font-bold text-sm truncate ${muted ? "line-through text-muted-foreground/60" : "text-foreground"}`}>
                   {item.name}
                 </p>
                 <p className="text-[10px] text-muted-foreground/80 font-medium">
                   {t(categoryLabelKey(item.category))}
                 </p>
               </div>
-            </div>
 
-            {/* Quantity */}
-            <div className="shrink-0 text-right">
-              {item.quantity != null ? (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-secondary/60 text-secondary-foreground font-black text-xs">
-                  {item.quantity} {item.unit ?? ""}
-                </span>
-              ) : (
-                <span className="text-[10px] text-muted-foreground">—</span>
-              )}
-            </div>
+              {/* Quantity */}
+              <div className="shrink-0 text-right">
+                {item.quantity != null ? (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-secondary/60 text-secondary-foreground font-black text-xs">
+                    {item.quantity} {item.unit ?? ""}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground">—</span>
+                )}
+              </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-1 shrink-0">
-              {!item.checked && (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="rounded-xl h-8 px-3 font-bold gap-1 shadow-2xs hover:bg-primary hover:text-white transition-colors"
-                  onClick={() => onPurchase(item)}
-                  title={t("shoppingMoveToFridge")}
-                >
-                  <Check className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">{t("shoppingBuyShort")}</span>
-                </Button>
+              {/* Action Buttons (Only shown if NOT in Swipe Mode) */}
+              {!isSwipe && (
+                <div className="flex items-center gap-1 shrink-0">
+                  {!muted && (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="rounded-xl h-8 px-3 font-bold gap-1 shadow-2xs hover:bg-primary hover:text-white transition-colors cursor-pointer"
+                      onClick={() => onPurchase(item)}
+                      title={t("shoppingMoveToFridge")}
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">{t("shoppingBuyShort")}</span>
+                    </Button>
+                  )}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                    onClick={() => onDelete(item.id)}
+                    title={t("actionDelete")}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               )}
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-                onClick={() => onDelete(item.id)}
-                title={t("actionDelete")}
+            </>
+          );
+
+          if (isSwipe) {
+            return (
+              <SwipeableItem
+                key={item.id}
+                item={item}
+                onDelete={onDelete}
+                onPurchase={onPurchase}
               >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+                {content}
+              </SwipeableItem>
+            );
+          }
+
+          return (
+            <div
+              key={item.id}
+              className={`flex items-center justify-between p-4 gap-4 border border-border/60 rounded-xl transition-all ${
+                muted ? "opacity-60 bg-secondary/5" : "bg-card/40"
+              }`}
+            >
+              {content}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

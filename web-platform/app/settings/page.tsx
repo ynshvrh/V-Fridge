@@ -42,6 +42,7 @@ import {
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useTheme } from "@/providers/theme-provider";
 import { FridgesCard } from "@/components/fridges-card";
 import { SUPPORTED_LOCALES, switchLocale, type Locale } from "@/lib/locale";
 import { CUISINE_SLUGS, cuisineLabelKey } from "@/interfaces/cuisines";
@@ -51,6 +52,19 @@ export default function Settings() {
   const t = useTranslations();
   const activeLocale = useLocale() as Locale;
   const { user, logout, refreshUser } = useAuth();
+  const { resolved } = useTheme();
+  const {
+    accentTheme,
+    setAccentTheme,
+    shoppingMode,
+    setShoppingMode,
+    ambientGlow,
+    setAmbientGlow,
+    hoverGlow,
+    setHoverGlow,
+    highContrast,
+    setHighContrast,
+  } = usePreferencesStore();
   const [activeTab, setActiveTab] = useState<"profile" | "preferences" | "fridges" | "interface" | "danger">("profile");
 
   const clearData = async (type: "chat" | "products") => {
@@ -233,9 +247,153 @@ export default function Settings() {
                     </CardTitle>
                     <CardDescription>{t("settingsAppearanceHint")}</CardDescription>
                   </CardHeader>
-                  <CardContent className="pt-5 flex items-center justify-between gap-4">
-                    <span className="text-sm font-medium text-muted-foreground">{t("settingsThemeLabel")}</span>
-                    <ThemeToggle />
+                  <CardContent className="pt-5 space-y-6 divide-y divide-border/20">
+                    {/* Theme Mode Toggle (light/dark) */}
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-sm font-bold text-foreground">{t("settingsThemeLabel")}</span>
+                      <ThemeToggle />
+                    </div>
+
+                    {/* Accent Color picker */}
+                    <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <span className="text-sm font-bold text-foreground">{t("settingsAccentLabel")}</span>
+                      <div className="flex gap-2">
+                        {resolved === "light" ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setAccentTheme("citrus")}
+                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                                accentTheme === "citrus"
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
+                              }`}
+                            >
+                              🍊 {t("settingsAccentCitrus")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setAccentTheme("strawberry")}
+                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                                accentTheme === "strawberry"
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
+                              }`}
+                            >
+                              🍓 {t("settingsAccentStrawberry")}
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setAccentTheme("blueberry")}
+                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                                accentTheme === "blueberry"
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
+                              }`}
+                            >
+                              🫐 {t("settingsAccentBlueberry")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setAccentTheme("lime")}
+                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                                accentTheme === "lime"
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
+                              }`}
+                            >
+                              🍈 {t("settingsAccentLime")}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Shopping Mode Toggle */}
+                    <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <span className="text-sm font-bold text-foreground">{t("settingsInteractionsLabel")}</span>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShoppingMode("buttons")}
+                          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                            shoppingMode === "buttons"
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
+                          }`}
+                        >
+                          {t("settingsInteractionsButtons")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShoppingMode("swipe")}
+                          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                            shoppingMode === "swipe"
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
+                          }`}
+                        >
+                          {t("settingsInteractionsSwipe")}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Fun UI Variety toggles */}
+                    <div className="pt-4 space-y-3">
+                      <span className="text-sm font-bold text-foreground block">{t("settingsVisualVariety")}</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {/* Ambient Glow */}
+                        <button
+                          type="button"
+                          onClick={() => setAmbientGlow(!ambientGlow)}
+                          className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left text-xs font-bold cursor-pointer ${
+                            ambientGlow
+                              ? "bg-primary/10 border-primary text-foreground"
+                              : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 transition-colors ${ambientGlow ? "bg-success border-success text-white" : "border-border/80"}`}>
+                            {ambientGlow && <Check className="h-3 w-3" />}
+                          </div>
+                          <span>{t("settingsAmbientGlow")}</span>
+                        </button>
+
+                        {/* Hover Glow */}
+                        <button
+                          type="button"
+                          onClick={() => setHoverGlow(!hoverGlow)}
+                          className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left text-xs font-bold cursor-pointer ${
+                            hoverGlow
+                              ? "bg-primary/10 border-primary text-foreground"
+                              : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 transition-colors ${hoverGlow ? "bg-success border-success text-white" : "border-border/80"}`}>
+                            {hoverGlow && <Check className="h-3 w-3" />}
+                          </div>
+                          <span>{t("settingsInteractiveGlow")}</span>
+                        </button>
+
+                        {/* High Contrast */}
+                        <button
+                          type="button"
+                          onClick={() => setHighContrast(!highContrast)}
+                          className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left text-xs font-bold cursor-pointer ${
+                            highContrast
+                              ? "bg-primary/10 border-primary text-foreground"
+                              : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 transition-colors ${highContrast ? "bg-success border-success text-white" : "border-border/80"}`}>
+                            {highContrast && <Check className="h-3 w-3" />}
+                          </div>
+                          <span>{t("settingsSoftBorders")}</span>
+                        </button>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
 

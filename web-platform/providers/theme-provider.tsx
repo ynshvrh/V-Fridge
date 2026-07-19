@@ -63,9 +63,12 @@ const getSystemPrefServer = (): "light" | "dark" => "light";
 
 const getStoredModeServer = (): ThemeMode => "system";
 
+import { usePreferencesStore } from "@/store/usePreferencesStore";
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const mode = useSyncExternalStore(subscribeToStoredMode, readStoredMode, getStoredModeServer);
   const systemPref = useSyncExternalStore(subscribeToSystemPref, getSystemPref, getSystemPrefServer);
+  const { accentTheme, setAccentTheme, ambientGlow, hoverGlow, highContrast } = usePreferencesStore();
 
   const resolved: "light" | "dark" = mode === "system" ? systemPref : mode;
 
@@ -74,6 +77,46 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyClass(resolved);
   }, [resolved]);
+
+  // Sync and apply accent color theme class
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const root = document.documentElement;
+    root.classList.remove("accent-citrus", "accent-strawberry", "accent-blueberry", "accent-lime");
+    
+    let activeAccent = accentTheme;
+    if (resolved === "dark") {
+      if (activeAccent !== "blueberry" && activeAccent !== "lime") {
+        activeAccent = "blueberry";
+      }
+    } else {
+      if (activeAccent !== "citrus" && activeAccent !== "strawberry") {
+        activeAccent = "citrus";
+      }
+    }
+
+    if (activeAccent !== accentTheme) {
+      setAccentTheme(activeAccent);
+    }
+    
+    root.classList.add(`accent-${activeAccent}`);
+  }, [resolved, accentTheme, setAccentTheme]);
+
+  // Apply other interactive preferences
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const body = document.body;
+    
+    // Ambient glow
+    body.classList.toggle("bg-ambient", ambientGlow);
+    body.classList.toggle("pref-no-ambient", !ambientGlow);
+    
+    // Hover glow
+    body.classList.toggle("pref-hover-glow", hoverGlow);
+    
+    // High contrast
+    body.classList.toggle("pref-high-contrast", highContrast);
+  }, [ambientGlow, hoverGlow, highContrast]);
 
   const setMode = useCallback((next: ThemeMode) => {
     if (typeof window === "undefined") return;
