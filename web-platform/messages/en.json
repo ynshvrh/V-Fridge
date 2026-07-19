@@ -300,6 +300,8 @@
   "settingsAmbientGlow": "Drifting Ambient Glow Bubbles",
   "settingsSoftBorders": "High Contrast Border Colors",
   "settingsInteractiveGlow": "Glow on Hover Effects",
+  "settingsSaveInterface": "Save Settings",
+  "settingsInterfaceSaved": "Interface settings saved successfully",
 
   "analyticsMostWasted": "Most wasted",
   "analyticsMostWastedSubtitle": "Last 30 days",

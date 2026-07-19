@@ -108,19 +108,6 @@ export default function Settings() {
   const t = useTranslations();
   const activeLocale = useLocale() as Locale;
   const { user, logout, refreshUser } = useAuth();
-  const { resolved } = useTheme();
-  const {
-    accentTheme,
-    setAccentTheme,
-    shoppingMode,
-    setShoppingMode,
-    ambientGlow,
-    setAmbientGlow,
-    hoverGlow,
-    setHoverGlow,
-    highContrast,
-    setHighContrast,
-  } = usePreferencesStore();
   const [activeTab, setActiveTab] = useState<"profile" | "preferences" | "fridges" | "interface" | "danger">("profile");
 
   const clearData = async (type: "chat" | "products") => {
@@ -287,163 +274,7 @@ export default function Settings() {
             {activeTab === "interface" && (
               <div className="space-y-5 animate-in fade-in duration-200">
                 {/* Appearance Theme Card */}
-                <Card className="rounded-3xl bg-glass overflow-hidden shadow-sm">
-                  <CardHeader className="pb-3 border-b border-border/30">
-                    <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
-                      <Palette className="h-4 w-4 text-primary" />
-                      {t("settingsAppearance")}
-                    </CardTitle>
-                    <CardDescription>{t("settingsAppearanceHint")}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-5 space-y-6 divide-y divide-border/20">
-                    {/* Theme Mode Toggle (light/dark) */}
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-sm font-bold text-foreground">{t("settingsThemeLabel")}</span>
-                      <ThemeToggle />
-                    </div>
-
-                    {/* Accent Color picker */}
-                    <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <span className="text-sm font-bold text-foreground">{t("settingsAccentLabel")}</span>
-                      <div className="flex gap-2">
-                        {resolved === "light" ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setAccentTheme("citrus")}
-                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                                accentTheme === "citrus"
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
-                              }`}
-                            >
-                              🍊 {t("settingsAccentCitrus")}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setAccentTheme("strawberry")}
-                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                                accentTheme === "strawberry"
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
-                              }`}
-                            >
-                              🍓 {t("settingsAccentStrawberry")}
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setAccentTheme("blueberry")}
-                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                                accentTheme === "blueberry"
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
-                              }`}
-                            >
-                              🫐 {t("settingsAccentBlueberry")}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setAccentTheme("lime")}
-                              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                                accentTheme === "lime"
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
-                              }`}
-                            >
-                              🍈 {t("settingsAccentLime")}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Shopping Mode Toggle */}
-                    <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <span className="text-sm font-bold text-foreground">{t("settingsInteractionsLabel")}</span>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setShoppingMode("buttons")}
-                          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                            shoppingMode === "buttons"
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
-                          }`}
-                        >
-                          {t("settingsInteractionsButtons")}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShoppingMode("swipe")}
-                          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
-                            shoppingMode === "swipe"
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
-                          }`}
-                        >
-                          {t("settingsInteractionsSwipe")}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Fun UI Variety toggles */}
-                    <div className="pt-4 space-y-3">
-                      <span className="text-sm font-bold text-foreground block">{t("settingsVisualVariety")}</span>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {/* Ambient Glow */}
-                        <button
-                          type="button"
-                          onClick={() => setAmbientGlow(!ambientGlow)}
-                          className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left text-xs font-bold cursor-pointer ${
-                            ambientGlow
-                              ? "bg-primary/10 border-primary text-foreground"
-                              : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 transition-colors ${ambientGlow ? "bg-success border-success text-white" : "border-border/80"}`}>
-                            {ambientGlow && <Check className="h-3 w-3" />}
-                          </div>
-                          <span>{t("settingsAmbientGlow")}</span>
-                        </button>
-
-                        {/* Hover Glow */}
-                        <button
-                          type="button"
-                          onClick={() => setHoverGlow(!hoverGlow)}
-                          className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left text-xs font-bold cursor-pointer ${
-                            hoverGlow
-                              ? "bg-primary/10 border-primary text-foreground"
-                              : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 transition-colors ${hoverGlow ? "bg-success border-success text-white" : "border-border/80"}`}>
-                            {hoverGlow && <Check className="h-3 w-3" />}
-                          </div>
-                          <span>{t("settingsInteractiveGlow")}</span>
-                        </button>
-
-                        {/* High Contrast */}
-                        <button
-                          type="button"
-                          onClick={() => setHighContrast(!highContrast)}
-                          className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left text-xs font-bold cursor-pointer ${
-                            highContrast
-                              ? "bg-primary/10 border-primary text-foreground"
-                              : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 transition-colors ${highContrast ? "bg-success border-success text-white" : "border-border/80"}`}>
-                            {highContrast && <Check className="h-3 w-3" />}
-                          </div>
-                          <span>{t("settingsSoftBorders")}</span>
-                        </button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <InterfaceSettingsCard />
 
                 {/* Quick Actions Preferences Customizer */}
                 <QuickActionsCustomizer />
@@ -1096,6 +927,236 @@ function QuickActionsCustomizer() {
               </button>
             );
           })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function InterfaceSettingsCard() {
+  const t = useTranslations();
+  const { resolved } = useTheme();
+  const {
+    accentTheme,
+    setAccentTheme,
+    shoppingMode,
+    setShoppingMode,
+    ambientGlow,
+    setAmbientGlow,
+    hoverGlow,
+    setHoverGlow,
+    highContrast,
+    setHighContrast,
+  } = usePreferencesStore();
+
+  const [tempAccent, setTempAccent] = useState(accentTheme);
+  const [tempShoppingMode, setTempShoppingMode] = useState(shoppingMode);
+  const [tempAmbientGlow, setTempAmbientGlow] = useState(ambientGlow);
+  const [tempHoverGlow, setTempHoverGlow] = useState(hoverGlow);
+  const [tempHighContrast, setTempHighContrast] = useState(highContrast);
+
+  useEffect(() => {
+    setTempAccent(accentTheme);
+  }, [accentTheme]);
+
+  useEffect(() => {
+    setTempShoppingMode(shoppingMode);
+  }, [shoppingMode]);
+
+  useEffect(() => {
+    setTempAmbientGlow(ambientGlow);
+  }, [ambientGlow]);
+
+  useEffect(() => {
+    setTempHoverGlow(hoverGlow);
+  }, [hoverGlow]);
+
+  useEffect(() => {
+    setTempHighContrast(highContrast);
+  }, [highContrast]);
+
+  const handleSave = () => {
+    setAccentTheme(tempAccent);
+    setShoppingMode(tempShoppingMode);
+    setAmbientGlow(tempAmbientGlow);
+    setHoverGlow(tempHoverGlow);
+    setHighContrast(tempHighContrast);
+    toast.success(t("settingsInterfaceSaved"));
+  };
+
+  const hasChanges =
+    tempAccent !== accentTheme ||
+    tempShoppingMode !== shoppingMode ||
+    tempAmbientGlow !== ambientGlow ||
+    tempHoverGlow !== hoverGlow ||
+    tempHighContrast !== highContrast;
+
+  return (
+    <Card className="rounded-3xl bg-glass overflow-hidden shadow-sm">
+      <CardHeader className="pb-3 border-b border-border/30">
+        <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
+          <Palette className="h-4 w-4 text-primary" />
+          {t("settingsAppearance")}
+        </CardTitle>
+        <CardDescription>{t("settingsAppearanceHint")}</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-5 space-y-6 divide-y divide-border/20 pb-5">
+        {/* Theme Mode Toggle (light/dark) */}
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-sm font-bold text-foreground">{t("settingsThemeLabel")}</span>
+          <ThemeToggle />
+        </div>
+
+        {/* Accent Color picker */}
+        <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <span className="text-sm font-bold text-foreground">{t("settingsAccentLabel")}</span>
+          <div className="flex gap-2">
+            {resolved === "light" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setTempAccent("citrus")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                    tempAccent === "citrus"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
+                  }`}
+                >
+                  🍊 {t("settingsAccentCitrus")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTempAccent("strawberry")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                    tempAccent === "strawberry"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
+                  }`}
+                >
+                  🍓 {t("settingsAccentStrawberry")}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setTempAccent("blueberry")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                    tempAccent === "blueberry"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
+                  }`}
+                >
+                  🫐 {t("settingsAccentBlueberry")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTempAccent("lime")}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                    tempAccent === "lime"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
+                  }`}
+                >
+                  🍈 {t("settingsAccentLime")}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Shopping Mode Toggle */}
+        <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <span className="text-sm font-bold text-foreground">{t("settingsInteractionsLabel")}</span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setTempShoppingMode("buttons")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                tempShoppingMode === "buttons"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
+              }`}
+            >
+              {t("settingsInteractionsButtons")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTempShoppingMode("swipe")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                tempShoppingMode === "swipe"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-secondary/40 text-muted-foreground border-border/60 hover:bg-secondary"
+              }`}
+            >
+              {t("settingsInteractionsSwipe")}
+            </button>
+          </div>
+        </div>
+
+        {/* Fun UI Variety toggles */}
+        <div className="pt-4 space-y-3">
+          <span className="text-sm font-bold text-foreground block">{t("settingsVisualVariety")}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Ambient Glow */}
+            <button
+              type="button"
+              onClick={() => setTempAmbientGlow(!tempAmbientGlow)}
+              className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left text-xs font-bold cursor-pointer ${
+                tempAmbientGlow
+                  ? "bg-primary/10 border-primary text-foreground"
+                  : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 transition-colors ${tempAmbientGlow ? "bg-success border-success text-white" : "border-border/80"}`}>
+                {tempAmbientGlow && <Check className="h-3 w-3" />}
+              </div>
+              <span>{t("settingsAmbientGlow")}</span>
+            </button>
+
+            {/* Hover Glow */}
+            <button
+              type="button"
+              onClick={() => setTempHoverGlow(!tempHoverGlow)}
+              className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left text-xs font-bold cursor-pointer ${
+                tempHoverGlow
+                  ? "bg-primary/10 border-primary text-foreground"
+                  : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 transition-colors ${tempHoverGlow ? "bg-success border-success text-white" : "border-border/80"}`}>
+                {tempHoverGlow && <Check className="h-3 w-3" />}
+              </div>
+              <span>{t("settingsInteractiveGlow")}</span>
+            </button>
+
+            {/* High Contrast */}
+            <button
+              type="button"
+              onClick={() => setTempHighContrast(!tempHighContrast)}
+              className={`flex items-center gap-2.5 p-3 rounded-xl border transition-all text-left text-xs font-bold cursor-pointer ${
+                tempHighContrast
+                  ? "bg-primary/10 border-primary text-foreground"
+                  : "bg-card border-border/60 text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 transition-colors ${tempHighContrast ? "bg-success border-success text-white" : "border-border/80"}`}>
+                {tempHighContrast && <Check className="h-3 w-3" />}
+              </div>
+              <span>{t("settingsSoftBorders")}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Save button footer row */}
+        <div className="pt-4 flex justify-end">
+          <Button
+            onClick={handleSave}
+            disabled={!hasChanges}
+            className="rounded-xl font-bold px-6 shadow-sm hover:scale-[1.02] transition-all cursor-pointer animate-in fade-in slide-in-from-bottom-1"
+          >
+            {t("settingsSaveInterface")}
+          </Button>
         </div>
       </CardContent>
     </Card>

@@ -300,6 +300,8 @@
   "settingsAmbientGlow": "Динамічне фонове світіння",
   "settingsSoftBorders": "Контрастні рамки",
   "settingsInteractiveGlow": "Світіння при наведенні",
+  "settingsSaveInterface": "Зберегти налаштування",
+  "settingsInterfaceSaved": "Налаштування інтерфейсу успішно збережено",
 
   "analyticsMostWasted": "Найбільше викидається",
   "analyticsMostWastedSubtitle": "За останні 30 днів",
