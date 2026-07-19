@@ -24,7 +24,6 @@ import {
   LogOut,
   ShieldCheck,
   User,
-  MailCheck,
   MailWarning,
   Palette,
   Languages,
@@ -81,11 +80,11 @@ export default function Settings() {
   };
 
   const tabItems = [
-    { id: "profile", label: "Профіль", icon: User },
-    { id: "preferences", label: "Смаки та уподобання", icon: ChefHat },
-    { id: "fridges", label: "Спільні холодильники", icon: Refrigerator },
-    { id: "interface", label: "Налаштування інтерфейсу", icon: Palette },
-    { id: "danger", label: "Безпека та дані", icon: Trash2 },
+    { id: "profile", label: t("settingsProfile"), icon: User },
+    { id: "preferences", label: t("settingsDietaryProfile"), icon: ChefHat },
+    { id: "fridges", label: t("fridgesTitle"), icon: Refrigerator },
+    { id: "interface", label: t("settingsAppearance"), icon: Palette },
+    { id: "danger", label: t("settingsDangerZone"), icon: Trash2 },
   ] as const;
 
   return (
@@ -183,8 +182,8 @@ export default function Settings() {
                       <div className="flex items-start gap-3">
                         <MailWarning className="h-5 w-5 text-solara shrink-0 mt-0.5" />
                         <div>
-                          <h4 className="font-bold text-sm">Ваш Email не верифіковано</h4>
-                          <p className="text-xs text-muted-foreground">Підтвердіть вашу пошту для повної безпеки акаунту.</p>
+                          <h4 className="font-bold text-sm">{t("settingsVerifyEmailWarning")}</h4>
+                          <p className="text-xs text-muted-foreground">{t("settingsVerifyEmailWarningDesc")}</p>
                         </div>
                       </div>
                       <button
@@ -367,7 +366,7 @@ function ProfileCard({
 
     // Validate size (5MB max)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Файл занадто великий! Ліміт 5МБ.");
+      toast.error(t("settingsFileTooLarge"));
       return;
     }
 
@@ -378,15 +377,15 @@ function ProfileCard({
 
   const handleSave = async () => {
     if (newPassword && newPassword !== confirmPassword) {
-      toast.error("Паролі не співпадають!");
+      toast.error(t("settingsPasswordsDoNotMatch"));
       return;
     }
     if (newPassword && !currentPassword) {
-      toast.error("Введіть поточний пароль для зміни на новий!");
+      toast.error(t("settingsPasswordCurrentRequired"));
       return;
     }
     if (!username.trim()) {
-      toast.error("Ім'я користувача не може бути порожнім!");
+      toast.error(t("settingsUsernameEmpty"));
       return;
     }
 
@@ -423,14 +422,14 @@ function ProfileCard({
       }
 
       await onSaved();
-      toast.success("Профіль успішно оновлено!");
+      toast.success(t("settingsProfileSuccess"));
       setLocalAvatarFile(null);
       setLocalAvatarPreview("");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      toast.error(getErrorMessage(err, "Помилка при оновленні профілю"));
+      toast.error(getErrorMessage(err, t("settingsProfileError")));
     } finally {
       setSaving(false);
     }
@@ -441,15 +440,15 @@ function ProfileCard({
       <CardHeader className="pb-3 border-b border-border/30">
         <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
           <User className="h-4 w-4 text-primary" />
-          Ваш Профіль
+          {t("settingsProfileCardTitle")}
         </CardTitle>
-        <CardDescription>Налаштуйте ім'я, аватарку та пароль вашого акаунту.</CardDescription>
+        <CardDescription>{t("settingsProfileCardDesc")}</CardDescription>
       </CardHeader>
       <CardContent className="pt-5 space-y-6">
         {/* Avatar Selection Section */}
         <div className="space-y-3">
           <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
-            Виберіть аватарку (емодзі або фото)
+            {t("settingsProfileAvatarLabel")}
           </label>
           <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl bg-secondary/15 border border-border/30">
             <div className="h-20 w-20 rounded-2xl bg-brand-gradient text-primary-foreground grid place-items-center shadow-md text-4xl font-black shrink-0 relative group overflow-hidden">
@@ -520,7 +519,7 @@ function ProfileCard({
                   className="rounded-xl font-bold gap-1 text-xs h-9 cursor-pointer"
                 >
                   <Plus className="h-3 w-3" />
-                  Завантажити власне фото
+                  {t("settingsProfileUploadPhoto")}
                 </Button>
                 <input
                   type="file"
@@ -537,14 +536,14 @@ function ProfileCard({
         {/* Username section */}
         <div className="space-y-2">
           <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
-            Ім'я користувача
+            {t("settingsProfileUsernameLabel")}
           </label>
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="w-full h-11 rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            placeholder="Юзернейм"
+            placeholder={t("settingsProfileUsernamePlaceholder")}
             maxLength={50}
           />
         </div>
@@ -552,43 +551,43 @@ function ProfileCard({
         {/* Password change section */}
         <div className="space-y-4 pt-2 border-t border-border/20">
           <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
-            Зміна паролю
+            {t("settingsProfilePasswordSection")}
           </label>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <span className="text-xs text-muted-foreground font-medium">Новий пароль</span>
+              <span className="text-xs text-muted-foreground font-medium">{t("settingsProfileNewPassword")}</span>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full h-10 rounded-xl border border-input bg-transparent px-3 py-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                placeholder="Мінімум 6 символів"
+                placeholder={t("settingsProfileNewPasswordPlaceholder")}
                 minLength={6}
               />
             </div>
             
             <div className="space-y-1.5">
-              <span className="text-xs text-muted-foreground font-medium">Підтвердження паролю</span>
+              <span className="text-xs text-muted-foreground font-medium">{t("settingsProfileConfirmPassword")}</span>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full h-10 rounded-xl border border-input bg-transparent px-3 py-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                placeholder="Повторіть пароль"
+                placeholder={t("settingsProfileConfirmPasswordPlaceholder")}
               />
             </div>
           </div>
 
           {newPassword && (
             <div className="space-y-1.5 animate-in slide-in-from-top-1 duration-200">
-              <span className="text-xs text-destructive font-bold">Поточний пароль (необхідно для підтвердження)</span>
+              <span className="text-xs text-destructive font-bold">{t("settingsProfileCurrentPassword")}</span>
               <input
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 className="w-full h-10 rounded-xl border border-destructive bg-transparent px-3 py-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-destructive"
-                placeholder="Введіть ваш поточний пароль"
+                placeholder={t("settingsProfileCurrentPasswordPlaceholder")}
                 required
               />
             </div>
@@ -766,16 +765,16 @@ function DietaryProfileCard({
   }, [initial]);
 
   const EXCLUDED_PRESETS = [
-    { label: "🐟 Риба", val: "Риба" },
-    { label: "🐖 Свинина", val: "Свинина" },
-    { label: "🥩 Яловичина", val: "Яловичина" },
-    { label: "🍄 Гриби", val: "Гриби" },
-    { label: "🥛 Лактоза", val: "Лактоза" },
-    { label: "🥜 Горіхи", val: "Горіхи" },
-    { label: "🥚 Яйця", val: "Яйця" },
-    { label: "🐔 Птиця", val: "Птиця" },
-    { label: "🧅 Цибуля", val: "Цибуля" },
-    { label: "🧄 Часник", val: "Часник" },
+    { label: t("presetFish"), val: "Риба" },
+    { label: t("presetPork"), val: "Свинина" },
+    { label: t("presetBeef"), val: "Яловичина" },
+    { label: t("presetMushrooms"), val: "Гриби" },
+    { label: t("presetLactose"), val: "Лактоза" },
+    { label: t("presetNuts"), val: "Горіхи" },
+    { label: t("presetEggs"), val: "Яйця" },
+    { label: t("presetPoultry"), val: "Птиця" },
+    { label: t("presetOnion"), val: "Цибуля" },
+    { label: t("presetGarlic"), val: "Часник" },
   ];
 
   const handleToggleExclude = (val: string) => {
@@ -826,22 +825,22 @@ function DietaryProfileCard({
       <CardHeader className="pb-3 border-b border-border/30">
         <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
           <Sparkles className="h-4 w-4 text-primary" />
-          Харчові уподобання та дієтичний профіль
+          {t("settingsPreferencesCardTitle")}
         </CardTitle>
-        <CardDescription>Налаштуйте складність рецептів та продукти, які ви не їсте. ШІ-шеф автоматично враховуватиме це при складанні планів.</CardDescription>
+        <CardDescription>{t("settingsPreferencesCardDesc")}</CardDescription>
       </CardHeader>
       
       <CardContent className="pt-5 space-y-6">
         {/* Recipe Complexity Section */}
         <div className="space-y-2.5">
           <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
-            Складність рецептів у планувальнику
+            {t("settingsPreferencesComplexityLabel")}
           </label>
           <div className="flex flex-wrap gap-2">
             {[
-              { id: "easy", label: "🟢 Легкі страви", desc: "Швидко й просто" },
-              { id: "normal", label: "🟡 Звичайні страви", desc: "Збалансовані" },
-              { id: "gourmet", label: "🔴 Складні страви", desc: "Вишукані / Довгі" }
+              { id: "easy", label: t("settingsPreferencesComplexityEasy"), desc: t("settingsPreferencesComplexityEasyDesc") },
+              { id: "normal", label: t("settingsPreferencesComplexityNormal"), desc: t("settingsPreferencesComplexityNormalDesc") },
+              { id: "gourmet", label: t("settingsPreferencesComplexityGourmet"), desc: t("settingsPreferencesComplexityGourmetDesc") }
             ].map(c => {
               const active = complexity === c.id;
               return (
@@ -866,7 +865,7 @@ function DietaryProfileCard({
         {/* Excluded Products Section */}
         <div className="space-y-2.5">
           <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
-            Які продукти ви НЕ їсте? (Шеф виключить їх)
+            {t("settingsPreferencesExcludedLabel")}
           </label>
           <div className="flex flex-wrap gap-2">
             {EXCLUDED_PRESETS.map((p) => {
@@ -892,12 +891,12 @@ function DietaryProfileCard({
         {/* Text Area for Additional Wishes */}
         <div className="space-y-2.5">
           <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground block">
-            Додаткові побажання чи улюблені страви
+            {t("settingsPreferencesAdditionalLabel")}
           </label>
           <textarea
             value={additional}
             onChange={(e) => setAdditional(e.target.value)}
-            placeholder="Наприклад: 'Люблю макарони з сиром', 'Не їм гостру їжу', 'Маю алергію на морепродукти'..."
+            placeholder={t("settingsPreferencesAdditionalPlaceholder")}
             className="w-full min-h-[100px] rounded-xl border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             maxLength={1000}
           />
@@ -935,7 +934,7 @@ function QuickActionsCustomizer() {
   const toggle = (key: string) => {
     if (quickActions.includes(key)) {
       if (quickActions.length <= 1) {
-        toast.warning("Оберіть хоча б одну швидку дію");
+        toast.warning(t("settingsQuickActionsMinOne"));
         return;
       }
       setQuickActions(quickActions.filter((k) => k !== key));
@@ -949,10 +948,10 @@ function QuickActionsCustomizer() {
       <CardHeader className="pb-3 border-b border-border/30">
         <CardTitle className="text-lg inline-flex items-center gap-2 font-black tracking-tight">
           <Sparkles className="h-4 w-4 text-primary" />
-          Налаштування швидких дій
+          {t("settingsQuickActionsCardTitle")}
         </CardTitle>
         <CardDescription>
-          Оберіть, які розділи показувати на головній сторінці як швидкі дії.
+          {t("settingsQuickActionsCardDesc")}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-5">
