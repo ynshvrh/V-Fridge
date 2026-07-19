@@ -159,7 +159,8 @@ export default function NutritionTrackerPage() {
     }
     
     fetchDailyData();
-  }, [selectedDate, status, mounted, fetchDailyData, dailyCache]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, status, mounted, fetchDailyData]);
 
   // Keep local edits in sync with Zustand cache
   useEffect(() => {
