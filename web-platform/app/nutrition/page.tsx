@@ -93,6 +93,17 @@ export default function NutritionTrackerPage() {
   const [editingLog, setEditingLog] = useState<NutritionLog | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  interface FridgeProduct {
+    id: number;
+    name: string;
+    quantity?: number;
+    unit?: string;
+  }
+
+  // Fridge products for selection
+  const [fridgeProducts, setFridgeProducts] = useState<FridgeProduct[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+
   // Form states - Log entry
   const [foodName, setFoodName] = useState("");
   const [mealType, setMealType] = useState("breakfast");
@@ -169,17 +180,28 @@ export default function NutritionTrackerPage() {
     setSelectedDate(d.toISOString().split("T")[0]);
   };
 
+  const fetchFridgeProducts = async () => {
+    try {
+      const items = await apiFetch<FridgeProduct[]>("/products");
+      setFridgeProducts(items || []);
+    } catch (err) {
+      console.error("Failed to load products from fridge:", err);
+    }
+  };
+
   const handleOpenAddLog = () => {
     setEditingLog(null);
     setFoodName("");
     setMealType("breakfast");
-    setQuantity("1");
-    setUnit("serving");
+    setQuantity("100");
+    setUnit("g");
     setCalories("0");
     setProtein("0");
     setFat("0");
     setCarbs("0");
+    setSelectedProductId(null);
     setIsLogOpen(true);
+    fetchFridgeProducts();
   };
 
   const handleOpenEditLog = (log: NutritionLog) => {
@@ -192,6 +214,7 @@ export default function NutritionTrackerPage() {
     setProtein(log.protein.toString());
     setFat(log.fat.toString());
     setCarbs(log.carbs.toString());
+    setSelectedProductId(null);
     setIsLogOpen(true);
   };
 
@@ -211,6 +234,7 @@ export default function NutritionTrackerPage() {
         protein: Number(protein) || 0,
         fat: Number(fat) || 0,
         carbs: Number(carbs) || 0,
+        productId: selectedProductId,
       };
 
       if (editingLog) {
@@ -578,6 +602,44 @@ export default function NutritionTrackerPage() {
           </DialogHeader>
           
           <form onSubmit={handleLogSubmit} className="space-y-4 pt-2">
+            {!editingLog && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1.5">
+                  <Refrigerator className="h-3.5 w-3.5 text-primary" />
+                  {t("trackerSelectFromFridge")}
+                </Label>
+                <Select
+                  value={selectedProductId?.toString() ?? "none"}
+                  onValueChange={(val) => {
+                    if (val === "none") {
+                      setSelectedProductId(null);
+                    } else {
+                      const pid = Number(val);
+                      setSelectedProductId(pid);
+                      const prod = fridgeProducts.find((p) => p.id === pid);
+                      if (prod) {
+                        setFoodName(prod.name);
+                        setUnit(prod.unit || "g");
+                        setQuantity(prod.quantity?.toString() ?? "100");
+                      }
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue placeholder={t("trackerSelectFromFridgePlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t("trackerSelectFromFridgePlaceholder")}</SelectItem>
+                    {fridgeProducts.map((prod) => (
+                      <SelectItem key={prod.id} value={prod.id.toString()}>
+                        {prod.name} ({prod.quantity} {prod.unit})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{t("trackerFoodName")}</Label>
               <Input
@@ -627,6 +689,12 @@ export default function NutritionTrackerPage() {
                 </div>
               </div>
             </div>
+
+            {selectedProductId && (
+              <div className="text-xs font-semibold text-amber-500 bg-amber-500/10 p-3 rounded-2xl border border-amber-500/20 animate-in fade-in slide-in-from-top-1">
+                ⚠️ {t("trackerWillDecrementFridge", { qty: quantity, unit: unit })}
+              </div>
+            )}
 
             <div className="border-t border-border/40 my-2 pt-3">
               <h4 className="text-xs font-black uppercase tracking-wider text-primary mb-3">

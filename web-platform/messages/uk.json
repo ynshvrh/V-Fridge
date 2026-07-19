@@ -302,6 +302,9 @@
   "settingsInteractiveGlow": "Світіння при наведенні",
   "settingsSaveInterface": "Зберегти налаштування",
   "settingsInterfaceSaved": "Налаштування інтерфейсу успішно збережено",
+  "trackerSelectFromFridge": "Вибрати з віртуального холодильника",
+  "trackerSelectFromFridgePlaceholder": "Оберіть продукт...",
+  "trackerWillDecrementFridge": "Зменшить кількість у холодильнику на {qty} {unit}",
 
   "analyticsMostWasted": "Найбільше викидається",
   "analyticsMostWastedSubtitle": "За останні 30 днів",

@@ -302,6 +302,9 @@
   "settingsInteractiveGlow": "Glow on Hover Effects",
   "settingsSaveInterface": "Save Settings",
   "settingsInterfaceSaved": "Interface settings saved successfully",
+  "trackerSelectFromFridge": "Select from virtual fridge",
+  "trackerSelectFromFridgePlaceholder": "Choose a product...",
+  "trackerWillDecrementFridge": "Will deduct {qty} {unit} from fridge inventory",
 
   "analyticsMostWasted": "Most wasted",
   "analyticsMostWastedSubtitle": "Last 30 days",
