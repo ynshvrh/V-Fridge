@@ -128,6 +128,7 @@
   "plannerRegenerate": "Regenerate",
   "plannerMissingIngredients": "Missing ingredients",
   "plannerMissingHint": "Not in your fridge yet — add them to the shopping list to be ready for the week.",
+  "plannerNoMissing": "All required ingredients are already in your fridge!",
   "plannerAddToShopping": "Add to shopping list",
   "plannerImportResult": "{created, plural, =1{1 added to shopping list} other{# added to shopping list}}",
   "plannerImportSkipped": " ({skipped} already there)",

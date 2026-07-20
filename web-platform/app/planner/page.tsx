@@ -767,7 +767,7 @@ export default function PlannerPage() {
             </div>
 
             {/* Optimized Missing Ingredients / Shopping List Section */}
-            {plan.gapItems.length > 0 && (
+            {plan.gapItems.length > 0 ? (
               <section className="rounded-3xl bg-glass border border-border/40 p-6 md:p-8 space-y-4 shadow-sm">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
                   <div
@@ -826,6 +826,20 @@ export default function PlannerPage() {
                     ))}
                   </div>
                 )}
+              </section>
+            ) : (
+              <section className="rounded-3xl bg-glass/40 border border-emerald-500/20 p-6 flex items-center gap-4 shadow-xs">
+                <div className="h-10 w-10 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 font-black">
+                  <Check className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-foreground">
+                    {t("plannerMissingIngredients")}
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-medium mt-0.5">
+                    {t("plannerNoMissing")}
+                  </p>
+                </div>
               </section>
             )}
           </>

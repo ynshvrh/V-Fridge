@@ -128,6 +128,7 @@
   "plannerRegenerate": "Згенерувати знову",
   "plannerMissingIngredients": "Бракує інгредієнтів",
   "plannerMissingHint": "Цього ще немає в холодильнику — додайте в список покупок, щоб мати все на тиждень.",
+  "plannerNoMissing": "Всі необхідні інгредієнти є у холодильнику!",
   "plannerAddToShopping": "Додати в список покупок",
   "plannerImportResult": "{created, plural, =1{1 додано в список покупок} few{# додано в список покупок} many{# додано в список покупок} other{# додано в список покупок}}",
   "plannerImportSkipped": " ({skipped} вже є)",
