@@ -4,7 +4,29 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CalendarDays, ChefHat, Loader2, Sparkles, ShoppingBasket, RefreshCw, Check, Flame, Plus, Coffee, Soup, Salad, Lightbulb, Refrigerator, Settings as SettingsIcon } from "lucide-react";
+import {
+  CalendarDays,
+  ChefHat,
+  Loader2,
+  Sparkles,
+  ShoppingBasket,
+  RefreshCw,
+  Check,
+  Flame,
+  Plus,
+  Coffee,
+  Soup,
+  Salad,
+  Lightbulb,
+  Refrigerator,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  LayoutGrid,
+  Calendar,
+  Settings as SettingsIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
@@ -24,8 +46,6 @@ import {
 const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const mealTypes = ["breakfast", "lunch", "dinner"];
 
-// Slug → translation key. Keeps the day order canonical (Monday = 0) while the
-// label flips with the locale.
 const DAY_KEY: Record<string, string> = {
   Monday: "plannerDayMonday",
   Tuesday: "plannerDayTuesday",
@@ -36,7 +56,15 @@ const DAY_KEY: Record<string, string> = {
   Sunday: "plannerDaySunday",
 };
 
-
+const SHORT_DAY_KEY: Record<string, string> = {
+  Monday: "Mon",
+  Tuesday: "Tue",
+  Wednesday: "Wed",
+  Thursday: "Thu",
+  Friday: "Fri",
+  Saturday: "Sat",
+  Sunday: "Sun",
+};
 
 export default function PlannerPage() {
   const t = useTranslations() as unknown as (key: string, values?: Record<string, string | number>) => string;
@@ -45,6 +73,15 @@ export default function PlannerPage() {
   const [importing, setImporting] = useState(false);
   const [loadingRecipeMealKey, setLoadingRecipeMealKey] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+
+  // Day navigation state
+  const todayDayName = weekdays[(new Date().getDay() + 6) % 7]; // Monday = 0
+  const [selectedDay, setSelectedDay] = useState<string>(todayDayName);
+  const [viewMode, setViewMode] = useState<"day" | "week">("day");
+  const [regeneratingDay, setRegeneratingDay] = useState<boolean>(false);
+
+  // Gap items UI state
+  const [isGapsExpanded, setIsGapsExpanded] = useState(true);
 
   // Sheet state
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
@@ -91,6 +128,26 @@ export default function PlannerPage() {
     }
   };
 
+  const handleRegenerateDay = async (day: string) => {
+    setRegeneratingDay(true);
+    try {
+      const updated = await apiFetch<MealPlan>("/meal-plan/regenerate-day", {
+        method: "POST",
+        body: { day },
+      });
+      setPlan(updated);
+      toast.success(t("plannerDayMonday") ? `Оновлено: ${t(DAY_KEY[day] || day)}` : `Updated ${day}`);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 429) {
+        toast.error(t("plannerRegenerateRateLimit"));
+        return;
+      }
+      toast.error(getErrorMessage(err, t("plannerRegenerateFailed")));
+    } finally {
+      setRegeneratingDay(false);
+    }
+  };
+
   const mealHasRecipe = (meal: Meal): boolean =>
     !!meal.description || (Array.isArray(meal.steps) && meal.steps.length > 0);
 
@@ -124,8 +181,6 @@ export default function PlannerPage() {
       }
     }
   };
-
-
 
   const handleRegenerateMeal = async (day: string, mealType: string) => {
     const key = `${day}-${mealType}`;
@@ -244,7 +299,7 @@ export default function PlannerPage() {
             const currentQty = localQuantities.get(matchingProduct.id) ?? matchingProduct.quantity;
             if (currentQty <= 0) continue;
 
-            const match = ingredient.trim().match(/^([\d\.,]+)\s*([a-zA-Zа-яА-ЯёЁіІїЇєЄґҐ]+)?/);
+            const match = ingredient.trim().match(/^([\d\.,]+)\s*([a-zA-Zа-яА-ЯєЄіІїЇґҐ]+)?/);
             let amountToDeduct = 1;
             let parsedUnit = "";
             if (match) {
@@ -329,6 +384,24 @@ export default function PlannerPage() {
     return targetDate.toISOString().split("T")[0];
   };
 
+  const handlePrevDay = () => {
+    const idx = weekdays.indexOf(selectedDay);
+    if (idx > 0) {
+      setSelectedDay(weekdays[idx - 1]);
+    } else {
+      setSelectedDay(weekdays[weekdays.length - 1]);
+    }
+  };
+
+  const handleNextDay = () => {
+    const idx = weekdays.indexOf(selectedDay);
+    if (idx < weekdays.length - 1) {
+      setSelectedDay(weekdays[idx + 1]);
+    } else {
+      setSelectedDay(weekdays[0]);
+    }
+  };
+
   if (!mounted) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -365,13 +438,21 @@ export default function PlannerPage() {
     );
   }
 
+  // Group missing ingredients by category
+  const groupedGaps = plan?.gapItems ? plan.gapItems.reduce((acc, item) => {
+    const cat = item.category || "other";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(item);
+    return acc;
+  }, {} as Record<string, GapItem[]>) : {};
+
   return (
     <div className="min-h-full w-full p-4 md:p-8 lg:p-12">
       <div className="max-w-6xl mx-auto space-y-8">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs font-bold uppercase tracking-widest">
-              <CalendarDays className="h-3 w-3" />
+              <CalendarDays className="h-3.5 w-3.5" />
               {t("plannerTitle")}
             </div>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight">{t("plannerHeroTitle")}</h1>
@@ -380,10 +461,12 @@ export default function PlannerPage() {
             </p>
             <ActiveFridgeBanner icon={CalendarDays} label={t("plannerActiveFor")} />
           </div>
-          <Button size="lg" onClick={generate} disabled={loading} className="rounded-xl font-bold gap-2 shadow-md shadow-primary/20 shrink-0">
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-            {plan ? t("plannerRegenerate") : t("plannerGenerate")}
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button size="lg" onClick={generate} disabled={loading} className="rounded-xl font-bold gap-2 shadow-md shadow-primary/20">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {plan ? t("plannerRegenerate") : t("plannerGenerate")}
+            </Button>
+          </div>
         </header>
 
         {plan === null ? (
@@ -398,114 +481,371 @@ export default function PlannerPage() {
           </Card>
         ) : (
           <>
+            {/* Day Selector Navigation Bar with Carousel / Horizontal Scroll */}
             <div className="space-y-4">
-              {weekdays.map((day) => {
-                const dayKey = DAY_KEY[day];
-                const dayLabel = dayKey ? t(dayKey) : day;
-                const dayMeals = plan.meals.filter((m) => m.day === day);
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-glass/30 border border-border/40 rounded-3xl p-3 shadow-xs">
+                {/* Horizontal Scrolling Day Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 px-1 flex-1">
+                  {weekdays.map((day) => {
+                    const isSelected = selectedDay === day;
+                    const isToday = day === todayDayName;
+                    const dayMealsCount = plan.meals.filter((m) => m.day === day).length;
+                    const dayLabel = DAY_KEY[day] ? t(DAY_KEY[day]) : day;
+                    const shortLabel = SHORT_DAY_KEY[day] || day.slice(0, 3);
 
-                return (
-                  <div
-                    key={day}
-                    className="flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-3xl bg-glass border border-border/40 shadow-xs hover:border-border/80 transition-colors"
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDay(day);
+                          if (viewMode !== "day") setViewMode("day");
+                        }}
+                        className={`relative shrink-0 flex flex-col items-center justify-center px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 cursor-pointer select-none border ${
+                          isSelected
+                            ? "bg-primary text-primary-foreground border-primary shadow-md scale-[1.02]"
+                            : "bg-secondary/15 hover:bg-secondary/35 text-foreground/80 border-border/30 hover:border-border/60"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1">
+                          <span>{dayLabel}</span>
+                          {isToday && (
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider ${
+                              isSelected ? "bg-white/20 text-white" : "bg-primary/20 text-primary"
+                            }`}>
+                              ●
+                            </span>
+                          )}
+                        </div>
+                        <span className={`text-[10px] font-medium mt-0.5 ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                          {dayMealsCount > 0 ? `${dayMealsCount} страв` : "—"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* View Mode Toggle: Day vs Week */}
+                <div className="flex items-center gap-1 bg-background/50 border border-border/40 rounded-2xl p-1 shrink-0 self-end sm:self-center">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("day")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      viewMode === "day"
+                        ? "bg-secondary text-secondary-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
                   >
-                    {/* Day label column */}
-                    <div className="md:w-32 shrink-0 md:text-center py-1 md:py-0">
-                      <p className="text-lg font-black tracking-tight text-primary">
-                        {dayLabel}
-                      </p>
-                      <p className="text-xs text-muted-foreground hidden md:block">
-                        {dayMeals.length} {t("dashboardItemsCount", { count: dayMeals.length })}
-                      </p>
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">День</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("week")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      viewMode === "week"
+                        ? "bg-secondary text-secondary-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <LayoutGrid className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Весь тиждень</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Single Day View Mode */}
+              {viewMode === "day" && (
+                <div className="space-y-4">
+                  {/* Selected Day Navigation Header */}
+                  <div className="flex items-center justify-between p-4 rounded-3xl bg-glass border border-border/40 shadow-xs">
+                    <div className="flex items-center gap-3">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl shrink-0" onClick={handlePrevDay}>
+                        <ChevronLeft className="h-5 w-5" />
+                      </Button>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-xl font-black tracking-tight text-primary">
+                            {DAY_KEY[selectedDay] ? t(DAY_KEY[selectedDay]) : selectedDay}
+                          </h2>
+                          {selectedDay === todayDayName && (
+                            <span className="px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-black uppercase tracking-wider">
+                              Сьогодні
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {plan.meals.filter((m) => m.day === selectedDay).length} страв заплановано
+                        </p>
+                      </div>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRegenerateDay(selectedDay)}
+                        disabled={regeneratingDay}
+                        className="rounded-xl h-9 text-xs font-bold gap-1.5 shadow-xs"
+                      >
+                        {regeneratingDay ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                        <span className="hidden sm:inline">{t("plannerRegenerateDay")}</span>
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl shrink-0" onClick={handleNextDay}>
+                        <ChevronRight className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  </div>
 
-                    {/* Meal types cells grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
-                      {mealTypes.map((mealType) => {
-                        const meal = dayMeals.find((m) => m.mealType?.toLowerCase() === mealType);
-                        const mealKey = `${day}-${mealType}`;
-                        const mealTypeLabel = t(`mealType${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
+                  {/* Meals Grid for Selected Day */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {mealTypes.map((mealType) => {
+                      const dayMeals = plan.meals.filter((m) => m.day === selectedDay);
+                      const meal = dayMeals.find((m) => m.mealType?.toLowerCase() === mealType);
+                      const mealKey = `${selectedDay}-${mealType}`;
+                      const mealTypeLabel = t(`mealType${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
 
-                        if (!meal) {
-                          return (
-                            <div
-                              key={mealKey}
-                              className="rounded-2xl border border-dashed border-border/60 bg-muted/10 p-4 flex flex-col justify-center items-center text-center min-h-[90px]"
-                            >
-                              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
-                                {mealTypeLabel}
-                              </span>
-                              <span className="text-xs text-muted-foreground/40 mt-1">
-                                {t("plannerEmptyTitle")}
-                              </span>
-                            </div>
-                          );
-                        }
-
+                      if (!meal) {
                         return (
-                          <button
+                          <div
                             key={mealKey}
-                            type="button"
-                            onClick={() => toggleMeal(meal)}
-                            className="group text-left rounded-2xl bg-secondary/20 hover:bg-secondary/40 border border-border/50 p-4 shadow-xs hover:shadow-sm hover:scale-[1.02] transition-all duration-300 active:scale-[0.98] cursor-pointer flex flex-col justify-between min-h-[100px]"
+                            className="rounded-3xl border-2 border-dashed border-border/60 bg-muted/10 p-6 flex flex-col justify-center items-center text-center min-h-[140px]"
                           >
-                            <div className="space-y-1">
+                            {mealType === "breakfast" ? (
+                              <Coffee className="h-5 w-5 text-muted-foreground/40 mb-2" />
+                            ) : mealType === "lunch" ? (
+                              <Soup className="h-5 w-5 text-muted-foreground/40 mb-2" />
+                            ) : (
+                              <Salad className="h-5 w-5 text-muted-foreground/40 mb-2" />
+                            )}
+                            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">
+                              {mealTypeLabel}
+                            </span>
+                            <span className="text-xs text-muted-foreground/40 mt-1">
+                              {t("plannerEmptyTitle")}
+                            </span>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <button
+                          key={mealKey}
+                          type="button"
+                          onClick={() => toggleMeal(meal)}
+                          className="group text-left rounded-3xl bg-glass hover:bg-secondary/20 border border-border/50 p-5 shadow-xs hover:shadow-md hover:scale-[1.02] transition-all duration-300 active:scale-[0.98] cursor-pointer flex flex-col justify-between min-h-[140px]"
+                        >
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
                               <div className="flex items-center gap-1.5">
-                                  {mealType === "breakfast" ? (
-                                    <Coffee className="h-3.5 w-3.5 text-primary shrink-0" />
-                                  ) : mealType === "lunch" ? (
-                                    <Soup className="h-3.5 w-3.5 text-primary shrink-0" />
-                                  ) : (
-                                    <Salad className="h-3.5 w-3.5 text-primary shrink-0" />
-                                  )}
-                                <span className="text-[10px] font-black uppercase tracking-widest text-primary/80">
+                                {mealType === "breakfast" ? (
+                                  <Coffee className="h-4 w-4 text-primary shrink-0" />
+                                ) : mealType === "lunch" ? (
+                                  <Soup className="h-4 w-4 text-primary shrink-0" />
+                                ) : (
+                                  <Salad className="h-4 w-4 text-primary shrink-0" />
+                                )}
+                                <span className="text-xs font-black uppercase tracking-widest text-primary/90">
                                   {mealTypeLabel}
                                 </span>
                               </div>
-                              <h4 className="font-bold text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors">
-                                {meal.name}
-                              </h4>
+                              {loggedMeals[mealKey] && (
+                                <span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                                  <Check className="h-3 w-3" />
+                                  Записано
+                                </span>
+                              )}
                             </div>
-                            {meal.description && (
-                              <p className="text-[11px] text-muted-foreground line-clamp-1 mt-2">
-                                {meal.description}
-                              </p>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
+                            <h4 className="font-bold text-base md:text-lg leading-snug group-hover:text-primary transition-colors">
+                              {meal.name}
+                            </h4>
+                          </div>
+                          {meal.description ? (
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-3 leading-relaxed">
+                              {meal.description}
+                            </p>
+                          ) : (
+                            <div className="flex items-center gap-1 text-[11px] text-primary/70 font-semibold mt-3">
+                              <span>Натисніть для перегляду рецепта</span>
+                              <ChevronRight className="h-3 w-3" />
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
-                );
-              })}
+                </div>
+              )}
+
+              {/* Full Week Grid View Mode */}
+              {viewMode === "week" && (
+                <div className="space-y-4">
+                  {weekdays.map((day) => {
+                    const dayKey = DAY_KEY[day];
+                    const dayLabel = dayKey ? t(dayKey) : day;
+                    const dayMeals = plan.meals.filter((m) => m.day === day);
+                    const isToday = day === todayDayName;
+
+                    return (
+                      <div
+                        key={day}
+                        className={`flex flex-col md:flex-row md:items-center gap-4 p-5 rounded-3xl border transition-colors ${
+                          isToday
+                            ? "bg-primary/5 border-primary/40 shadow-xs"
+                            : "bg-glass border-border/40 hover:border-border/80 shadow-xs"
+                        }`}
+                      >
+                        {/* Day label column */}
+                        <div className="md:w-36 shrink-0 flex md:flex-col items-center justify-between md:justify-center md:text-center py-1 md:py-0">
+                          <div>
+                            <div className="flex items-center gap-1.5 md:justify-center">
+                              <p className="text-lg font-black tracking-tight text-primary">
+                                {dayLabel}
+                              </p>
+                              {isToday && (
+                                <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-black uppercase tracking-wider">
+                                  Сьогодні
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground hidden md:block">
+                              {dayMeals.length} {t("dashboardItemsCount", { count: dayMeals.length })}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRegenerateDay(day)}
+                            disabled={regeneratingDay}
+                            className="h-8 text-[11px] font-bold text-muted-foreground hover:text-foreground md:mt-2"
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            {t("plannerRegenerateDay")}
+                          </Button>
+                        </div>
+
+                        {/* Meal types cells grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
+                          {mealTypes.map((mealType) => {
+                            const meal = dayMeals.find((m) => m.mealType?.toLowerCase() === mealType);
+                            const mealKey = `${day}-${mealType}`;
+                            const mealTypeLabel = t(`mealType${mealType.charAt(0).toUpperCase() + mealType.slice(1)}`);
+
+                            if (!meal) {
+                              return (
+                                <div
+                                  key={mealKey}
+                                  className="rounded-2xl border border-dashed border-border/60 bg-muted/10 p-4 flex flex-col justify-center items-center text-center min-h-[90px]"
+                                >
+                                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                    {mealTypeLabel}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground/40 mt-1">
+                                    {t("plannerEmptyTitle")}
+                                  </span>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <button
+                                key={mealKey}
+                                type="button"
+                                onClick={() => toggleMeal(meal)}
+                                className="group text-left rounded-2xl bg-secondary/20 hover:bg-secondary/40 border border-border/50 p-4 shadow-xs hover:shadow-sm hover:scale-[1.02] transition-all duration-300 active:scale-[0.98] cursor-pointer flex flex-col justify-between min-h-[100px]"
+                              >
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-1.5">
+                                    {mealType === "breakfast" ? (
+                                      <Coffee className="h-3.5 w-3.5 text-primary shrink-0" />
+                                    ) : mealType === "lunch" ? (
+                                      <Soup className="h-3.5 w-3.5 text-primary shrink-0" />
+                                    ) : (
+                                      <Salad className="h-3.5 w-3.5 text-primary shrink-0" />
+                                    )}
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-primary/80">
+                                      {mealTypeLabel}
+                                    </span>
+                                  </div>
+                                  <h4 className="font-bold text-sm line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                                    {meal.name}
+                                  </h4>
+                                </div>
+                                {meal.description && (
+                                  <p className="text-[11px] text-muted-foreground line-clamp-1 mt-2">
+                                    {meal.description}
+                                  </p>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            {/* Gap items section */}
+            {/* Optimized Missing Ingredients / Shopping List Section */}
             {plan.gapItems.length > 0 && (
-              <section className="rounded-3xl bg-glass p-6 md:p-8 space-y-4 shadow-sm">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
-                  <div className="space-y-1">
-                    <h2 className="text-xl font-black tracking-tight">{t("plannerMissingIngredients")}</h2>
-                    <p className="text-sm text-muted-foreground">
-                      {t("plannerMissingHint")}
-                    </p>
+              <section className="rounded-3xl bg-glass border border-border/40 p-6 md:p-8 space-y-4 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
+                  <div
+                    className="flex items-center gap-3 cursor-pointer select-none"
+                    onClick={() => setIsGapsExpanded(!isGapsExpanded)}
+                  >
+                    <div className="h-10 w-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <ShoppingBasket className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-black tracking-tight">{t("plannerMissingIngredients")}</h2>
+                        <span className="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-xs font-black">
+                          {plan.gapItems.length}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {t("plannerMissingHint")}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl shrink-0 ml-1">
+                      {isGapsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
                   </div>
-                  <Button onClick={importGaps} disabled={importing} variant="secondary" className="rounded-xl font-bold gap-2 shrink-0">
+
+                  <Button onClick={importGaps} disabled={importing} variant="secondary" className="rounded-xl font-bold gap-2 shrink-0 self-start sm:self-center shadow-xs">
                     {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBasket className="h-4 w-4" />}
                     {t("plannerAddToShopping")}
                   </Button>
                 </div>
-                <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                  {plan.gapItems.map((item, i) => (
-                    <li key={i} className="rounded-xl border border-border/70 bg-muted/40 px-3 py-2 text-sm">
-                      <p className="font-semibold">{item.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.quantity != null ? `${item.quantity} ${item.unit ?? ""} · ` : ""}
-                        {t(categoryLabelKey(item.category))}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
+
+                {isGapsExpanded && (
+                  <div className="space-y-4 pt-1">
+                    {/* Compact Category Breakdown View */}
+                    {Object.keys(groupedGaps).map((cat) => (
+                      <div key={cat} className="space-y-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 block px-1">
+                          {t(categoryLabelKey(cat))} ({groupedGaps[cat].length})
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {groupedGaps[cat].map((item, i) => (
+                            <div
+                              key={i}
+                              className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-muted/30 px-3 py-1.5 text-xs font-semibold hover:border-border transition-colors"
+                            >
+                              <span>{item.name}</span>
+                              {item.quantity != null && (
+                                <span className="text-[10px] text-muted-foreground font-normal bg-background/60 px-1.5 py-0.5 rounded-md border border-border/40">
+                                  {item.quantity} {item.unit ?? ""}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </section>
             )}
           </>
@@ -518,13 +858,13 @@ export default function PlannerPage() {
               <>
                 <SheetHeader className="p-0 text-left">
                   <div className="flex items-center gap-2">
-                      {selectedMeal.mealType === "breakfast" ? (
-                        <Coffee className="h-4 w-4 text-primary shrink-0" />
-                      ) : selectedMeal.mealType === "lunch" ? (
-                        <Soup className="h-4 w-4 text-primary shrink-0" />
-                      ) : (
-                        <Salad className="h-4 w-4 text-primary shrink-0" />
-                      )}
+                    {selectedMeal.mealType === "breakfast" ? (
+                      <Coffee className="h-4 w-4 text-primary shrink-0" />
+                    ) : selectedMeal.mealType === "lunch" ? (
+                      <Soup className="h-4 w-4 text-primary shrink-0" />
+                    ) : (
+                      <Salad className="h-4 w-4 text-primary shrink-0" />
+                    )}
                     <span className="text-[11px] font-black uppercase tracking-widest text-primary">
                       {selectedMeal.mealType
                         ? t(`mealType${selectedMeal.mealType.charAt(0).toUpperCase() + selectedMeal.mealType.slice(1).toLowerCase()}`)
