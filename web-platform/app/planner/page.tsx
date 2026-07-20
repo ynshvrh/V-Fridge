@@ -105,7 +105,6 @@ export default function PlannerPage() {
   const todayDayName = weekdays[(new Date().getDay() + 6) % 7]; // Monday = 0
   const [selectedDay, setSelectedDay] = useState<string>(todayDayName);
   const [viewMode, setViewMode] = useState<"day" | "week">("day");
-  const [regeneratingDay, setRegeneratingDay] = useState<boolean>(false);
 
   // Gap items UI state
   const [isGapsExpanded, setIsGapsExpanded] = useState(true);
@@ -152,26 +151,6 @@ export default function PlannerPage() {
       toast.error(getErrorMessage(err, t("plannerGenerateFailed")));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleRegenerateDay = async (day: string) => {
-    setRegeneratingDay(true);
-    try {
-      const updated = await apiFetch<MealPlan>("/meal-plan/regenerate-day", {
-        method: "POST",
-        body: { day },
-      });
-      setPlan(updated);
-      toast.success(t("plannerDayMonday") ? `Оновлено: ${t(DAY_KEY[day] || day)}` : `Updated ${day}`);
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 429) {
-        toast.error(t("plannerRegenerateRateLimit"));
-        return;
-      }
-      toast.error(getErrorMessage(err, t("plannerRegenerateFailed")));
-    } finally {
-      setRegeneratingDay(false);
     }
   };
 
@@ -310,7 +289,7 @@ export default function PlannerPage() {
 
       // Deduct ingredients from the active fridge
       const { products: currentProducts, removeProduct, updateProduct } = useProductStore.getState();
-      const updatedProductsToSave: Promise<any>[] = [];
+      const updatedProductsToSave: Promise<unknown>[] = [];
       const localQuantities = new Map<number, number>();
       currentProducts.forEach((p) => localQuantities.set(p.id, p.quantity));
 
@@ -518,7 +497,6 @@ export default function PlannerPage() {
                     const isToday = day === todayDayName;
                     const dayMealsCount = plan.meals.filter((m) => m.day === day).length;
                     const dayLabel = DAY_KEY[day] ? t(DAY_KEY[day]) : day;
-                    const shortLabel = SHORT_DAY_KEY[day] || day.slice(0, 3);
 
                     return (
                       <button

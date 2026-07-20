@@ -25,7 +25,7 @@ import { useTranslations } from "next-intl";
 import { apiFetch } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
 import { toast } from "sonner";
-import { useSavedRecipeStore, useProductStore, type SavedRecipe } from "@/store/useVFridgeStore";
+import { useSavedRecipeStore, type SavedRecipe } from "@/store/useVFridgeStore";
 import {
   Sheet,
   SheetContent,

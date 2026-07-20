@@ -129,7 +129,7 @@ export default function NutritionTrackerPage() {
     try {
       const resp = await apiFetch<DailyNutritionResponse>(`/nutrition/daily?date=${selectedDate}`);
       setData(resp);
-      setDailyData(selectedDate, resp as any);
+      setDailyData(selectedDate, resp);
       
       // Prefill targets form
       setTargetCalories(resp.targets.calories?.toString() ?? "2000");
@@ -149,7 +149,7 @@ export default function NutritionTrackerPage() {
     // Instantly load from cache to prevent blank screens/loaders
     const cached = dailyCache[selectedDate];
     if (cached) {
-      setData(cached as any);
+      setData(cached);
       setTargetCalories(cached.targets.calories?.toString() ?? "2000");
       setTargetProtein(cached.targets.protein?.toString() ?? "120");
       setTargetFat(cached.targets.fat?.toString() ?? "65");
@@ -165,7 +165,7 @@ export default function NutritionTrackerPage() {
   // Keep local edits in sync with Zustand cache
   useEffect(() => {
     if (data && data.date === selectedDate) {
-      setDailyData(selectedDate, data as any);
+      setDailyData(selectedDate, data);
     }
   }, [data, selectedDate, setDailyData]);
 

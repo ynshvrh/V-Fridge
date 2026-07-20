@@ -401,7 +401,7 @@ function ProfileCard({
       const isPasswordDiff = newPassword.length > 0;
 
       if (isUsernameDiff || isAvatarDiff || isPasswordDiff) {
-        const body: Record<string, any> = {};
+        const body: Record<string, string | null> = {};
         if (isUsernameDiff) body.username = username.trim();
         if (isAvatarDiff) body.avatar = selectedAvatar || null;
         if (isPasswordDiff) {
@@ -797,7 +797,7 @@ function DietaryProfileCard({
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => setComplexity(c.id as any)}
+                  onClick={() => setComplexity(c.id as "easy" | "normal" | "gourmet")}
                   className={`flex-1 min-w-[130px] flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer ${
                     active
                       ? "bg-primary/10 border-primary text-foreground font-bold shadow-xs"

@@ -32,7 +32,7 @@ type ProductResponse = {
 
 export default function ShoppingPage() {
   const t = useTranslations();
-  const { items, setItems, addItem, toggleItem, removeItem } = useShoppingStore();
+  const { items, setItems, addItem, removeItem } = useShoppingStore();
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("1");
@@ -43,6 +43,25 @@ export default function ShoppingPage() {
 
   const { fridges, status: fridgesStatus } = useFridges();
   const activeFridgeId = useFridges().active?.id ?? null;
+
+  const unchecked = items.filter((i) => !i.checked);
+  const checked = items.filter((i) => i.checked);
+
+  // Group the still-to-buy items by category, ordered by the canonical catalog
+  // order so headers stay stable regardless of insertion order. Bought items
+  // keep their own flat "Got them" group below.
+  const uncheckedGroups = useMemo(() => {
+    const byCategory = new Map<string, ShoppingItem[]>();
+    for (const item of unchecked) {
+      const slug = PRODUCT_CATEGORIES.some((c) => c.slug === item.category) ? item.category : "other";
+      const bucket = byCategory.get(slug);
+      if (bucket) bucket.push(item);
+      else byCategory.set(slug, [item]);
+    }
+    return PRODUCT_CATEGORIES
+      .filter((c) => byCategory.has(c.slug))
+      .map((c) => ({ category: c.slug, items: byCategory.get(c.slug)! }));
+  }, [unchecked]);
 
   useEffect(() => {
     setMounted(true);
@@ -138,25 +157,6 @@ export default function ShoppingPage() {
       toast.error(getErrorMessage(err, t("shoppingPurchaseFailed")));
     }
   };
-
-  const unchecked = items.filter((i) => !i.checked);
-  const checked = items.filter((i) => i.checked);
-
-  // Group the still-to-buy items by category, ordered by the canonical catalog
-  // order so headers stay stable regardless of insertion order. Bought items
-  // keep their own flat "Got them" group below.
-  const uncheckedGroups = useMemo(() => {
-    const byCategory = new Map<string, ShoppingItem[]>();
-    for (const item of unchecked) {
-      const slug = PRODUCT_CATEGORIES.some((c) => c.slug === item.category) ? item.category : "other";
-      const bucket = byCategory.get(slug);
-      if (bucket) bucket.push(item);
-      else byCategory.set(slug, [item]);
-    }
-    return PRODUCT_CATEGORIES
-      .filter((c) => byCategory.has(c.slug))
-      .map((c) => ({ category: c.slug, items: byCategory.get(c.slug)! }));
-  }, [unchecked]);
 
   return (
     <div className="min-h-full w-full p-4 md:p-8 lg:p-12">
