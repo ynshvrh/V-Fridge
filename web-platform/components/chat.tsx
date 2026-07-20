@@ -14,6 +14,127 @@ import { getErrorMessage } from "@/lib/utils";
 import { useProductStore, useSavedRecipeStore } from "@/store/useVFridgeStore";
 
 
+interface ParsedRecipeBlock {
+  preText: string;
+  recipeName: string;
+  recipeDescription: string;
+  ingredients: string[];
+  steps: string[];
+  postText: string;
+  hasRecipe: boolean;
+  fullRecipeText: string;
+}
+
+function extractRecipeData(content: string): ParsedRecipeBlock {
+  const codeBlockMatch = content.match(/```(?:recipe)?\s*([\s\S]*?)```/i);
+  if (codeBlockMatch) {
+    const rawBlock = codeBlockMatch[1];
+    const preText = content.slice(0, codeBlockMatch.index).trim();
+    const postText = content.slice(codeBlockMatch.index! + codeBlockMatch[0].length).trim();
+
+    let name = "Рецепт від AI Шефа";
+    let description = "";
+    const ingredients: string[] = [];
+    const steps: string[] = [];
+
+    const lines = rawBlock.split("\n").map((l) => l.trim()).filter(Boolean);
+    let section: "none" | "ingredients" | "steps" = "none";
+
+    for (const line of lines) {
+      if (/^(?:Title|Name|Назва|Рецепт):/i.test(line)) {
+        name = line.replace(/^(?:Title|Name|Назва|Рецепт):\s*/i, "").replace(/[*#]/g, "").trim();
+      } else if (/^(?:Description|Опис):/i.test(line)) {
+        description = line.replace(/^(?:Description|Опис):\s*/i, "").trim();
+      } else if (/^(?:Ingredients|Інгредієнти):/i.test(line)) {
+        section = "ingredients";
+      } else if (/^(?:Steps|Кроки|Приготування):/i.test(line)) {
+        section = "steps";
+      } else if (line.startsWith("-") || line.startsWith("*")) {
+        const item = line.replace(/^[-*]\s*/, "").trim();
+        if (section === "steps") steps.push(item);
+        else ingredients.push(item);
+      } else if (/^\d+\./.test(line)) {
+        steps.push(line.replace(/^\d+\.\s*/, "").trim());
+      } else {
+        if (section === "ingredients") ingredients.push(line);
+        else if (section === "steps") steps.push(line);
+        else if (!description) description = line;
+      }
+    }
+
+    return {
+      preText,
+      recipeName: name,
+      recipeDescription: description,
+      ingredients,
+      steps,
+      postText,
+      hasRecipe: true,
+      fullRecipeText: rawBlock,
+    };
+  }
+
+  const ingIndex = content.search(/(?:Інгредієнти|Ingredients):/i);
+  if (ingIndex !== -1) {
+    const preText = content.slice(0, ingIndex).trim();
+    const recipeText = content.slice(ingIndex).trim();
+
+    let name = "Рецепт від AI Шефа";
+    const titleMatch = preText.match(/\*\*(.*?)\*\*/) || preText.match(/^#+\s*(.*)/m);
+    if (titleMatch) {
+      name = titleMatch[1].replace(/[*#]/g, "").trim();
+    } else {
+      const preLines = preText.split("\n").map((l) => l.trim()).filter(Boolean);
+      if (preLines.length > 0) name = preLines[preLines.length - 1].replace(/[*#]/g, "").trim();
+    }
+
+    const ingredients: string[] = [];
+    const steps: string[] = [];
+    const lines = recipeText.split("\n").map((l) => l.trim()).filter(Boolean);
+    let section: "ingredients" | "steps" = "ingredients";
+
+    for (const line of lines) {
+      if (/(?:Кроки|Приготування|Steps):/i.test(line)) {
+        section = "steps";
+        continue;
+      }
+      if (/(?:Інгредієнти|Ingredients):/i.test(line)) {
+        section = "ingredients";
+        continue;
+      }
+      if (line.startsWith("-") || line.startsWith("*")) {
+        const item = line.replace(/^[-*]\s*/, "").trim();
+        if (section === "steps") steps.push(item);
+        else ingredients.push(item);
+      } else if (/^\d+\./.test(line)) {
+        steps.push(line.replace(/^\d+\.\s*/, "").trim());
+      }
+    }
+
+    return {
+      preText,
+      recipeName: name,
+      recipeDescription: "",
+      ingredients,
+      steps,
+      postText: "",
+      hasRecipe: true,
+      fullRecipeText: recipeText,
+    };
+  }
+
+  return {
+    preText: content,
+    recipeName: "",
+    recipeDescription: "",
+    ingredients: [],
+    steps: [],
+    postText: "",
+    hasRecipe: false,
+    fullRecipeText: "",
+  };
+}
+
 export default function Chat() {
   const t = useTranslations() as unknown as (key: string, values?: Record<string, string | number>) => string;
   const products = useProductStore((state) => state.products);
@@ -21,24 +142,16 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSaveRecipe = async (messageText: string) => {
-    let name = "Рецепт від AI Шефа";
-    const lines = messageText.split("\n").map((l) => l.trim()).filter(Boolean);
-    const titleMatch = messageText.match(/\*\*(.*?)\*\*/) || messageText.match(/^#+\s*(.*)/m);
-    if (titleMatch && titleMatch[1]) {
-      name = titleMatch[1].replace(/[*#]/g, "").trim();
-    } else if (lines.length > 0) {
-      name = lines[0].replace(/[*#]/g, "").trim();
-    }
-
+  const handleSaveRecipeCard = async (parsed: ParsedRecipeBlock) => {
+    const name = parsed.recipeName || "Рецепт від AI Шефа";
     try {
       const saved = await apiFetch<SavedRecipe>("/saved-recipes", {
         method: "POST",
         body: {
           name,
-          description: messageText.slice(0, 300),
-          ingredients: [],
-          steps: lines,
+          description: parsed.recipeDescription || null,
+          ingredients: parsed.ingredients,
+          steps: parsed.steps,
           calories: 0,
           protein: 0,
           fat: 0,
@@ -189,12 +302,14 @@ export default function Chat() {
 
         {messages.map((m, i) => {
           const isAI = m.role === "assistant" || m.role === "model";
+          const parsed = isAI ? extractRecipeData(m.content) : null;
+
           return (
             <div
               key={i}
               className={`flex ${isAI ? "justify-start" : "justify-end"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
             >
-              <div className={`flex gap-2.5 max-w-[88%] ${isAI ? "flex-row" : "flex-row-reverse"}`}>
+              <div className={`flex gap-2.5 max-w-[92%] sm:max-w-[85%] ${isAI ? "flex-row" : "flex-row-reverse"}`}>
                 <Avatar className="h-8 w-8 shrink-0 border border-border/60 shadow-sm">
                   <AvatarFallback
                     className={
@@ -209,40 +324,114 @@ export default function Chat() {
 
                 <div className={`flex flex-col gap-1 ${isAI ? "items-start" : "items-end"}`}>
                   <div
-                    className={`p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm border ${
+                    className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm border ${
                       isAI
                         ? "bg-card border-border/60 rounded-tl-md text-card-foreground"
                         : "bg-primary text-primary-foreground border-primary rounded-tr-md"
                     }`}
                   >
-                    <div className={`prose prose-sm max-w-none wrap-break-word ${isAI ? "" : "prose-invert"}`}>
-                      <ReactMarkdown
-                        components={{
-                          p: ({ children }) => <p className="mb-2 last:mb-0 leading-normal">{children}</p>,
-                          ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
-                          ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
-                          strong: ({ children }) => (
-                            <span className={`font-bold ${isAI ? "text-primary" : "text-primary-foreground underline underline-offset-2 decoration-white/40"}`}>
-                              {children}
-                            </span>
-                          ),
-                          li: ({ children }) => <li className="ml-1">{children}</li>,
-                        }}
-                      >
-                        {m.content}
-                      </ReactMarkdown>
-                    </div>
+                    {isAI && parsed && parsed.hasRecipe ? (
+                      <div className="space-y-3">
+                        {/* Pre-recipe text */}
+                        {parsed.preText && (
+                          <div className="prose prose-sm max-w-none wrap-break-word">
+                            <ReactMarkdown>{parsed.preText}</ReactMarkdown>
+                          </div>
+                        )}
 
-                    {isAI && (
-                      <div className="mt-3 pt-2 border-t border-border/40 flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => handleSaveRecipe(m.content)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary/30 hover:bg-secondary/60 text-[11px] font-bold text-primary transition-all cursor-pointer select-none"
+                        {/* Framed Recipe Block */}
+                        <div className="rounded-3xl border-2 border-primary/30 bg-primary/5 p-4 md:p-5 space-y-3 shadow-xs my-2">
+                          <div className="flex items-center justify-between border-b border-primary/15 pb-2.5">
+                            <div className="flex items-center gap-2">
+                              <ChefHat className="h-4 w-4 text-primary shrink-0" />
+                              <span className="text-xs font-black uppercase tracking-widest text-primary">
+                                Рецепт
+                              </span>
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => handleSaveRecipeCard(parsed)}
+                              className="rounded-xl text-xs font-bold gap-1.5 shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            >
+                              <Bookmark className="h-3.5 w-3.5 text-primary" />
+                              <span>{t("recipeSaveAction")}</span>
+                            </Button>
+                          </div>
+
+                          <div className="space-y-2">
+                            <h4 className="text-base md:text-lg font-black tracking-tight leading-snug text-foreground">
+                              {parsed.recipeName}
+                            </h4>
+                            {parsed.recipeDescription && (
+                              <p className="text-xs text-muted-foreground leading-relaxed">
+                                {parsed.recipeDescription}
+                              </p>
+                            )}
+
+                            {/* Ingredients */}
+                            {parsed.ingredients.length > 0 && (
+                              <div className="space-y-1.5 pt-2">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                  {t("plannerIngredientsLabel")}
+                                </span>
+                                <ul className="grid grid-cols-1 gap-1 text-xs font-medium">
+                                  {parsed.ingredients.map((ing, ix) => (
+                                    <li key={ix} className="flex items-center gap-2 text-foreground/90">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                                      <span>{ing}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Steps */}
+                            {parsed.steps.length > 0 && (
+                              <div className="space-y-2 pt-2">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                  {t("plannerStepsLabel")}
+                                </span>
+                                <ol className="relative border-l border-primary/20 ml-2.5 space-y-2">
+                                  {parsed.steps.map((step, ix) => (
+                                    <li key={ix} className="pl-5 relative text-xs">
+                                      <div className="absolute -left-2.5 top-0.5 flex items-center justify-center w-5 h-5 rounded-full bg-primary/20 text-[9px] font-black text-primary select-none">
+                                        {ix + 1}
+                                      </div>
+                                      <span className="text-foreground/90 leading-relaxed">{step}</span>
+                                    </li>
+                                  ))}
+                                </ol>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Post-recipe text */}
+                        {parsed.postText && (
+                          <div className="prose prose-sm max-w-none wrap-break-word">
+                            <ReactMarkdown>{parsed.postText}</ReactMarkdown>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className={`prose prose-sm max-w-none wrap-break-word ${isAI ? "" : "prose-invert"}`}>
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => <p className="mb-2 last:mb-0 leading-normal">{children}</p>,
+                            ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                            ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+                            strong: ({ children }) => (
+                              <span className={`font-bold ${isAI ? "text-primary" : "text-primary-foreground underline underline-offset-2 decoration-white/40"}`}>
+                                {children}
+                              </span>
+                            ),
+                            li: ({ children }) => <li className="ml-1">{children}</li>,
+                          }}
                         >
-                          <Bookmark className="h-3 w-3" />
-                          <span>{t("recipeSaveAction")}</span>
-                        </button>
+                          {m.content}
+                        </ReactMarkdown>
                       </div>
                     )}
                   </div>
