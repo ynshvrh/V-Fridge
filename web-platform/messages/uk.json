@@ -167,6 +167,13 @@
   "plannerLogToTrackerBusy": "Запис…",
   "plannerLogToTrackerSuccess": "Страва «{name}» записана в трекер!",
   "plannerLogToTrackerDone": "Записано",
+  "recipeTabChef": "AI Шеф",
+  "recipeTabSaved": "Збережені рецепти",
+  "recipeSaveAction": "Зберегти рецепт",
+  "recipeSavedSuccess": "Рецепт «{name}» збережено в улюблені!",
+  "recipeRemoveSuccess": "Рецепт вилучено зі збережених",
+  "recipeNoSavedTitle": "Немає збережених рецептів",
+  "recipeNoSavedBody": "Зберігайте улюблені страви з чату з Шефом або з Планнера, щоб мати до них швидкий доступ.",
 
   "settingsTitle": "Налаштування",
   "settingsHeroSubtitle": "Профіль, вигляд, мова, кухня та спільні холодильники.",

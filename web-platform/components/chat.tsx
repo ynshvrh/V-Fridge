@@ -5,13 +5,13 @@ import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, Send, ChefHat, User, Trash2, Sparkles } from "lucide-react";
+import { Loader2, Send, ChefHat, User, Trash2, Sparkles, Bookmark } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
-import { Message } from "@/interfaces/type";
+import { Message, SavedRecipe } from "@/interfaces/type";
 import { apiFetch, ApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/utils";
-import { useProductStore } from "@/store/useVFridgeStore";
+import { useProductStore, useSavedRecipeStore } from "@/store/useVFridgeStore";
 
 
 export default function Chat() {
@@ -20,6 +20,37 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleSaveRecipe = async (messageText: string) => {
+    let name = "Рецепт від AI Шефа";
+    const lines = messageText.split("\n").map((l) => l.trim()).filter(Boolean);
+    const titleMatch = messageText.match(/\*\*(.*?)\*\*/) || messageText.match(/^#+\s*(.*)/m);
+    if (titleMatch && titleMatch[1]) {
+      name = titleMatch[1].replace(/[*#]/g, "").trim();
+    } else if (lines.length > 0) {
+      name = lines[0].replace(/[*#]/g, "").trim();
+    }
+
+    try {
+      const saved = await apiFetch<SavedRecipe>("/saved-recipes", {
+        method: "POST",
+        body: {
+          name,
+          description: messageText.slice(0, 300),
+          ingredients: [],
+          steps: lines,
+          calories: 0,
+          protein: 0,
+          fat: 0,
+          carbs: 0,
+        },
+      });
+      useSavedRecipeStore.getState().addSavedRecipe(saved);
+      toast.success(t("recipeSavedSuccess", { name }));
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Не вдалося зберегти рецепт."));
+    }
+  };
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -201,6 +232,19 @@ export default function Chat() {
                         {m.content}
                       </ReactMarkdown>
                     </div>
+
+                    {isAI && (
+                      <div className="mt-3 pt-2 border-t border-border/40 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => handleSaveRecipe(m.content)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-secondary/30 hover:bg-secondary/60 text-[11px] font-bold text-primary transition-all cursor-pointer select-none"
+                        >
+                          <Bookmark className="h-3 w-3" />
+                          <span>{t("recipeSaveAction")}</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

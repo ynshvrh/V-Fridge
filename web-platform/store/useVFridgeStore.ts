@@ -167,3 +167,41 @@ export const usePlannerStore = create<PlannerState>()(
     }
   )
 );
+
+export interface SavedRecipe {
+  id: number;
+  name: string;
+  description: string | null;
+  ingredients: string[];
+  steps: string[];
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  createdAt: string;
+}
+
+interface SavedRecipeState {
+  savedRecipes: SavedRecipe[];
+  setSavedRecipes: (recipes: SavedRecipe[]) => void;
+  addSavedRecipe: (recipe: SavedRecipe) => void;
+  removeSavedRecipe: (id: number) => void;
+}
+
+export const useSavedRecipeStore = create<SavedRecipeState>()(
+  persist(
+    (set) => ({
+      savedRecipes: [],
+      setSavedRecipes: (savedRecipes) => set({ savedRecipes }),
+      addSavedRecipe: (recipe) => set((state) => ({
+        savedRecipes: [recipe, ...state.savedRecipes.filter((r) => r.id !== recipe.id)]
+      })),
+      removeSavedRecipe: (id) => set((state) => ({
+        savedRecipes: state.savedRecipes.filter((r) => r.id !== id)
+      })),
+    }),
+    {
+      name: 'vfridge-saved-recipes-storage',
+    }
+  )
+);

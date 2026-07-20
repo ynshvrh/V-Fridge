@@ -26,6 +26,7 @@ import {
   LayoutGrid,
   Calendar,
   Settings as SettingsIcon,
+  Bookmark,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiFetch, ApiError } from "@/lib/api-client";
@@ -34,7 +35,7 @@ import { categoryLabelKey } from "@/interfaces/categories";
 import { useFridges } from "@/providers/fridge-provider";
 import { ActiveFridgeBanner } from "@/components/active-fridge-banner";
 import Link from "next/link";
-import { useProductStore, usePlannerStore, type Meal, type GapItem, type MealPlan } from "@/store/useVFridgeStore";
+import { useProductStore, usePlannerStore, useSavedRecipeStore, type Meal, type GapItem, type MealPlan, type SavedRecipe } from "@/store/useVFridgeStore";
 import {
   Sheet,
   SheetContent,
@@ -70,6 +71,32 @@ export default function PlannerPage() {
   const t = useTranslations() as unknown as (key: string, values?: Record<string, string | number>) => string;
   const { plan, setPlan } = usePlannerStore();
   const [loading, setLoading] = useState(false);
+  const [savingRecipe, setSavingRecipe] = useState(false);
+
+  const handleSaveMealToFavorites = async (meal: Meal) => {
+    setSavingRecipe(true);
+    try {
+      const saved = await apiFetch<SavedRecipe>("/saved-recipes", {
+        method: "POST",
+        body: {
+          name: meal.name,
+          description: meal.description,
+          ingredients: meal.ingredients || [],
+          steps: meal.steps || [],
+          calories: meal.calories || 0,
+          protein: meal.protein || 0,
+          fat: meal.fat || 0,
+          carbs: meal.carbs || 0,
+        },
+      });
+      useSavedRecipeStore.getState().addSavedRecipe(saved);
+      toast.success(t("recipeSavedSuccess", { name: meal.name }));
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Не вдалося зберегти рецепт."));
+    } finally {
+      setSavingRecipe(false);
+    }
+  };
   const [importing, setImporting] = useState(false);
   const [loadingRecipeMealKey, setLoadingRecipeMealKey] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -1003,6 +1030,20 @@ export default function PlannerPage() {
                 )}
 
                 <div className="pt-4 border-t border-border/60 flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="w-full h-11 rounded-xl gap-2 font-bold shadow-xs hover:scale-[1.01] active:scale-[0.99] transition-all"
+                    onClick={() => handleSaveMealToFavorites(selectedMeal)}
+                    disabled={savingRecipe}
+                  >
+                    {savingRecipe ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Bookmark className="h-4 w-4 text-primary" />
+                    )}
+                    {t("recipeSaveAction")}
+                  </Button>
                   <Button
                     type="button"
                     variant="outline"

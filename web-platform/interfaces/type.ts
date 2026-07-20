@@ -25,6 +25,19 @@ export interface Message {
   createdAt?: Date;
 }
 
+export interface SavedRecipe {
+  id: number;
+  name: string;
+  description: string | null;
+  ingredients: string[];
+  steps: string[];
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  createdAt: string;
+}
+
 
 export type NewProduct = Omit<Product, 'id' | 'createdAt'>;
 export type NewUser = Omit<User, 'id' | 'createdAt'>;
