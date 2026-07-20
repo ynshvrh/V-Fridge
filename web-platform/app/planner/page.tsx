@@ -57,16 +57,6 @@ const DAY_KEY: Record<string, string> = {
   Sunday: "plannerDaySunday",
 };
 
-const SHORT_DAY_KEY: Record<string, string> = {
-  Monday: "Mon",
-  Tuesday: "Tue",
-  Wednesday: "Wed",
-  Thursday: "Thu",
-  Friday: "Fri",
-  Saturday: "Sat",
-  Sunday: "Sun",
-};
-
 export default function PlannerPage() {
   const t = useTranslations() as unknown as (key: string, values?: Record<string, string | number>) => string;
   const { plan, setPlan } = usePlannerStore();
