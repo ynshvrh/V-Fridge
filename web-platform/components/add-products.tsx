@@ -133,7 +133,7 @@ export function AddProducts() {
           category: payload.category,
         },
       });
-      addProductToStore({ ...savedProduct, ownerId: String(savedProduct.ownerId) });
+      addProductToStore(savedProduct);
       toast.success(t("addProductAddedToast", { name: savedProduct.name }));
       setIsOpen(false);
       reset();

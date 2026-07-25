@@ -307,6 +307,7 @@ function SwipeableItem({
   onPurchase: (i: ShoppingItem) => void;
   children: React.ReactNode;
 }) {
+  const t = useTranslations();
   const containerRef = useRef<HTMLDivElement>(null);
   const startX = useRef(0);
   const currentX = useRef(0);
@@ -386,12 +387,12 @@ function SwipeableItem({
       {/* Swipe Right Background (Buy) */}
       <div className="absolute inset-y-0 left-0 bg-success text-success-foreground flex items-center pl-5 gap-2 rounded-l-xl pointer-events-none w-1/2">
         <Check className="h-4 w-4" />
-        <span className="text-xs font-bold uppercase tracking-wider">Куплено</span>
+        <span className="text-xs font-bold uppercase tracking-wider">{t("shoppingSwipeBought")}</span>
       </div>
 
       {/* Swipe Left Background (Delete) */}
       <div className="absolute inset-y-0 right-0 bg-destructive text-destructive-foreground flex items-center justify-end pr-5 gap-2 rounded-r-xl pointer-events-none w-1/2">
-        <span className="text-xs font-bold uppercase tracking-wider">Видалити</span>
+        <span className="text-xs font-bold uppercase tracking-wider">{t("shoppingSwipeDelete")}</span>
         <Trash2 className="h-4 w-4" />
       </div>
 

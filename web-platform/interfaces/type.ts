@@ -1,9 +1,9 @@
 
 export interface User {
-  id: string;
+  id: number;
   username: string;
   email: string;
-  createdAt?: Date;
+  createdAt?: string | Date;
 }
 
 export interface Product {
@@ -14,15 +14,15 @@ export interface Product {
   unit: string;
   expiryDate: string | Date | null;
   category: string;
-  ownerId: string;
+  ownerId: number;
   createdAt?: string | Date;
 }
 
 export interface Message {
-  id?: string;
+  id?: number | string;
   role: 'user' | 'assistant' | "model";
   content: string;
-  createdAt?: Date;
+  createdAt?: string | Date;
 }
 
 export interface SavedRecipe {
@@ -56,8 +56,8 @@ export interface ProductState {
   isLoading: boolean;
   setProducts: (products: Product[]) => void;
   addProduct: (product: Product) => void;
-  removeProduct: (id: string) => void;
-  updateProduct: (id: string, updates: Partial<Product>) => void;
+  removeProduct: (id: number) => void;
+  updateProduct: (id: number, updates: Partial<Product>) => void;
 }
 
 export interface ChatState {

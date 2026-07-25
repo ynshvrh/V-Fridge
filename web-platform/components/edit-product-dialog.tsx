@@ -149,7 +149,7 @@ export function EditProductDialog({ product, open, onOpenChange }: Props) {
         toast.success(t("dashboardConsumeLogged", { name: product.name }));
       } else {
         const u = updated as ProductResponse;
-        updateProduct({ ...u, ownerId: String(u.ownerId) });
+        updateProduct(u);
         toast.success(t("productUpdatedToast"));
       }
       onOpenChange(false);

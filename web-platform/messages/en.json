@@ -364,6 +364,8 @@
   "shoppingAriaCheck": "Mark as bought",
   "shoppingAriaUncheck": "Mark as not bought",
   "shoppingBuyShort": "Buy",
+  "shoppingSwipeBought": "Bought",
+  "shoppingSwipeDelete": "Delete",
 
   "signinValidationInvalidEmail": "Invalid email format",
   "signinValidationPasswordRequired": "Password is required",

@@ -364,6 +364,8 @@
   "shoppingAriaCheck": "Позначити купленим",
   "shoppingAriaUncheck": "Позначити некупленим",
   "shoppingBuyShort": "Куплено",
+  "shoppingSwipeBought": "Куплено",
+  "shoppingSwipeDelete": "Видалити",
 
   "signinValidationInvalidEmail": "Невірний формат email",
   "signinValidationPasswordRequired": "Пароль обов'язковий",
