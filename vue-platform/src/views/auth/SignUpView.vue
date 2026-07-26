@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { UserPlus, User, Mail, Lock, AlertCircle, CheckCircle2, ArrowRight } from '@lucide/vue';
+import GoogleSignInButton from '@/components/GoogleSignInButton.vue';
 
 const authStore = useAuthStore();
 
@@ -100,6 +101,8 @@ const handleSignUp = async () => {
             <ArrowRight :size="18" />
           </button>
         </form>
+
+        <GoogleSignInButton />
       </div>
 
       <div class="auth-footer">

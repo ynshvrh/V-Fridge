@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 import { LogIn, Mail, Lock, AlertCircle, ArrowRight } from '@lucide/vue';
+import GoogleSignInButton from '@/components/GoogleSignInButton.vue';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -74,6 +75,8 @@ const handleLogin = async () => {
           <ArrowRight :size="18" />
         </button>
       </form>
+
+      <GoogleSignInButton />
 
       <div class="auth-footer">
         <span>Don't have an account?</span>
