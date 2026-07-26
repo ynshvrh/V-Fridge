@@ -4,7 +4,7 @@ export interface ApiErrorResponse {
 }
 
 class ApiClient {
-  private baseUrl: string = '/api';
+  private baseUrl: string = import.meta.env.VITE_API_URL || 'https://v-fridge-api.onrender.com';
 
   public getToken(): string | null {
     return localStorage.getItem('vfridge_access_token');
