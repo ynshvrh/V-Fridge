@@ -79,7 +79,7 @@ const handleSignUp = async () => {
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="password">Password (Min 6 chars, Max 72)</label>
+            <label class="form-label" for="password">Password (Min 8 chars, Max 72)</label>
             <div class="input-wrapper">
               <Lock class="input-icon" :size="18" />
               <input
@@ -88,7 +88,7 @@ const handleSignUp = async () => {
                 type="password"
                 class="form-input with-icon"
                 placeholder="••••••••"
-                minlength="6"
+                minlength="8"
                 maxlength="72"
                 required
               />

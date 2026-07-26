@@ -200,13 +200,14 @@ const handleAvatarFile = async (e: Event) => {
 
         <form @submit.prevent="handleUpdatePassword" class="card-form">
           <div class="form-group">
-            <label class="form-label" for="new-pass">New Password (Max 72 chars)</label>
+            <label class="form-label" for="new-pass">New Password (Min 8 chars, Max 72)</label>
             <input
               id="new-pass"
               v-model="newPassword"
               type="password"
               class="form-input"
               placeholder="••••••••"
+              minlength="8"
               maxlength="72"
               required
             />
