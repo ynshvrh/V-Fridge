@@ -43,7 +43,7 @@ const calculateHeight = (val: number) => {
           <div class="bar bar-wasted" :style="{ height: `${calculateHeight(t.wastedCount)}px` }"></div>
           <div class="bar bar-expired" :style="{ height: `${calculateHeight(t.expiredCount)}px` }"></div>
         </div>
-        <span class="week-label">{{ t.weekStartDate.slice(5) }}</span>
+        <span class="week-label">{{ (t.weekStartDate || '').slice(5) }}</span>
       </div>
     </div>
   </div>

@@ -87,7 +87,7 @@ const handleAvatarFile = async (e: Event) => {
   try {
     const formData = new FormData();
     formData.append('file', file);
-    const res = await api.fetch<{ avatarUrl: string }>('/auth/avatar', {
+    const res = await api.fetch<{ avatarUrl: string }>('/auth/me/avatar', {
       method: 'POST',
       body: formData
     });
