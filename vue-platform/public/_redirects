@@ -1,0 +1,5 @@
+# Proxy API requests to backend on Render
+/api/* https://v-fridge-api.onrender.com/:splat 200
+
+# SPA fallback for Vue Router
+/* /index.html 200
