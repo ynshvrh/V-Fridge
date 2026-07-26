@@ -1,6 +1,0 @@
-import{c as t,d as a,a as n,b as e,e as c,f as o,o as i,_ as r}from"./index-CkLnnfwY.js";/**
- * @license @lucide/vue v1.27.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */const d=[["path",{d:"M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915",key:"1i5ecw"}],["circle",{cx:"12",cy:"12",r:"3",key:"1v7zrd"}]],l=t("settings",d),p={class:"settings-page fade-in"},u={class:"glass-card content-card"},_={class:"icon-header"},f=a({__name:"SettingsView",setup(g){return(m,s)=>(i(),n("div",p,[s[2]||(s[2]=e("header",{class:"page-header"},[e("div",null,[e("h1",null,"Settings & Profile"),e("p",{class:"subtitle"},"Customize preferences, avatar, and account credentials")])],-1)),e("div",u,[e("div",_,[c(o(l),{size:28}),s[0]||(s[0]=e("h2",null,"Account Settings",-1))]),s[1]||(s[1]=e("p",{class:"desc"},"Manage user preferences, preferred language, cuisine options, and security.",-1))])]))}}),S=r(f,[["__scopeId","data-v-c84f00f4"]]);export{S as default};
