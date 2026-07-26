@@ -1,0 +1,11 @@
+import{c as u,d as y,m as _,p as g,a,b as s,e as d,f as c,R as h,F as v,q as f,r as p,o,t as r,l as k,g as m,_ as b}from"./index-CkLnnfwY.js";/**
+ * @license @lucide/vue v1.27.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const x=[["path",{d:"M5 12h14",key:"1ays0h"}],["path",{d:"M12 5v14",key:"s699le"}]],N=u("plus",x);/**
+ * @license @lucide/vue v1.27.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const V=[["path",{d:"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3",key:"wmoenq"}],["path",{d:"M12 9v4",key:"juzpu7"}],["path",{d:"M12 17h.01",key:"p32p05"}]],D=u("triangle-alert",V),M={class:"dashboard-page fade-in"},q={class:"page-header"},w={class:"btn-primary"},z={key:0,class:"loading-state glass-card"},A={key:1,class:"empty-state glass-card"},B={class:"empty-icon-bg"},I={key:2,class:"products-grid"},L={class:"card-top"},P={class:"category-badge"},C={key:0,class:"expiry-tag"},F={class:"product-title"},R={class:"product-qty"},S=y({__name:"DashboardView",setup(T){const n=p([]),l=p(!0);return _(async()=>{try{n.value=await g.fetch("/products")}catch(i){console.error(i)}finally{l.value=!1}}),(i,t)=>(o(),a("div",M,[s("header",q,[t[1]||(t[1]=s("div",null,[s("h1",null,"Inventory"),s("p",{class:"subtitle"},"Products currently in your active fridge")],-1)),s("button",w,[d(c(N),{size:18}),t[0]||(t[0]=s("span",null,"Add Product",-1))])]),l.value?(o(),a("div",z,[...t[2]||(t[2]=[s("p",null,"Loading inventory...",-1)])])):n.value.length===0?(o(),a("div",A,[s("div",B,[d(c(h),{size:36})]),t[3]||(t[3]=s("h3",null,"Your fridge is empty",-1)),t[4]||(t[4]=s("p",null,"Start tracking by adding your first product to the inventory.",-1))])):(o(),a("div",I,[(o(!0),a(v,null,f(n.value,e=>(o(),a("div",{key:e.id,class:"glass-card product-card"},[s("div",L,[s("span",P,r(e.category),1),e.expiryDate?(o(),a("span",C,[d(c(D),{size:12}),k(" "+r(e.expiryDate),1)])):m("",!0)]),s("h3",F,r(e.name),1),s("p",R,r(e.quantity)+" "+r(e.unit),1)]))),128))]))]))}}),E=b(S,[["__scopeId","data-v-cdfef0ce"]]);export{E as default};
