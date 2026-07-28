@@ -34,15 +34,11 @@ const router = createRouter({
     },
     {
       path: '/fridges',
-      name: 'Fridges',
-      component: () => import('@/views/FridgesView.vue'),
-      meta: { requiresAuth: true }
+      redirect: '/?tab=fridges'
     },
     {
       path: '/shopping',
-      name: 'Shopping',
-      component: () => import('@/views/ShoppingView.vue'),
-      meta: { requiresAuth: true }
+      redirect: '/?tab=shopping'
     },
     {
       path: '/planner',

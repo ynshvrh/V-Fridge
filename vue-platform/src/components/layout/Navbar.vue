@@ -5,9 +5,7 @@ import { useThemeStore } from '@/stores/theme';
 import { useRouter } from 'vue-router';
 import { 
   Refrigerator, 
-  ShoppingCart, 
   ChefHat, 
-  UtensilsCrossed, 
   LogOut, 
   User as UserIcon,
   Sun,
@@ -54,11 +52,7 @@ const handleLogout = async () => {
       <nav v-if="authStore.isAuthenticated" class="desktop-nav-links">
         <router-link to="/" class="nav-item" active-class="active">
           <Refrigerator :size="18" />
-          <span>Інвентар</span>
-        </router-link>
-        <router-link to="/shopping" class="nav-item" active-class="active">
-          <ShoppingCart :size="18" />
-          <span>Покупки</span>
+          <span>Холодильник та Сховище</span>
         </router-link>
         <router-link to="/recipes" class="nav-item" active-class="active">
           <ChefHat :size="18" />
@@ -67,10 +61,6 @@ const handleLogout = async () => {
         <router-link to="/nutrition" class="nav-item" active-class="active">
           <Activity :size="18" />
           <span>Калорії</span>
-        </router-link>
-        <router-link to="/fridges" class="nav-item" active-class="active">
-          <UtensilsCrossed :size="18" />
-          <span>Холодильники</span>
         </router-link>
       </nav>
 
@@ -129,11 +119,7 @@ const handleLogout = async () => {
           <nav class="mobile-nav-links">
             <router-link to="/" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
               <Refrigerator :size="20" />
-              <span>Інвентар</span>
-            </router-link>
-            <router-link to="/shopping" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
-              <ShoppingCart :size="20" />
-              <span>Покупки</span>
+              <span>Холодильник та Сховище</span>
             </router-link>
             <router-link to="/recipes" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
               <ChefHat :size="20" />
@@ -142,10 +128,6 @@ const handleLogout = async () => {
             <router-link to="/nutrition" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
               <Activity :size="20" />
               <span>Калорії</span>
-            </router-link>
-            <router-link to="/fridges" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
-              <UtensilsCrossed :size="20" />
-              <span>Холодильники</span>
             </router-link>
             <router-link to="/settings" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
               <Settings :size="20" />
