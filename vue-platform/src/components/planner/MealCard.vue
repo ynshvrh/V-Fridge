@@ -36,7 +36,7 @@ const toggleRecipe = async () => {
         <span class="type-label">{{ meal.mealType }}</span>
       </div>
 
-      <button class="icon-btn" title="Regenerate this meal" :disabled="isRegenerating" @click="handleRegenerate">
+      <button class="icon-btn" title="Оновити цю страву" :disabled="isRegenerating" @click="handleRegenerate">
         <RefreshCw :size="14" :class="{ spin: isRegenerating }" />
       </button>
     </div>
@@ -51,24 +51,26 @@ const toggleRecipe = async () => {
       </div>
 
       <div v-if="meal.calories" class="macros-row">
-        <span class="macro-chip"><Flame :size="12" /> {{ meal.calories }} kcal</span>
-        <span v-if="meal.protein" class="macro-chip">P: {{ meal.protein }}g</span>
-        <span v-if="meal.carbs" class="macro-chip">C: {{ meal.carbs }}g</span>
-        <span v-if="meal.fat" class="macro-chip">F: {{ meal.fat }}g</span>
+        <span class="macro-chip"><Flame :size="12" /> {{ meal.calories }} ккал</span>
+        <span v-if="meal.protein" class="macro-chip">Б: {{ meal.protein }}г</span>
+        <span v-if="meal.carbs" class="macro-chip">В: {{ meal.carbs }}г</span>
+        <span v-if="meal.fat" class="macro-chip">Ж: {{ meal.fat }}г</span>
       </div>
     </div>
 
     <div class="meal-footer">
       <button class="recipe-btn" :disabled="isFetchingRecipe" @click="toggleRecipe">
-        <BookOpen :size="14" />
-        <span>{{ isFetchingRecipe ? 'Loading recipe...' : (isExpanded ? 'Hide Recipe' : 'View Recipe & Steps') }}</span>
+        <div class="recipe-btn-left">
+          <BookOpen :size="14" />
+          <span>{{ isFetchingRecipe ? 'Завантаження...' : (isExpanded ? 'Сховати рецепт' : 'Подивитись рецепт') }}</span>
+        </div>
         <ChevronRight :size="14" class="chev" :class="{ open: isExpanded }" />
       </button>
     </div>
 
     <div v-if="isExpanded && meal.steps && meal.steps.length > 0" class="recipe-steps fade-in">
       <p v-if="meal.description" class="meal-desc">{{ meal.description }}</p>
-      <h5>Cooking Steps:</h5>
+      <h5>Кроки приготування:</h5>
       <ol class="steps-list">
         <li v-for="(step, i) in meal.steps" :key="i">{{ step }}</li>
       </ol>
@@ -78,10 +80,10 @@ const toggleRecipe = async () => {
 
 <style scoped>
 .meal-card {
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .meal-header {
@@ -97,11 +99,11 @@ const toggleRecipe = async () => {
 }
 
 .type-icon {
-  color: var(--accent-purple-hover);
+  color: var(--accent-orange);
 }
 
 .type-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -112,11 +114,12 @@ const toggleRecipe = async () => {
   color: var(--text-muted);
   padding: 4px;
   border-radius: 4px;
+  transition: var(--transition-fast);
 }
 
 .icon-btn:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.08);
+  color: var(--accent-orange);
+  background: var(--accent-orange-bg);
 }
 
 .spin {
@@ -129,32 +132,33 @@ const toggleRecipe = async () => {
 }
 
 .meal-name {
-  font-size: 1.05rem;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .ingredients-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 4px;
+  margin-bottom: 6px;
 }
 
 .ing-tag {
-  font-size: 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  padding: 2px 8px;
-  border-radius: 10px;
+  font-size: 0.72rem;
+  background: var(--accent-blue-bg);
+  border: 1px solid rgba(164, 225, 255, 0.3);
+  color: var(--accent-blue);
+  padding: 2px 6px;
+  border-radius: 6px;
 }
 
 .macros-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 6px;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .macro-chip {
@@ -163,15 +167,15 @@ const toggleRecipe = async () => {
   gap: 4px;
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--accent-amber);
-  background: rgba(245, 158, 11, 0.1);
+  color: var(--status-warning);
+  background: var(--status-warning-bg);
   padding: 2px 6px;
   border-radius: 4px;
 }
 
 .meal-footer {
   border-top: 1px solid var(--border-subtle);
-  padding-top: 10px;
+  padding-top: 8px;
 }
 
 .recipe-btn {
@@ -180,8 +184,19 @@ const toggleRecipe = async () => {
   justify-content: space-between;
   width: 100%;
   font-size: 0.85rem;
-  color: var(--accent-purple-hover);
+  color: var(--accent-orange);
   font-weight: 500;
+  transition: var(--transition-fast);
+}
+
+.recipe-btn-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.recipe-btn:hover {
+  color: var(--accent-orange-hover);
 }
 
 .chev {
@@ -193,25 +208,25 @@ const toggleRecipe = async () => {
 }
 
 .recipe-steps {
-  margin-top: 8px;
-  padding: 12px;
-  background: rgba(15, 14, 23, 0.6);
+  margin-top: 6px;
+  padding: 10px 12px;
+  background: var(--bg-primary);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
 }
 
 .meal-desc {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-secondary);
   margin-bottom: 8px;
 }
 
 .steps-list {
-  padding-left: 20px;
-  font-size: 0.85rem;
+  padding-left: 18px;
+  font-size: 0.82rem;
   color: var(--text-secondary);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 </style>
