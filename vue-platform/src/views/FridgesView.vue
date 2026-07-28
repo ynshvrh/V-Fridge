@@ -28,13 +28,13 @@ const saveRename = async (id: number) => {
 };
 
 const handleDelete = async (id: number, name: string) => {
-  if (confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
+  if (confirm(`Ви впевнені, що хочете видалити "${name}"? Цю дію неможливо скасувати.`)) {
     await fridgeStore.deleteFridge(id);
   }
 };
 
 const handleLeave = async (id: number, name: string) => {
-  if (confirm(`Are you sure you want to leave "${name}"?`)) {
+  if (confirm(`Ви впевнені, що хочете залишити холодильник "${name}"?`)) {
     await fridgeStore.leaveFridge(id);
   }
 };
@@ -44,12 +44,12 @@ const handleLeave = async (id: number, name: string) => {
   <div class="fridges-page fade-in">
     <header class="page-header">
       <div>
-        <h1>My Fridges & Members</h1>
-        <p class="subtitle">Manage owned fridges and member access</p>
+        <h1>Холодильники та Учасники</h1>
+        <p class="subtitle">Управління власними та спільними холодильниками</p>
       </div>
       <button class="btn-primary" @click="showCreateModal = true">
         <Plus :size="18" />
-        <span>Create New Fridge</span>
+        <span>Створити новий холодильник</span>
       </button>
     </header>
 
@@ -57,8 +57,8 @@ const handleLeave = async (id: number, name: string) => {
       <div class="empty-icon-bg">
         <Refrigerator :size="36" />
       </div>
-      <h3>No fridges found</h3>
-      <p>Create a fridge or ask someone to invite you to theirs.</p>
+      <h3>Холодильники не знайдені</h3>
+      <p>Створіть власний холодильник або попросіть надіслати вам запрошення.</p>
     </div>
 
     <div v-else class="fridges-grid">
@@ -67,7 +67,7 @@ const handleLeave = async (id: number, name: string) => {
           <div class="role-badge" :class="fridge.role">
             <Crown v-if="fridge.role === 'owner'" :size="12" />
             <Users v-else :size="12" />
-            <span>{{ fridge.role }}</span>
+            <span>{{ fridge.role === 'owner' ? 'ВЛАСНИК' : 'УЧАСНИК' }}</span>
           </div>
           <span class="created-date">{{ new Date(fridge.createdAt).toLocaleDateString() }}</span>
         </div>
@@ -75,17 +75,17 @@ const handleLeave = async (id: number, name: string) => {
         <div class="card-main">
           <div v-if="editingFridgeId === fridge.id" class="inline-edit">
             <input v-model="editName" type="text" class="form-input" @keyup.enter="saveRename(fridge.id)" />
-            <button class="btn-primary btn-sm" @click="saveRename(fridge.id)">Save</button>
+            <button class="btn-primary btn-sm" @click="saveRename(fridge.id)">Зберегти</button>
           </div>
           <div v-else class="title-row">
             <h3 class="fridge-title">{{ fridge.name }}</h3>
-            <button v-if="fridge.role === 'owner'" class="icon-btn" title="Rename" @click="startRename(fridge.id, fridge.name)">
+            <button v-if="fridge.role === 'owner'" class="icon-btn" title="Перейменувати" @click="startRename(fridge.id, fridge.name)">
               <Edit3 :size="14" />
             </button>
           </div>
           <p class="member-count">
             <Users :size="14" />
-            {{ fridge.memberCount }} member{{ fridge.memberCount > 1 ? 's' : '' }}
+            {{ fridge.memberCount }} учасник{{ fridge.memberCount > 1 ? 'ів' : '' }}
           </p>
         </div>
 
@@ -96,13 +96,13 @@ const handleLeave = async (id: number, name: string) => {
             @click="inviteModalFridge = { id: fridge.id, name: fridge.name }"
           >
             <UserPlus :size="16" />
-            <span>Invite Member</span>
+            <span>Запросити учасника</span>
           </button>
 
           <button
             v-if="fridge.role === 'owner'"
             class="danger-icon-btn"
-            title="Delete Fridge"
+            title="Видалити холодильник"
             @click="handleDelete(fridge.id, fridge.name)"
           >
             <Trash2 :size="16" />
@@ -111,7 +111,7 @@ const handleLeave = async (id: number, name: string) => {
           <button
             v-else
             class="danger-icon-btn"
-            title="Leave Fridge"
+            title="Залишити холодильник"
             @click="handleLeave(fridge.id, fridge.name)"
           >
             <LogOut :size="16" />
@@ -135,123 +135,153 @@ const handleLeave = async (id: number, name: string) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
+
 .subtitle {
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin-top: 4px;
+  font-size: 0.88rem;
+  margin-top: 2px;
 }
+
 .empty-state {
-  padding: 64px 24px;
+  padding: 48px 20px;
   text-align: center;
   color: var(--text-secondary);
   display: flex;
   flex-direction: column;
   align-items: center;
 }
+
 .empty-icon-bg {
-  width: 64px;
-  height: 64px;
-  margin-bottom: 16px;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
   border-radius: 50%;
-  background: rgba(140, 83, 131, 0.15);
-  color: var(--accent-purple-hover);
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .fridges-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-.fridge-card {
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
+
+.fridge-card {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
+
 .role-badge {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  font-weight: 600;
-  padding: 3px 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
   border-radius: 12px;
 }
+
 .role-badge.owner {
-  background: rgba(245, 158, 11, 0.15);
-  color: var(--accent-amber);
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
+  border: 1px solid var(--accent-orange-glow);
 }
+
 .role-badge.member {
-  background: rgba(6, 182, 212, 0.15);
-  color: var(--accent-cyan);
+  background: var(--accent-blue-bg);
+  color: var(--accent-blue);
+  border: 1px solid rgba(164, 225, 255, 0.3);
 }
+
 .created-date {
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
 .title-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
 .fridge-title {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: var(--text-primary);
 }
+
 .icon-btn {
   color: var(--text-muted);
   padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
 }
+
 .icon-btn:hover {
-  color: var(--text-primary);
+  color: var(--accent-orange);
+  background: var(--accent-orange-bg);
 }
+
 .inline-edit {
   display: flex;
   gap: 8px;
 }
+
 .btn-sm {
   padding: 6px 12px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
+
 .member-count {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  margin-top: 6px;
+  margin-top: 4px;
 }
+
 .card-actions {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 8px;
-  padding-top: 14px;
+  margin-top: 4px;
+  padding-top: 12px;
   border-top: 1px solid var(--border-subtle);
 }
+
 .action-btn {
   flex: 1;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
+
 .danger-icon-btn {
   color: var(--text-muted);
-  padding: 8px;
+  padding: 6px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
+  transition: var(--transition-fast);
 }
+
 .danger-icon-btn:hover {
-  color: var(--accent-rose);
-  background: rgba(244, 63, 94, 0.1);
-  border-color: rgba(244, 63, 94, 0.3);
+  color: var(--status-expired);
+  background: var(--status-expired-bg);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 </style>
