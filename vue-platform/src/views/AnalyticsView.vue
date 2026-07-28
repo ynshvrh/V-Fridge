@@ -28,15 +28,15 @@ onMounted(async () => {
 
     <div v-if="analyticsStore.loading" class="loading-state glass-card">
       <BarChart3 class="spin-icon" :size="36" />
-      <p>Loading analytics report...</p>
+      <p>Завантаження звіту аналітики...</p>
     </div>
 
     <div v-else-if="!analyticsStore.summary" class="empty-state glass-card">
       <div class="empty-icon-bg">
         <BarChart3 :size="36" />
       </div>
-      <h3>No Analytics Data</h3>
-      <p>Log consumption or food waste in your fridge to generate analytics insights.</p>
+      <h3>Немає даних аналітики</h3>
+      <p>Фіксуйте споживання або списання продуктів у холодильнику для відображення аналітики.</p>
     </div>
 
     <div v-else class="analytics-content">
@@ -46,11 +46,11 @@ onMounted(async () => {
         <div class="glass-card metric-card">
           <div class="card-title text-warning">
             <AlertTriangle :size="20" />
-            <h3>Most Wasted Products (30 Days)</h3>
+            <h3>Найчастіше списані (30 днів)</h3>
           </div>
 
           <div v-if="analyticsStore.summary.mostWasted.length === 0" class="empty-list">
-            No wasted items recorded! Great job minimizing food waste.
+            Списаних продуктів немає! Чудова робота зі зменшення відходів.
           </div>
 
           <div v-else class="leaderboard-list">
@@ -61,20 +61,20 @@ onMounted(async () => {
               </div>
               <div class="leader-stats">
                 <span class="badge-tag">{{ item.category }}</span>
-                <span class="stat-value text-warning">{{ item.totalQuantity }} units ({{ item.occurrences }}x)</span>
+                <span class="stat-value text-warning">{{ item.totalQuantity }} од. ({{ item.occurrences }}x)</span>
               </div>
             </div>
           </div>
         </div>
 
         <div class="glass-card metric-card">
-          <div class="card-title text-cyan">
+          <div class="card-title text-blue">
             <Zap :size="20" />
-            <h3>Fastest Consumed Products</h3>
+            <h3>Найшвидше споживані продукти</h3>
           </div>
 
           <div v-if="analyticsStore.summary.fastestConsumed.length === 0" class="empty-list">
-            No consumption logs recorded yet.
+            Записи споживання поки відсутні.
           </div>
 
           <div v-else class="leaderboard-list">
@@ -85,8 +85,8 @@ onMounted(async () => {
               </div>
               <div class="leader-stats">
                 <span class="badge-tag">{{ item.category }}</span>
-                <span class="stat-value text-cyan">
-                  <Clock :size="12" /> {{ item.ageDays }} day{{ item.ageDays === 1 ? '' : 's' }}
+                <span class="stat-value text-blue">
+                  <Clock :size="12" /> {{ item.ageDays }} дн{{ item.ageDays === 1 ? 'ь' : 'ів' }}
                 </span>
               </div>
             </div>
@@ -101,11 +101,11 @@ onMounted(async () => {
 
 <style scoped>
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .loading-state, .empty-state {
-  padding: 64px 24px;
+  padding: 48px 20px;
   text-align: center;
   color: var(--text-secondary);
   display: flex;
@@ -114,17 +114,17 @@ onMounted(async () => {
 }
 
 .spin-icon {
-  color: var(--accent-purple);
+  color: var(--accent-orange);
   margin-bottom: 12px;
 }
 
 .empty-icon-bg {
-  width: 64px;
-  height: 64px;
-  margin-bottom: 16px;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
   border-radius: 50%;
-  background: rgba(140, 83, 131, 0.15);
-  color: var(--accent-purple-hover);
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -133,49 +133,53 @@ onMounted(async () => {
 .analytics-content {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 20px;
 }
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
 }
 
 .metric-card {
-  padding: 24px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .card-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.text-warning { color: var(--accent-amber); }
-.text-cyan { color: var(--accent-cyan); }
+.card-title h3 {
+  font-size: 1rem;
+}
+
+.text-warning { color: var(--status-warning); }
+.text-blue { color: var(--accent-blue); }
 
 .empty-list {
   color: var(--text-muted);
-  font-size: 0.875rem;
-  padding: 20px 0;
+  font-size: 0.85rem;
+  padding: 16px 0;
 }
 
 .leaderboard-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .leader-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background: rgba(15, 14, 23, 0.5);
+  padding: 8px 10px;
+  background: var(--bg-primary);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
 }
@@ -183,37 +187,38 @@ onMounted(async () => {
 .leader-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .leader-rank {
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
 }
 
 .leader-name {
   font-weight: 500;
+  font-size: 0.9rem;
   color: var(--text-primary);
 }
 
 .leader-stats {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .badge-tag {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--border-subtle);
   padding: 2px 6px;
   border-radius: 4px;
   color: var(--text-muted);
 }
 
 .stat-value {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   display: flex;
   align-items: center;

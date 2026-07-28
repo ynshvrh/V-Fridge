@@ -44,11 +44,11 @@ const handleUpdateProfile = async () => {
     });
     if (updated) {
       authStore.user = updated;
-      profileMessage.value = 'Profile preferences updated successfully!';
+      profileMessage.value = 'Налаштування профілю успішно оновлено!';
     }
   } catch (err) {
     const apiErr = err as ApiErrorResponse;
-    errorMessage.value = apiErr.error || 'Failed to update profile';
+    errorMessage.value = apiErr.error || 'Не вдалося оновити профіль';
   } finally {
     isSavingProfile.value = false;
   }
@@ -56,7 +56,7 @@ const handleUpdateProfile = async () => {
 
 const handleUpdatePassword = async () => {
   if (newPassword.value !== confirmPassword.value) {
-    errorMessage.value = 'Passwords do not match';
+    errorMessage.value = 'Паролі не збігаються';
     return;
   }
   isSavingPassword.value = true;
@@ -67,12 +67,12 @@ const handleUpdatePassword = async () => {
       method: 'PATCH',
       body: JSON.stringify({ newPassword: newPassword.value })
     });
-    passwordMessage.value = 'Password updated successfully!';
+    passwordMessage.value = 'Пароль успішно оновлено!';
     newPassword.value = '';
     confirmPassword.value = '';
   } catch (err) {
     const apiErr = err as ApiErrorResponse;
-    errorMessage.value = apiErr.error || 'Failed to update password';
+    errorMessage.value = apiErr.error || 'Не вдалося оновити пароль';
   } finally {
     isSavingPassword.value = false;
   }
@@ -93,11 +93,11 @@ const handleAvatarFile = async (e: Event) => {
     });
     if (res.avatarUrl && authStore.user) {
       authStore.user.avatar = res.avatarUrl;
-      avatarMessage.value = 'Avatar updated!';
+      avatarMessage.value = 'Аватар успішно оновлено!';
     }
   } catch (err) {
     const apiErr = err as ApiErrorResponse;
-    errorMessage.value = apiErr.error || 'Failed to upload avatar';
+    errorMessage.value = apiErr.error || 'Не вдалося завантажити аватар';
   } finally {
     isUploadingAvatar.value = false;
   }
@@ -108,8 +108,8 @@ const handleAvatarFile = async (e: Event) => {
   <div class="settings-page fade-in">
     <header class="page-header">
       <div>
-        <h1>Account Settings</h1>
-        <p class="subtitle">Customize preferences, avatar, and security</p>
+        <h1>Налаштування акаунту</h1>
+        <p class="subtitle">Персоналізація, аватар та безпека</p>
       </div>
     </header>
 
@@ -122,7 +122,7 @@ const handleAvatarFile = async (e: Event) => {
       <div class="glass-card settings-card">
         <div class="card-header">
           <Globe :size="20" class="header-icon" />
-          <h3>Preferences & AI Chef Tuning</h3>
+          <h3>Переваги та Налаштування AI Шефа</h3>
         </div>
 
         <div v-if="profileMessage" class="success-banner">
@@ -132,32 +132,32 @@ const handleAvatarFile = async (e: Event) => {
 
         <form @submit.prevent="handleUpdateProfile" class="card-form">
           <div class="form-group">
-            <label class="form-label" for="pref-lang">Preferred Language</label>
+            <label class="form-label" for="pref-lang">Бажана мова</label>
             <select id="pref-lang" v-model="preferredLanguage" class="form-input">
               <option v-for="l in languages" :key="l.code" :value="l.code">{{ l.label }}</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="pref-cuisine">Cuisine Style</label>
+            <label class="form-label" for="pref-cuisine">Стиль кухні</label>
             <select id="pref-cuisine" v-model="cuisinePreference" class="form-input">
               <option v-for="c in cuisines" :key="c" :value="c">{{ c }}</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="pref-diet">Dietary Restrictions (Optional)</label>
+            <label class="form-label" for="pref-diet">Дієтичні обмеження (необов'язково)</label>
             <input
               id="pref-diet"
               v-model="dietaryProfile"
               type="text"
               class="form-input"
-              placeholder="Vegetarian, Gluten-Free, No Nuts..."
+              placeholder="Вегетаріанське, Без глютену..."
             />
           </div>
 
           <button type="submit" class="btn-primary" :disabled="isSavingProfile">
-            <span>{{ isSavingProfile ? 'Saving...' : 'Save Preferences' }}</span>
+            <span>{{ isSavingProfile ? 'Збереження...' : 'Зберегти налаштування' }}</span>
           </button>
         </form>
       </div>
@@ -165,7 +165,7 @@ const handleAvatarFile = async (e: Event) => {
       <div class="glass-card settings-card">
         <div class="card-header">
           <User :size="20" class="header-icon" />
-          <h3>Avatar & Profile Photo</h3>
+          <h3>Аватар та Фото профілю</h3>
         </div>
 
         <div v-if="avatarMessage" class="success-banner">
@@ -181,7 +181,7 @@ const handleAvatarFile = async (e: Event) => {
 
           <label class="btn-secondary upload-btn">
             <Upload :size="16" />
-            <span>{{ isUploadingAvatar ? 'Uploading...' : 'Choose Photo' }}</span>
+            <span>{{ isUploadingAvatar ? 'Завантаження...' : 'Обрати фото' }}</span>
             <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" class="file-input" @change="handleAvatarFile" />
           </label>
         </div>
@@ -190,7 +190,7 @@ const handleAvatarFile = async (e: Event) => {
       <div class="glass-card settings-card">
         <div class="card-header">
           <Lock :size="20" class="header-icon" />
-          <h3>Security & Password</h3>
+          <h3>Безпека та Зміна пароля</h3>
         </div>
 
         <div v-if="passwordMessage" class="success-banner">
@@ -200,7 +200,7 @@ const handleAvatarFile = async (e: Event) => {
 
         <form @submit.prevent="handleUpdatePassword" class="card-form">
           <div class="form-group">
-            <label class="form-label" for="new-pass">New Password (Min 8 chars, Max 72)</label>
+            <label class="form-label" for="new-pass">Новий пароль (мін. 8 символів)</label>
             <input
               id="new-pass"
               v-model="newPassword"
@@ -214,7 +214,7 @@ const handleAvatarFile = async (e: Event) => {
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="confirm-pass">Confirm New Password</label>
+            <label class="form-label" for="confirm-pass">Підтвердження пароля</label>
             <input
               id="confirm-pass"
               v-model="confirmPassword"
@@ -226,7 +226,7 @@ const handleAvatarFile = async (e: Event) => {
           </div>
 
           <button type="submit" class="btn-primary" :disabled="isSavingPassword || !newPassword">
-            <span>{{ isSavingPassword ? 'Updating...' : 'Update Password' }}</span>
+            <span>{{ isSavingPassword ? 'Оновлення...' : 'Оновити пароль' }}</span>
           </button>
         </form>
       </div>
@@ -236,22 +236,22 @@ const handleAvatarFile = async (e: Event) => {
 
 <style scoped>
 .page-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .subtitle {
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin-top: 4px;
+  font-size: 0.88rem;
+  margin-top: 2px;
 }
 
 .error-banner {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(244, 63, 94, 0.12);
-  border: 1px solid rgba(244, 63, 94, 0.3);
-  color: var(--accent-rose);
+  background: var(--status-expired-bg);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: var(--status-expired);
   padding: 12px 16px;
   border-radius: var(--radius-md);
   margin-bottom: 20px;
@@ -261,9 +261,9 @@ const handleAvatarFile = async (e: Event) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: var(--accent-emerald);
+  background: var(--status-fresh-bg);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--status-fresh);
   padding: 10px 14px;
   border-radius: var(--radius-md);
   font-size: 0.85rem;
@@ -272,45 +272,45 @@ const handleAvatarFile = async (e: Event) => {
 
 .settings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
 }
 
 .settings-card {
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.header-icon {
-  color: var(--accent-purple-hover);
-}
-
-.card-form {
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-icon {
+  color: var(--accent-orange);
+}
+
+.card-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .avatar-section {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
 }
 
 .avatar-preview {
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: var(--accent-purple-glow);
-  border: 2px solid var(--accent-purple);
+  background: var(--accent-orange-bg);
+  border: 2px solid var(--accent-orange);
   display: flex;
   align-items: center;
   justify-content: center;
