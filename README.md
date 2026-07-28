@@ -2,7 +2,7 @@
 
 **V-Fridge** is an AI-powered smart fridge tracker, meal planner, and calorie management application. Track your inventory, monitor expiration dates, scan product barcodes, plan weekly meals, log calories, and chat with an AI Chef to create delicious recipes from available ingredients.
 
-> 🚀 **Primary Client:** The application frontend has been fully migrated to **Vue 3 + Vite (`vue-platform`)**, featuring a consolidated Hub-based navigation, mobile-first responsive design, camera barcode scanner, and customizable accent themes. The legacy Next.js client (`web-platform`) is archived.
+> 🚀 **Primary Client:** The application frontend has been fully migrated to **Vue 3 + Vite (`vue-platform`)**, featuring a consolidated Hub-based navigation, mobile-first responsive design, camera barcode scanner, and clean Light/Dark theme switching. The legacy Next.js client (`web-platform`) is archived.
 
 The backend service lives in [`v-fridge-api`](https://github.com/ynshvrh/v-fridge-api) (ASP.NET Core 10 Minimal API + PostgreSQL).
 
@@ -21,7 +21,7 @@ The backend service lives in [`v-fridge-api`](https://github.com/ynshvrh/v-fridg
 * **📊 Calorie & Macro Tracker (`/nutrition`)** — Set daily calorie, protein, fat, and carb targets; track food logs by date; auto-decrement consumed quantities from your fridge.
 * **📷 Camera Barcode Scanner** — Built-in camera scanner using `@zxing/library` connected to the **OpenFoodFacts API** to automatically look up product names, categories, and weights.
 * **📱 Mobile-First Responsive UI** — Touch-optimized 44px+ touch targets, off-canvas mobile drawer, and seamless scaling from 320px smartphones to 4K displays.
-* **🎨 Advanced Themes & Customization** — Light & Dark modes with dynamic accent palettes (**Sliced Citrus**, **Sweet Strawberry**, **Blueberry Sky**, **Electric Lime**), **Ambient Glow** toggle, **High Contrast** mode, and shopping list interaction modes.
+* **🎨 Themes & Customization** — Light & Dark modes aligned with the Citrus design system palette, **Ambient Glow** toggle, **High Contrast** mode, and shopping list interaction modes.
 * **🔑 Deep-Link Invites & Email Verification** — Secure JWT authentication with single-flight refresh, email verification workflow, and deep-link token invite acceptance (`/invite?token=...`).
 
 ---

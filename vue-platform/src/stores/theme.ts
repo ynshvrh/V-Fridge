@@ -2,8 +2,6 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
 export type ThemeMode = 'light' | 'dark';
-export type LightAccentTheme = 'citrus' | 'strawberry';
-export type DarkAccentTheme = 'blueberry' | 'lime';
 export type ShoppingMode = 'buttons' | 'swipe';
 
 export const useThemeStore = defineStore('theme', () => {
@@ -15,12 +13,6 @@ export const useThemeStore = defineStore('theme', () => {
   };
 
   const theme = ref<ThemeMode>(getInitialTheme());
-  const lightAccentTheme = ref<LightAccentTheme>(
-    (localStorage.getItem('vf_light_accent') as LightAccentTheme) || 'citrus'
-  );
-  const darkAccentTheme = ref<DarkAccentTheme>(
-    (localStorage.getItem('vf_dark_accent') as DarkAccentTheme) || 'blueberry'
-  );
   const ambientGlow = ref<boolean>(localStorage.getItem('vf_ambient_glow') !== 'false');
   const highContrast = ref<boolean>(localStorage.getItem('vf_high_contrast') === 'true');
   const shoppingMode = ref<ShoppingMode>(
@@ -29,8 +21,6 @@ export const useThemeStore = defineStore('theme', () => {
 
   const applyPreferencesToDOM = () => {
     document.documentElement.setAttribute('data-theme', theme.value);
-    document.documentElement.setAttribute('data-accent-light', lightAccentTheme.value);
-    document.documentElement.setAttribute('data-accent-dark', darkAccentTheme.value);
     document.documentElement.setAttribute('data-ambient-glow', ambientGlow.value ? 'true' : 'false');
     document.documentElement.setAttribute('data-high-contrast', highContrast.value ? 'true' : 'false');
   };
@@ -43,18 +33,6 @@ export const useThemeStore = defineStore('theme', () => {
 
   const toggleTheme = () => {
     setTheme(theme.value === 'dark' ? 'light' : 'dark');
-  };
-
-  const setLightAccentTheme = (accent: LightAccentTheme) => {
-    lightAccentTheme.value = accent;
-    localStorage.setItem('vf_light_accent', accent);
-    applyPreferencesToDOM();
-  };
-
-  const setDarkAccentTheme = (accent: DarkAccentTheme) => {
-    darkAccentTheme.value = accent;
-    localStorage.setItem('vf_dark_accent', accent);
-    applyPreferencesToDOM();
   };
 
   const setAmbientGlow = (val: boolean) => {
@@ -78,17 +56,14 @@ export const useThemeStore = defineStore('theme', () => {
 
   return {
     theme,
-    lightAccentTheme,
-    darkAccentTheme,
     ambientGlow,
     highContrast,
     shoppingMode,
     setTheme,
     toggleTheme,
-    setLightAccentTheme,
-    setDarkAccentTheme,
     setAmbientGlow,
     setHighContrast,
     setShoppingMode,
   };
 });
+

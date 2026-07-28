@@ -166,53 +166,6 @@ const handleAvatarFile = async (e: Event) => {
             </div>
           </div>
 
-          <!-- Accent Theme Light -->
-          <div v-if="themeStore.theme === 'light'" class="pref-item">
-            <div class="pref-info">
-              <span class="pref-title">Акцентний колір (Світла тема)</span>
-              <span class="pref-desc">Оберіть палітру акцентів для світлого режиму</span>
-            </div>
-            <div class="toggle-buttons">
-              <button
-                :class="['toggle-btn', themeStore.lightAccentTheme === 'citrus' ? 'active' : '']"
-                @click="themeStore.setLightAccentTheme('citrus')"
-              >
-                <span class="color-dot citrus-dot" />
-                <span>Sliced Citrus</span>
-              </button>
-              <button
-                :class="['toggle-btn', themeStore.lightAccentTheme === 'strawberry' ? 'active' : '']"
-                @click="themeStore.setLightAccentTheme('strawberry')"
-              >
-                <span class="color-dot strawberry-dot" />
-                <span>Strawberry</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Accent Theme Dark -->
-          <div v-else class="pref-item">
-            <div class="pref-info">
-              <span class="pref-title">Акцентний колір (Темна тема)</span>
-              <span class="pref-desc">Оберіть палітру акцентів для темного режиму</span>
-            </div>
-            <div class="toggle-buttons">
-              <button
-                :class="['toggle-btn', themeStore.darkAccentTheme === 'blueberry' ? 'active' : '']"
-                @click="themeStore.setDarkAccentTheme('blueberry')"
-              >
-                <span class="color-dot blueberry-dot" />
-                <span>Blueberry Sky</span>
-              </button>
-              <button
-                :class="['toggle-btn', themeStore.darkAccentTheme === 'lime' ? 'active' : '']"
-                @click="themeStore.setDarkAccentTheme('lime')"
-              >
-                <span class="color-dot lime-dot" />
-                <span>Electric Lime</span>
-              </button>
-            </div>
-          </div>
 
           <!-- Ambient Glow Switch -->
           <div class="pref-item">
@@ -535,16 +488,6 @@ const handleAvatarFile = async (e: Event) => {
   border-color: var(--accent-orange);
 }
 
-.color-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-
-.citrus-dot { background: #f97316; }
-.strawberry-dot { background: #ef4444; }
-.blueberry-dot { background: #3b82f6; }
-.lime-dot { background: #84cc16; }
 
 /* Switch Slider */
 .switch-label {
