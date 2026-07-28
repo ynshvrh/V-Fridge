@@ -22,6 +22,11 @@ const router = createRouter({
       component: () => import('@/views/auth/VerifyEmailView.vue')
     },
     {
+      path: '/invite',
+      name: 'Invite',
+      component: () => import('@/views/InviteView.vue')
+    },
+    {
       path: '/',
       name: 'Dashboard',
       component: () => import('@/views/DashboardView.vue'),
