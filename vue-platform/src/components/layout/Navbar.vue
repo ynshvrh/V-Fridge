@@ -15,7 +15,8 @@ import {
   Moon,
   Menu,
   X,
-  Settings
+  Settings,
+  Activity
 } from '@lucide/vue';
 
 const authStore = useAuthStore();
@@ -67,6 +68,10 @@ const handleLogout = async () => {
         <router-link to="/analytics" class="nav-item" active-class="active">
           <BarChart3 :size="18" />
           <span>Аналітика</span>
+        </router-link>
+        <router-link to="/nutrition" class="nav-item" active-class="active">
+          <Activity :size="18" />
+          <span>Калорії</span>
         </router-link>
         <router-link to="/fridges" class="nav-item" active-class="active">
           <UtensilsCrossed :size="18" />
@@ -146,6 +151,10 @@ const handleLogout = async () => {
             <router-link to="/analytics" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
               <BarChart3 :size="20" />
               <span>Аналітика</span>
+            </router-link>
+            <router-link to="/nutrition" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
+              <Activity :size="20" />
+              <span>Калорії</span>
             </router-link>
             <router-link to="/fridges" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
               <UtensilsCrossed :size="20" />

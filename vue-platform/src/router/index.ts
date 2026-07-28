@@ -52,6 +52,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/nutrition',
+      name: 'Nutrition',
+      component: () => import('@/views/NutritionView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/settings',
       name: 'Settings',
       component: () => import('@/views/SettingsView.vue'),
