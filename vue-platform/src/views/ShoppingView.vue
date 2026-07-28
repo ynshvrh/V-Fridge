@@ -40,7 +40,7 @@ const handleQuickAdd = async () => {
       <div class="header-right">
         <button class="btn-primary" @click="showAddModal = true">
           <Plus :size="18" />
-          <span>Add Item</span>
+          <span>Додати елемент</span>
         </button>
       </div>
     </header>
@@ -52,34 +52,34 @@ const handleQuickAdd = async () => {
           v-model="quickName"
           type="text"
           class="quick-input"
-          placeholder="Quick add to shopping list (e.g. Milk, Eggs, Bread)..."
+          placeholder="Швидке додавання до списку покупок (напр. Молоко, Хліб)..."
           :disabled="isAdding"
         />
         <button type="submit" class="btn-primary btn-sm" :disabled="!quickName.trim() || isAdding">
           <Plus :size="16" />
-          <span>Add</span>
+          <span>Додати</span>
         </button>
       </form>
     </div>
 
     <div v-if="shoppingStore.loading" class="loading-state glass-card">
       <Package class="spin-icon" :size="32" />
-      <p>Loading shopping list...</p>
+      <p>Завантаження списку покупок...</p>
     </div>
 
     <div v-else-if="shoppingStore.items.length === 0" class="empty-state glass-card">
       <div class="empty-icon-bg">
         <ShoppingCart :size="36" />
       </div>
-      <h3>Your shopping list is empty</h3>
-      <p>Add groceries you need to buy. Items can be moved directly into your fridge upon purchase.</p>
+      <h3>Ваш список покупок порожній</h3>
+      <p>Додайте необхідні продукти. Куплені товари можна одразу перемістити в холодильник.</p>
     </div>
 
     <div v-else class="shopping-sections">
       <section v-if="shoppingStore.uncheckedItems.length > 0" class="section">
         <h3 class="section-title">
           <ShoppingCart :size="16" />
-          <span>To Buy ({{ shoppingStore.uncheckedItems.length }})</span>
+          <span>Купити ({{ shoppingStore.uncheckedItems.length }})</span>
         </h3>
         <div class="items-list">
           <ShoppingItemRow v-for="item in shoppingStore.uncheckedItems" :key="item.id" :item="item" />
@@ -89,7 +89,7 @@ const handleQuickAdd = async () => {
       <section v-if="shoppingStore.checkedItems.length > 0" class="section">
         <h3 class="section-title checked-title">
           <CheckCheck :size="16" />
-          <span>Checked / Done ({{ shoppingStore.checkedItems.length }})</span>
+          <span>Куплено / Готово ({{ shoppingStore.checkedItems.length }})</span>
         </h3>
         <div class="items-list">
           <ShoppingItemRow v-for="item in shoppingStore.checkedItems" :key="item.id" :item="item" />
@@ -107,22 +107,22 @@ const handleQuickAdd = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .quick-add-bar {
-  padding: 10px 16px;
-  margin-bottom: 24px;
+  padding: 8px 14px;
+  margin-bottom: 20px;
 }
 
 .quick-form {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .input-icon {
-  color: var(--text-muted);
+  color: var(--accent-orange);
 }
 
 .quick-input {
@@ -130,16 +130,16 @@ const handleQuickAdd = async () => {
   background: transparent;
   border: none;
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
 }
 
 .btn-sm {
-  padding: 6px 14px;
-  font-size: 0.85rem;
+  padding: 6px 12px;
+  font-size: 0.82rem;
 }
 
 .loading-state, .empty-state {
-  padding: 64px 24px;
+  padding: 48px 20px;
   text-align: center;
   color: var(--text-secondary);
   display: flex;
@@ -148,17 +148,17 @@ const handleQuickAdd = async () => {
 }
 
 .spin-icon {
-  color: var(--accent-purple);
+  color: var(--accent-orange);
   margin-bottom: 12px;
 }
 
 .empty-icon-bg {
-  width: 64px;
-  height: 64px;
-  margin-bottom: 16px;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
   border-radius: 50%;
-  background: rgba(140, 83, 131, 0.15);
-  color: var(--accent-purple-hover);
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -167,16 +167,16 @@ const handleQuickAdd = async () => {
 .shopping-sections {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 20px;
 }
 
 .section-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   font-weight: 600;
 }
 

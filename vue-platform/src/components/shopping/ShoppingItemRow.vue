@@ -43,8 +43,8 @@ const handleDelete = async () => {
 <template>
   <div class="glass-card shopping-row fade-in" :class="{ checked: item.checked }">
     <button class="checkbox-btn" @click="toggleCheck">
-      <CheckSquare v-if="item.checked" :size="20" class="checked-icon" />
-      <Square v-else :size="20" class="unchecked-icon" />
+      <CheckSquare v-if="item.checked" :size="18" class="checked-icon" />
+      <Square v-else :size="18" class="unchecked-icon" />
     </button>
 
     <div class="item-details" @click="toggleCheck">
@@ -56,27 +56,27 @@ const handleDelete = async () => {
 
     <div class="row-actions">
       <div class="qty-controls">
-        <button class="qty-btn" title="Decrease" @click.stop="decreaseQuantity">
+        <button class="qty-btn" title="Зменшити" @click.stop="decreaseQuantity">
           <Minus :size="12" />
         </button>
-        <span class="qty-text">{{ item.quantity || 1 }} <small>{{ item.unit || 'pcs' }}</small></span>
-        <button class="qty-btn" title="Increase" @click.stop="increaseQuantity">
+        <span class="qty-text">{{ item.quantity || 1 }} <small>{{ item.unit || 'шт' }}</small></span>
+        <button class="qty-btn" title="Збільшити" @click.stop="increaseQuantity">
           <Plus :size="12" />
         </button>
       </div>
 
       <button
         class="purchase-btn"
-        title="Move to Fridge (Mark Purchased)"
+        title="Перемістити в холодильник (Куплено)"
         :disabled="isPurchasing"
         @click.stop="handlePurchase"
       >
-        <ShoppingBag :size="16" />
-        <span class="btn-text">Move to Fridge</span>
+        <ShoppingBag :size="14" />
+        <span class="btn-text">В холодильник</span>
       </button>
 
-      <button class="delete-btn" title="Delete" @click.stop="handleDelete">
-        <Trash2 :size="16" />
+      <button class="delete-btn" title="Видалити" @click.stop="handleDelete">
+        <Trash2 :size="15" />
       </button>
     </div>
   </div>
@@ -86,14 +86,14 @@ const handleDelete = async () => {
 .shopping-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 18px;
+  gap: 12px;
+  padding: 10px 14px;
   transition: var(--transition-fast);
 }
 
 .shopping-row.checked {
   opacity: 0.65;
-  background: rgba(22, 21, 36, 0.4);
+  background: var(--border-subtle);
 }
 
 .checkbox-btn {
@@ -105,11 +105,11 @@ const handleDelete = async () => {
 }
 
 .checkbox-btn:hover {
-  color: var(--accent-purple-hover);
+  color: var(--accent-orange);
 }
 
 .checked-icon {
-  color: var(--accent-emerald);
+  color: var(--accent-orange);
 }
 
 .unchecked-icon {
@@ -126,7 +126,7 @@ const handleDelete = async () => {
 
 .item-name {
   font-weight: 500;
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--text-primary);
 }
 
@@ -138,32 +138,32 @@ const handleDelete = async () => {
 .item-meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .category-chip {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
   font-weight: 600;
   letter-spacing: 0.05em;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-muted);
+  background: var(--border-subtle);
+  color: var(--text-secondary);
 }
 
 .row-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .qty-controls {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(15, 14, 23, 0.5);
-  padding: 3px 6px;
+  gap: 4px;
+  background: var(--bg-primary);
+  padding: 2px 6px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
 }
@@ -176,15 +176,16 @@ const handleDelete = async () => {
   width: 20px;
   height: 20px;
   border-radius: 4px;
+  transition: var(--transition-fast);
 }
 
 .qty-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
 }
 
 .qty-text {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
 }
 
@@ -197,30 +198,31 @@ const handleDelete = async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: var(--accent-emerald);
-  padding: 6px 12px;
+  background: var(--accent-orange-bg);
+  border: 1px solid var(--accent-orange-glow);
+  color: var(--accent-orange);
+  padding: 5px 10px;
   border-radius: var(--radius-md);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   transition: var(--transition-fast);
 }
 
 .purchase-btn:hover {
-  background: rgba(16, 185, 129, 0.25);
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+  background: var(--accent-orange);
+  color: #ffffff;
 }
 
 .delete-btn {
   color: var(--text-muted);
-  padding: 6px;
+  padding: 5px;
   border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
 }
 
 .delete-btn:hover {
-  color: var(--accent-rose);
-  background: rgba(244, 63, 94, 0.1);
+  color: var(--status-expired);
+  background: var(--status-expired-bg);
 }
 
 @media (max-width: 640px) {
