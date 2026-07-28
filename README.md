@@ -1,80 +1,97 @@
-# V-Fridge
+# 🧊 V-Fridge
 
-**V-Fridge** is an AI-powered fridge tracker. Add the groceries you have, watch expiry dates, and ask the AI chef for a recipe that uses what is already in your fridge.
+**V-Fridge** is an AI-powered smart fridge tracker, meal planner, and calorie management application. Track your inventory, monitor expiration dates, scan product barcodes, plan weekly meals, log calories, and chat with an AI Chef to create delicious recipes from available ingredients.
 
-This repository holds the Next.js single-page client. The backend lives in a separate repo, [`v-fridge-api`](https://github.com/ynshvrh/v-fridge-api), and exposes a public stateless JSON API that this SPA (and, later, a Flutter mobile client) consumes.
+> 🚀 **Primary Client:** The application frontend has been fully migrated to **Vue 3 + Vite (`vue-platform`)**, featuring a consolidated Hub-based navigation, mobile-first responsive design, camera barcode scanner, and customizable accent themes. The legacy Next.js client (`web-platform`) is archived.
+
+The backend service lives in [`v-fridge-api`](https://github.com/ynshvrh/v-fridge-api) (ASP.NET Core 10 Minimal API + PostgreSQL).
 
 ---
 
-## Features
+## 🌟 Key Features
 
-* **AI Chef** — recipe suggestions powered by OpenRouter, grounded in the user's current inventory and dietary profiles.
-* **Inventory & Shared Fridges** — track items with quantities, units, and expiry dates; split grocery lists across shared household fridges.
-* **Weekly Meal Planner** — generate weekly plans (breakfast, lunch, dinner), dynamically calculate missing ingredients ("gaps"), and import them to the shopping list.
-* **Calorie & Macro Tracker** — set daily calorie, protein, fat, and carb goals; log planned meals or custom food items directly.
-* **Localization** — full multi-language support (English and Ukrainian) using `next-intl`.
-* **Theme System** — premium dual themes: **Citrus Splash** (light mode) and **Blueberry Night** (dark mode).
-* **Self-clearing chat history** — the assistant drops anything older than 24 hours so the prompt stays focused.
-* **Server-side rate limiting** — the API enforces 5 chat requests per 60 s per user.
-* **Email verification** — accounts are unusable until the verification link is clicked.
+* **🧊 Storage Hub (`/`)** — Consolidated 3-in-1 management hub:
+  * **Inventory:** Track products with quantities, units, categories, and expiration status badges (`Fresh`, `Expiring Soon`, `Expired`).
+  * **Shopping List:** Add items manually or auto-replenish from inventory; check off items and move them to your fridge in one click.
+  * **Shared Fridges:** Create household fridges, switch active fridges, manage roles (`Owner` / `Member`), and generate invite tokens.
+* **🍳 Culinary Hub (`/recipes`)** — Consolidated 3-in-1 cooking workspace:
+  * **AI Chef Chat:** Real-time recipe generation powered by OpenRouter grounded in your fridge inventory and dietary profile.
+  * **Weekly Meal Planner:** Generate weekly meal plans (Breakfast, Lunch, Dinner), calculate missing ingredients ("gaps"), and import them to your shopping list.
+  * **Saved Recipes:** Bookmark favorite recipes, inspect KBJV macro breakdowns, and log meals directly to your Calorie Tracker.
+* **📊 Calorie & Macro Tracker (`/nutrition`)** — Set daily calorie, protein, fat, and carb targets; track food logs by date; auto-decrement consumed quantities from your fridge.
+* **📷 Camera Barcode Scanner** — Built-in camera scanner using `@zxing/library` connected to the **OpenFoodFacts API** to automatically look up product names, categories, and weights.
+* **📱 Mobile-First Responsive UI** — Touch-optimized 44px+ touch targets, off-canvas mobile drawer, and seamless scaling from 320px smartphones to 4K displays.
+* **🎨 Advanced Themes & Customization** — Light & Dark modes with dynamic accent palettes (**Sliced Citrus**, **Sweet Strawberry**, **Blueberry Sky**, **Electric Lime**), **Ambient Glow** toggle, **High Contrast** mode, and shopping list interaction modes.
+* **🔑 Deep-Link Invites & Email Verification** — Secure JWT authentication with single-flight refresh, email verification workflow, and deep-link token invite acceptance (`/invite?token=...`).
 
-## Tech stack
+---
 
-* **Framework:** Next.js 16 (App Router) on React 19
-* **Localization:** `next-intl` (i18n translation engine)
-* **State:** Zustand
-* **Styling:** Tailwind CSS v4 + custom themed CSS variables + lucide-react icons
-* **Validation:** Zod
-* **Auth:** Bearer JWT stored in `localStorage`, single-flight refresh in `lib/api-client.ts` (no cookies, no NextAuth)
-* **Backend API:** see [`v-fridge-api`](https://github.com/ynshvrh/v-fridge-api) — ASP.NET Core 10 Minimal API + PostgreSQL, schema in C# migrations
-* **AI:** OpenRouter (configured on the API side)
+## 🛠️ Tech Stack (`vue-platform`)
 
-## Local development
+* **Framework:** Vue 3 (Composition API + `<script setup>`)
+* **Build Tool:** Vite 6
+* **State Management:** Pinia
+* **Routing:** Vue Router 4
+* **Barcode Scanner:** `@zxing/library` + OpenFoodFacts API
+* **Icons:** `@lucide/vue`
+* **Styling:** Vanilla CSS design system with CSS custom properties, glassmorphism tokens, and responsive media queries
+* **Auth & API Client:** Custom fetch client with JWT token storage, single-flight refresh, and error handling in `src/api/client.ts`
+* **Backend API:** ASP.NET Core 10 Minimal API + PostgreSQL (see [`v-fridge-api`](https://github.com/ynshvrh/v-fridge-api))
+
+---
+
+## 💻 Local Development
 
 ```bash
+# Clone repository
 git clone https://github.com/ynshvrh/V-Fridge.git
-cd V-Fridge/web-platform
+cd V-Fridge/vue-platform
+
+# Install dependencies
 npm install
 ```
 
-Create `web-platform/.env.local`:
+Create `vue-platform/.env` (optional, defaults to `http://localhost:5080`):
 
-```
-NEXT_PUBLIC_API_URL=http://localhost:5080
+```env
+VITE_API_URL=http://localhost:5080
 ```
 
-Point it at a running [`v-fridge-api`](https://github.com/ynshvrh/v-fridge-api) instance (defaults to `http://localhost:5080`) and start the dev server:
+Start the Vite development server:
 
 ```bash
 npm run dev
 ```
 
-Useful scripts:
+### Useful Scripts
 
-| Command         | Description                                      |
-| --------------- | ------------------------------------------------ |
-| `npm run dev`   | Next.js dev server with HMR                      |
-| `npm run build` | Production build                                 |
-| `npm run start` | Run the production build                         |
-| `npm run lint`  | ESLint (Next.js + react-hooks rules, no errors)  |
+| Command | Description |
+| ------- | ----------- |
+| `npm run dev` | Start Vite dev server with Hot Module Replacement (HMR) |
+| `npm run build` | Run TypeScript type-checker (`vue-tsc`) & production bundle build |
+| `npm run preview` | Preview production build locally |
 
-TypeScript is checked at build time; run `npx tsc --noEmit` for a standalone type-check.
+---
 
-## Repository layout
+## 📂 Repository Layout
 
 ```
 V-Fridge/
-└── web-platform/
-    ├── app/             # Next.js App Router pages
-    ├── components/      # Reusable UI primitives (shadcn-style)
-    ├── hooks/           # React hooks
-    ├── interfaces/      # Shared TypeScript types / Zod schemas
-    ├── lib/             # api-client, utils
-    ├── messages/        # Translation JSON bundles (en.json, uk.json)
-    ├── providers/       # AuthProvider, etc.
-    └── store/           # Zustand stores
+├── vue-platform/             # Active Primary Vue 3 + Vite SPA
+│   ├── src/
+│   │   ├── api/             # HTTP API Client & types
+│   │   ├── assets/          # Global CSS tokens & main.css
+│   │   ├── components/      # Modular UI components
+│   │   │   ├── chat/        # AI Chef Chat components
+│   │   │   ├── fridge/      # Fridge selector, product cards, modals, Fridges tab
+│   │   │   ├── layout/      # Navbar & responsive mobile drawer
+│   │   │   ├── planner/     # Meal cards, gap items & Planner tab
+│   │   │   ├── products/    # BarcodeScannerModal
+│   │   │   └── shopping/    # Shopping rows & Shopping tab
+│   │   ├── router/          # Vue Router routes & auth guards
+│   │   ├── stores/          # Pinia stores (auth, fridge, product, nutrition, etc.)
+│   │   └── views/           # Consolidated Hub views (Dashboard, Recipe, Nutrition, Settings, Invite)
+│   ├── package.json
+│   └── vite.config.ts
+└── web-platform/            # Legacy Next.js client (Archived)
 ```
-
-## Notes
-
-* The fridge database schema is owned by the C# API (see `v-fridge-api/src/VFridge.Api/Migrations`). This repo no longer carries Drizzle, NextAuth, Upstash, Neon-specific helpers, or Gemini SDKs.
