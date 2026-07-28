@@ -48,7 +48,7 @@ const handleSubmit = async () => {
       <div class="modal-header">
         <div class="header-title">
           <Package :size="20" class="header-icon" />
-          <h3>Add Product to Fridge</h3>
+          <h3>Додати продукт в холодильник</h3>
         </div>
         <button class="close-btn" @click="emit('close')">
           <X :size="18" />
@@ -57,20 +57,20 @@ const handleSubmit = async () => {
 
       <form @submit.prevent="handleSubmit" class="modal-body">
         <div class="form-group">
-          <label class="form-label" for="prod-name">Product Name *</label>
+          <label class="form-label" for="prod-name">Назва продукту *</label>
           <input
             id="prod-name"
             v-model="name"
             type="text"
             class="form-input"
-            placeholder="Milk, Eggs, Avocado..."
+            placeholder="Молоко, Яйця, Авокадо..."
             required
           />
         </div>
 
         <div class="form-row">
           <div class="form-group flex-2">
-            <label class="form-label" for="prod-qty">Quantity *</label>
+            <label class="form-label" for="prod-qty">Кількість *</label>
             <input
               id="prod-qty"
               v-model.number="quantity"
@@ -83,7 +83,7 @@ const handleSubmit = async () => {
           </div>
 
           <div class="form-group flex-1">
-            <label class="form-label" for="prod-unit">Unit</label>
+            <label class="form-label" for="prod-unit">Одиниця</label>
             <select id="prod-unit" v-model="unit" class="form-input">
               <option v-for="u in units" :key="u" :value="u">{{ u }}</option>
             </select>
@@ -92,14 +92,14 @@ const handleSubmit = async () => {
 
         <div class="form-row">
           <div class="form-group flex-1">
-            <label class="form-label" for="prod-cat">Category</label>
+            <label class="form-label" for="prod-cat">Категорія</label>
             <select id="prod-cat" v-model="category" class="form-input">
               <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
             </select>
           </div>
 
           <div class="form-group flex-1">
-            <label class="form-label" for="prod-expiry">Expiry Date</label>
+            <label class="form-label" for="prod-expiry">Придатний до</label>
             <input
               id="prod-expiry"
               v-model="expiryDate"
@@ -110,21 +110,21 @@ const handleSubmit = async () => {
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="prod-desc">Description / Note (Optional)</label>
+          <label class="form-label" for="prod-desc">Примітка (необов'язково)</label>
           <input
             id="prod-desc"
             v-model="description"
             type="text"
             class="form-input"
-            placeholder="Organic, Low fat..."
+            placeholder="Органічне, 2.5%..."
           />
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" @click="emit('close')">Cancel</button>
+          <button type="button" class="btn-ghost" @click="emit('close')">Скасувати</button>
           <button type="submit" class="btn-primary" :disabled="isSubmitting">
             <Plus :size="16" />
-            <span>{{ isSubmitting ? 'Adding...' : 'Add Item' }}</span>
+            <span>{{ isSubmitting ? 'Збереження...' : 'Додати' }}</span>
           </button>
         </div>
       </form>
@@ -147,25 +147,25 @@ const handleSubmit = async () => {
 
 .modal-card {
   width: 100%;
-  max-width: 480px;
-  padding: 24px;
+  max-width: 460px;
+  padding: 20px;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .header-icon {
-  color: var(--accent-purple-hover);
+  color: var(--accent-orange);
 }
 
 .close-btn {
@@ -177,18 +177,18 @@ const handleSubmit = async () => {
 
 .close-btn:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-subtle);
 }
 
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .form-row {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 .flex-1 { flex: 1; }
@@ -197,9 +197,9 @@ const handleSubmit = async () => {
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 12px;
-  padding-top: 16px;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 14px;
   border-top: 1px solid var(--border-subtle);
 }
 </style>

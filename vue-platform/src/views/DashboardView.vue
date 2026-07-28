@@ -36,7 +36,7 @@ const filteredProducts = computed(() => {
 });
 
 const handleEmptyFridge = async () => {
-  if (confirm('Are you sure you want to empty the entire fridge? All items will be logged as consumed/wasted.')) {
+  if (confirm('Ви впевнені, що хочете очистити весь холодильник? Всі продукти будуть видалені.')) {
     await productStore.deleteAllProducts();
   }
 };
@@ -53,21 +53,21 @@ const handleEmptyFridge = async () => {
       </div>
 
       <div class="header-right">
-        <button v-if="productStore.products.length > 0" class="btn-secondary danger-btn" @click="handleEmptyFridge">
+        <button v-if="productStore.products.length > 0" class="btn-destructive" @click="handleEmptyFridge">
           <Trash2 :size="16" />
-          <span>Empty Fridge</span>
+          <span>Очистити</span>
         </button>
         <button class="btn-primary" @click="showAddModal = true">
           <Plus :size="18" />
-          <span>Add Product</span>
+          <span>Додати товар</span>
         </button>
       </div>
     </header>
 
     <div v-if="productStore.products.length > 0" class="controls-bar glass-card">
       <div class="search-box">
-        <Search :size="18" class="search-icon" />
-        <input v-model="searchQuery" type="text" class="search-input" placeholder="Search items..." />
+        <Search :size="16" class="search-icon" />
+        <input v-model="searchQuery" type="text" class="search-input" placeholder="Пошук продуктів..." />
       </div>
 
       <div class="category-filter">
@@ -85,18 +85,18 @@ const handleEmptyFridge = async () => {
 
     <div v-if="productStore.loading" class="loading-state glass-card">
       <Package class="spin-icon" :size="32" />
-      <p>Loading inventory...</p>
+      <p>Завантаження інвентарю...</p>
     </div>
 
     <div v-else-if="!fridgeStore.activeFridge" class="empty-state glass-card">
       <div class="empty-icon-bg">
         <Refrigerator :size="36" />
       </div>
-      <h3>No Fridges Found</h3>
-      <p>Create your first fridge to start tracking food inventory.</p>
+      <h3>Холодильники не знайдені</h3>
+      <p>Створіть свій перший холодильник для відстеження продуктів.</p>
       <button class="btn-primary" style="margin-top: 16px;" @click="showCreateFridgeModal = true">
         <Plus :size="18" />
-        <span>Create Fridge</span>
+        <span>Створити холодильник</span>
       </button>
     </div>
 
@@ -104,8 +104,8 @@ const handleEmptyFridge = async () => {
       <div class="empty-icon-bg">
         <Package :size="36" />
       </div>
-      <h3>{{ searchQuery || selectedCategory !== 'all' ? 'No items match your filter' : 'Your fridge is empty' }}</h3>
-      <p v-if="!searchQuery && selectedCategory === 'all'">Add items to track expiry dates and quantities.</p>
+      <h3>{{ searchQuery || selectedCategory !== 'all' ? 'Немає продуктів за вашим фільтром' : 'Ваш холодильник порожній' }}</h3>
+      <p v-if="!searchQuery && selectedCategory === 'all'">Додайте товари, щоб стежити за їх терміном придатності та кількістю.</p>
     </div>
 
     <div v-else class="products-grid">
@@ -122,46 +122,44 @@ const handleEmptyFridge = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
-  gap: 16px;
+  margin-bottom: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .role-badge {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.05em;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 12px;
-  background: rgba(140, 83, 131, 0.15);
-  color: var(--accent-purple-hover);
-  border: 1px solid var(--border-strong);
-}
-
-.danger-btn:hover {
-  border-color: rgba(244, 63, 94, 0.4);
-  color: var(--accent-rose);
+  background: var(--accent-blue-bg);
+  color: var(--accent-blue);
+  border: 1px solid rgba(164, 225, 255, 0.3);
 }
 
 .controls-bar {
-  padding: 12px 16px;
-  margin-bottom: 24px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  position: sticky;
+  top: 64px;
+  z-index: 90;
 }
 
 .search-box {
@@ -172,17 +170,18 @@ const handleEmptyFridge = async () => {
 
 .search-icon {
   position: absolute;
-  left: 14px;
+  left: 12px;
   color: var(--text-muted);
 }
 
 .search-input {
   width: 100%;
-  padding: 10px 16px 10px 42px;
-  background: rgba(15, 14, 23, 0.6);
+  padding: 8px 14px 8px 36px;
+  background: var(--bg-primary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   color: var(--text-primary);
+  font-size: 0.88rem;
 }
 
 .category-filter {
@@ -191,33 +190,38 @@ const handleEmptyFridge = async () => {
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.category-filter::-webkit-scrollbar {
+  display: none;
 }
 
 .cat-tab {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 0.78rem;
   text-transform: capitalize;
   color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-primary);
   border: 1px solid var(--border-subtle);
   white-space: nowrap;
   transition: var(--transition-fast);
 }
 
 .cat-tab:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--border-subtle);
   color: var(--text-primary);
 }
 
 .cat-tab.active {
-  background: var(--accent-purple-glow);
-  color: var(--text-primary);
-  border-color: var(--accent-purple-hover);
+  background: var(--accent-orange);
+  color: #ffffff;
+  border-color: var(--accent-orange);
 }
 
 .loading-state, .empty-state {
-  padding: 64px 24px;
+  padding: 48px 20px;
   text-align: center;
   color: var(--text-secondary);
   display: flex;
@@ -226,17 +230,22 @@ const handleEmptyFridge = async () => {
 }
 
 .spin-icon {
-  color: var(--accent-purple);
+  color: var(--accent-orange);
   margin-bottom: 12px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
 }
 
 .empty-icon-bg {
-  width: 64px;
-  height: 64px;
-  margin-bottom: 16px;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 14px;
   border-radius: 50%;
-  background: rgba(140, 83, 131, 0.15);
-  color: var(--accent-purple-hover);
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -244,7 +253,14 @@ const handleEmptyFridge = async () => {
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
 }
 </style>
