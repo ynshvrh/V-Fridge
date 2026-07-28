@@ -7,7 +7,6 @@ import {
   Refrigerator, 
   ShoppingCart, 
   ChefHat, 
-  BarChart3, 
   UtensilsCrossed, 
   LogOut, 
   User as UserIcon,
@@ -16,8 +15,7 @@ import {
   Menu,
   X,
   Settings,
-  Activity,
-  Calendar
+  Activity
 } from '@lucide/vue';
 
 const authStore = useAuthStore();
@@ -62,17 +60,9 @@ const handleLogout = async () => {
           <ShoppingCart :size="18" />
           <span>Покупки</span>
         </router-link>
-        <router-link to="/planner" class="nav-item" active-class="active">
-          <Calendar :size="18" />
-          <span>Планер</span>
-        </router-link>
         <router-link to="/recipes" class="nav-item" active-class="active">
           <ChefHat :size="18" />
-          <span>AI Шеф</span>
-        </router-link>
-        <router-link to="/analytics" class="nav-item" active-class="active">
-          <BarChart3 :size="18" />
-          <span>Аналітика</span>
+          <span>Кулінарія</span>
         </router-link>
         <router-link to="/nutrition" class="nav-item" active-class="active">
           <Activity :size="18" />
@@ -84,9 +74,8 @@ const handleLogout = async () => {
         </router-link>
       </nav>
 
-      <!-- User Actions & Theme Toggle (Desktop & Mobile trigger) -->
+      <!-- User Actions & Theme Toggle -->
       <div class="right-actions">
-        <!-- Theme Toggle -->
         <button 
           class="theme-toggle-btn" 
           :title="themeStore.theme === 'dark' ? 'Увімкнути світлу тему' : 'Увімкнути темну тему'"
@@ -97,7 +86,6 @@ const handleLogout = async () => {
         </button>
 
         <template v-if="authStore.isAuthenticated">
-          <!-- Desktop User Profile Pill -->
           <router-link to="/settings" class="user-pill desktop-only">
             <div class="avatar-box">
               <img v-if="authStore.user?.avatar" :src="authStore.user.avatar" alt="Avatar" class="avatar-img" />
@@ -106,12 +94,10 @@ const handleLogout = async () => {
             <span class="user-name">{{ authStore.user?.username }}</span>
           </router-link>
 
-          <!-- Desktop Logout -->
           <button class="logout-btn desktop-only" title="Вийти" @click="handleLogout">
             <LogOut :size="18" />
           </button>
 
-          <!-- Mobile Hamburger Menu Button -->
           <button class="hamburger-btn mobile-only" @click="toggleMobileMenu" aria-label="Меню">
             <X v-if="isMobileMenuOpen" :size="22" />
             <Menu v-else :size="22" />
@@ -149,17 +135,9 @@ const handleLogout = async () => {
               <ShoppingCart :size="20" />
               <span>Покупки</span>
             </router-link>
-            <router-link to="/planner" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
-              <Calendar :size="20" />
-              <span>Планер</span>
-            </router-link>
             <router-link to="/recipes" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
               <ChefHat :size="20" />
-              <span>AI Шеф</span>
-            </router-link>
-            <router-link to="/analytics" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
-              <BarChart3 :size="20" />
-              <span>Аналітика</span>
+              <span>Кулінарія</span>
             </router-link>
             <router-link to="/nutrition" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
               <Activity :size="20" />
@@ -339,7 +317,6 @@ const handleLogout = async () => {
   color: var(--text-primary);
 }
 
-/* Mobile responsive rules */
 .mobile-only {
   display: none;
 }
@@ -353,7 +330,6 @@ const handleLogout = async () => {
   }
 }
 
-/* Off-canvas Mobile Drawer */
 .mobile-drawer-overlay {
   position: fixed;
   top: 0;
@@ -453,7 +429,6 @@ const handleLogout = async () => {
   font-weight: 600;
 }
 
-/* Drawer Animation */
 .drawer-enter-active, .drawer-leave-active {
   transition: opacity 0.25s ease;
 }

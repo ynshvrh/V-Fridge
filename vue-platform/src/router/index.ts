@@ -46,9 +46,7 @@ const router = createRouter({
     },
     {
       path: '/planner',
-      name: 'Planner',
-      component: () => import('@/views/PlannerView.vue'),
-      meta: { requiresAuth: true }
+      redirect: '/recipes?tab=planner'
     },
     {
       path: '/analytics',

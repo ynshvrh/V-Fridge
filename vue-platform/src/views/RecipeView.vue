@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { useSavedRecipeStore, type SavedRecipe } from '@/stores/savedRecipes';
 import { useNutritionStore } from '@/stores/nutrition';
 import { api } from '@/api/client';
 import ChefChat from '@/components/chat/ChefChat.vue';
+import PlannerTab from '@/components/planner/PlannerTab.vue';
 import { 
   ChefHat, 
+  Calendar, 
   Bookmark, 
   Search, 
   Trash2, 
@@ -18,10 +21,14 @@ import {
   X 
 } from '@lucide/vue';
 
+const route = useRoute();
 const savedRecipeStore = useSavedRecipeStore();
 const nutritionStore = useNutritionStore();
 
-const activeTab = ref<'chat' | 'saved'>('chat');
+// Check query param tab or default to 'chat'
+const initialTab = (route.query.tab as 'chat' | 'planner' | 'saved') || 'chat';
+const activeTab = ref<'chat' | 'planner' | 'saved'>(initialTab);
+
 const searchQuery = ref('');
 const selectedRecipe = ref<SavedRecipe | null>(null);
 const checkedIngredients = ref<Record<string, boolean>>({});
@@ -112,7 +119,7 @@ const handleImportIngredients = async (recipe: SavedRecipe) => {
 
 <template>
   <div class="recipe-page">
-    <!-- Header & Tab bar -->
+    <!-- Top Consolidated Culinary Hub Navigation Bar -->
     <div class="top-nav-bar">
       <div class="tab-buttons">
         <button
@@ -121,6 +128,14 @@ const handleImportIngredients = async (recipe: SavedRecipe) => {
         >
           <ChefHat :size="18" />
           <span>AI Шеф-чат</span>
+        </button>
+
+        <button
+          :class="['tab-btn', activeTab === 'planner' ? 'active' : '']"
+          @click="activeTab = 'planner'"
+        >
+          <Calendar :size="18" />
+          <span>Тижневий планер</span>
         </button>
 
         <button
@@ -141,7 +156,12 @@ const handleImportIngredients = async (recipe: SavedRecipe) => {
       <ChefChat />
     </div>
 
-    <!-- Tab 2: Saved Recipes Gallery -->
+    <!-- Tab 2: Weekly Planner -->
+    <div v-else-if="activeTab === 'planner'" class="tab-content">
+      <PlannerTab />
+    </div>
+
+    <!-- Tab 3: Saved Recipes Gallery -->
     <div v-else class="tab-content saved-recipes-tab">
       <div class="search-bar-row">
         <div class="search-input-wrapper">
@@ -332,16 +352,19 @@ const handleImportIngredients = async (recipe: SavedRecipe) => {
 .tab-buttons {
   display: flex;
   gap: 6px;
+  width: 100%;
 }
 
 .tab-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 8px 16px;
+  flex: 1;
+  padding: 10px 14px;
   border-radius: var(--radius-md);
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 700;
   transition: var(--transition-fast);
 }
