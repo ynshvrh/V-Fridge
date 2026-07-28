@@ -23,6 +23,18 @@ import Navbar from '@/components/layout/Navbar.vue';
   max-width: 1200px;
   width: 100%;
   margin: 0 auto;
-  padding: 24px;
+  padding: 12px;
+}
+
+@media (min-width: 640px) {
+  .main-content {
+    padding: 18px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .main-content {
+    padding: 24px;
+  }
 }
 </style>
