@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useProductStore } from '@/stores/product';
-import { Plus, X, Package } from '@lucide/vue';
+import BarcodeScannerModal, { type ScannedProduct } from '@/components/products/BarcodeScannerModal.vue';
+import { Plus, X, Package, ScanBarcode } from '@lucide/vue';
 
 const emit = defineEmits<{
   (e: 'close'): void;
@@ -16,6 +17,7 @@ const unit = ref('pcs');
 const expiryDate = ref('');
 const category = ref('other');
 const isSubmitting = ref(false);
+const showScannerModal = ref(false);
 
 const categories = [
   'dairy', 'fruits', 'vegetables', 'meat', 'poultry', 
@@ -23,6 +25,17 @@ const categories = [
 ];
 
 const units = ['pcs', 'kg', 'g', 'l', 'ml', 'pack'];
+
+const handleBarcodeResolved = (scanned: ScannedProduct) => {
+  name.value = scanned.name;
+  quantity.value = scanned.quantity;
+  if (units.includes(scanned.unit)) {
+    unit.value = scanned.unit;
+  }
+  if (categories.includes(scanned.category)) {
+    category.value = scanned.category;
+  }
+};
 
 const handleSubmit = async () => {
   if (!name.value || quantity.value <= 0) return;
@@ -50,9 +63,21 @@ const handleSubmit = async () => {
           <Package :size="20" class="header-icon" />
           <h3>Додати продукт в холодильник</h3>
         </div>
-        <button class="close-btn" @click="emit('close')">
-          <X :size="18" />
-        </button>
+
+        <div class="header-actions">
+          <button
+            type="button"
+            class="scan-btn"
+            title="Сканувати штрих-код камери"
+            @click="showScannerModal = true"
+          >
+            <ScanBarcode :size="16" />
+            <span>Штрих-код</span>
+          </button>
+          <button class="close-btn" @click="emit('close')">
+            <X :size="18" />
+          </button>
+        </div>
       </div>
 
       <form @submit.prevent="handleSubmit" class="modal-body">
@@ -129,6 +154,13 @@ const handleSubmit = async () => {
         </div>
       </form>
     </div>
+
+    <!-- Barcode Scanner Modal -->
+    <BarcodeScannerModal
+      :open="showScannerModal"
+      @close="showScannerModal = false"
+      @resolved="handleBarcodeResolved"
+    />
   </div>
 </template>
 
@@ -166,6 +198,30 @@ const handleSubmit = async () => {
 
 .header-icon {
   color: var(--accent-orange);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scan-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: var(--transition-fast);
+}
+
+.scan-btn:hover {
+  background: var(--accent-orange);
+  color: #ffffff;
 }
 
 .close-btn {
