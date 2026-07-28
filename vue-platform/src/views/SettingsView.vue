@@ -1,10 +1,25 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useThemeStore } from '@/stores/theme';
 import { api, type ApiErrorResponse } from '@/api/client';
-import { User, Globe, Lock, Upload, CheckCircle2, AlertCircle } from '@lucide/vue';
+import { 
+  User, 
+  Globe, 
+  Lock, 
+  Upload, 
+  CheckCircle2, 
+  AlertCircle, 
+  Palette, 
+  Sun, 
+  Moon, 
+  Sparkles, 
+  Contrast, 
+  Sliders 
+} from '@lucide/vue';
 
 const authStore = useAuthStore();
+const themeStore = useThemeStore();
 
 const preferredLanguage = ref(authStore.user?.preferredLanguage || 'en');
 const cuisinePreference = ref(authStore.user?.cuisinePreference || 'General');
@@ -108,8 +123,8 @@ const handleAvatarFile = async (e: Event) => {
   <div class="settings-page fade-in">
     <header class="page-header">
       <div>
-        <h1>Налаштування акаунту</h1>
-        <p class="subtitle">Персоналізація, аватар та безпека</p>
+        <h1>Налаштування акаунту та інтерфейсу</h1>
+        <p class="subtitle">Персоналізація оформлення, акцентні кольори, профіль та безпека</p>
       </div>
     </header>
 
@@ -119,6 +134,149 @@ const handleAvatarFile = async (e: Event) => {
     </div>
 
     <div class="settings-grid">
+      <!-- Section 1: UI Preferences & Accent Themes -->
+      <div class="glass-card settings-card col-span-full">
+        <div class="card-header">
+          <Palette :size="20" class="header-icon" />
+          <h3>Теми оформлення та візуальні ефекти</h3>
+        </div>
+
+        <div class="theme-options-grid">
+          <!-- Theme mode switcher -->
+          <div class="pref-item">
+            <div class="pref-info">
+              <span class="pref-title">Основна тема</span>
+              <span class="pref-desc">Перемикання між темним та світлим оформленням</span>
+            </div>
+            <div class="toggle-buttons">
+              <button
+                :class="['toggle-btn', themeStore.theme === 'light' ? 'active' : '']"
+                @click="themeStore.setTheme('light')"
+              >
+                <Sun :size="16" />
+                <span>Світла</span>
+              </button>
+              <button
+                :class="['toggle-btn', themeStore.theme === 'dark' ? 'active' : '']"
+                @click="themeStore.setTheme('dark')"
+              >
+                <Moon :size="16" />
+                <span>Темна</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Accent Theme Light -->
+          <div v-if="themeStore.theme === 'light'" class="pref-item">
+            <div class="pref-info">
+              <span class="pref-title">Акцентний колір (Світла тема)</span>
+              <span class="pref-desc">Оберіть палітру акцентів для світлого режиму</span>
+            </div>
+            <div class="toggle-buttons">
+              <button
+                :class="['toggle-btn', themeStore.lightAccentTheme === 'citrus' ? 'active' : '']"
+                @click="themeStore.setLightAccentTheme('citrus')"
+              >
+                <span class="color-dot citrus-dot" />
+                <span>Sliced Citrus</span>
+              </button>
+              <button
+                :class="['toggle-btn', themeStore.lightAccentTheme === 'strawberry' ? 'active' : '']"
+                @click="themeStore.setLightAccentTheme('strawberry')"
+              >
+                <span class="color-dot strawberry-dot" />
+                <span>Strawberry</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Accent Theme Dark -->
+          <div v-else class="pref-item">
+            <div class="pref-info">
+              <span class="pref-title">Акцентний колір (Темна тема)</span>
+              <span class="pref-desc">Оберіть палітру акцентів для темного режиму</span>
+            </div>
+            <div class="toggle-buttons">
+              <button
+                :class="['toggle-btn', themeStore.darkAccentTheme === 'blueberry' ? 'active' : '']"
+                @click="themeStore.setDarkAccentTheme('blueberry')"
+              >
+                <span class="color-dot blueberry-dot" />
+                <span>Blueberry Sky</span>
+              </button>
+              <button
+                :class="['toggle-btn', themeStore.darkAccentTheme === 'lime' ? 'active' : '']"
+                @click="themeStore.setDarkAccentTheme('lime')"
+              >
+                <span class="color-dot lime-dot" />
+                <span>Electric Lime</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Ambient Glow Switch -->
+          <div class="pref-item">
+            <div class="pref-info">
+              <span class="pref-title flex-title">
+                <Sparkles :size="16" class="orange-icon" /> Ambient Glow Ефекти
+              </span>
+              <span class="pref-desc">М'яке підсвічування та фонове сяйво карток</span>
+            </div>
+            <label class="switch-label">
+              <input
+                type="checkbox"
+                :checked="themeStore.ambientGlow"
+                @change="themeStore.setAmbientGlow(($event.target as HTMLInputElement).checked)"
+              />
+              <span class="slider" />
+            </label>
+          </div>
+
+          <!-- High Contrast -->
+          <div class="pref-item">
+            <div class="pref-info">
+              <span class="pref-title flex-title">
+                <Contrast :size="16" /> Високий контраст
+              </span>
+              <span class="pref-desc">Підвищена чіткість меж карток та текстів</span>
+            </div>
+            <label class="switch-label">
+              <input
+                type="checkbox"
+                :checked="themeStore.highContrast"
+                @change="themeStore.setHighContrast(($event.target as HTMLInputElement).checked)"
+              />
+              <span class="slider" />
+            </label>
+          </div>
+
+          <!-- Shopping Mode -->
+          <div class="pref-item">
+            <div class="pref-info">
+              <span class="pref-title flex-title">
+                <Sliders :size="16" /> Режим списку покупок
+              </span>
+              <span class="pref-desc">Спосіб викреслення покупок (кнопки або свайп)</span>
+            </div>
+            <div class="toggle-buttons">
+              <button
+                :class="['toggle-btn', themeStore.shoppingMode === 'buttons' ? 'active' : '']"
+                @click="themeStore.setShoppingMode('buttons')"
+              >
+                <span>Кнопки</span>
+              </button>
+              <button
+                :class="['toggle-btn', themeStore.shoppingMode === 'swipe' ? 'active' : '']"
+                @click="themeStore.setShoppingMode('swipe')"
+              >
+                <span>Свайп</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: AI Chef & Language Preferences -->
       <div class="glass-card settings-card">
         <div class="card-header">
           <Globe :size="20" class="header-icon" />
@@ -162,6 +320,7 @@ const handleAvatarFile = async (e: Event) => {
         </form>
       </div>
 
+      <!-- Section 3: Avatar -->
       <div class="glass-card settings-card">
         <div class="card-header">
           <User :size="20" class="header-icon" />
@@ -187,6 +346,7 @@ const handleAvatarFile = async (e: Event) => {
         </div>
       </div>
 
+      <!-- Section 4: Security & Password -->
       <div class="glass-card settings-card">
         <div class="card-header">
           <Lock :size="20" class="header-icon" />
@@ -249,11 +409,12 @@ const handleAvatarFile = async (e: Event) => {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--status-expired-bg);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: var(--status-expired);
   padding: 12px 16px;
   border-radius: var(--radius-md);
+  background: var(--status-expired-bg);
+  color: var(--status-expired);
+  font-size: 0.85rem;
+  font-weight: 600;
   margin-bottom: 20px;
 }
 
@@ -261,42 +422,214 @@ const handleAvatarFile = async (e: Event) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--status-fresh-bg);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  color: var(--status-fresh);
   padding: 10px 14px;
   border-radius: var(--radius-md);
-  font-size: 0.85rem;
-  margin-bottom: 16px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 14px;
 }
 
 .settings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.col-span-full {
+  grid-column: 1 / -1;
 }
 
 .settings-card {
-  padding: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
 }
 
 .card-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.card-header h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
 }
 
 .header-icon {
   color: var(--accent-orange);
 }
 
+.theme-options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.pref-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+.pref-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pref-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.flex-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pref-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.toggle-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: var(--transition-fast);
+}
+
+.toggle-btn.active {
+  background: var(--accent-orange);
+  color: #ffffff;
+  border-color: var(--accent-orange);
+}
+
+.color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.citrus-dot { background: #f97316; }
+.strawberry-dot { background: #ef4444; }
+.blueberry-dot { background: #3b82f6; }
+.lime-dot { background: #84cc16; }
+
+/* Switch Slider */
+.switch-label {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch-label input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--border-subtle);
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--accent-orange);
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
 .card-form {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.form-input {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  background: var(--accent-orange);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .avatar-section {
@@ -309,13 +642,12 @@ const handleAvatarFile = async (e: Event) => {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: var(--accent-orange-bg);
-  border: 2px solid var(--accent-orange);
+  background: var(--accent-orange);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  color: var(--text-primary);
 }
 
 .avatar-preview img {
@@ -325,15 +657,23 @@ const handleAvatarFile = async (e: Event) => {
 }
 
 .upload-btn {
-  position: relative;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  background: var(--border-subtle);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
   cursor: pointer;
 }
 
 .file-input {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  opacity: 0;
-  cursor: pointer;
+  display: none;
+}
+
+.orange-icon {
+  color: var(--accent-orange);
 }
 </style>
