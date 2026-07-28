@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   Settings,
-  Activity
+  Activity,
+  Calendar
 } from '@lucide/vue';
 
 const authStore = useAuthStore();
@@ -62,6 +63,10 @@ const handleLogout = async () => {
           <span>Покупки</span>
         </router-link>
         <router-link to="/planner" class="nav-item" active-class="active">
+          <Calendar :size="18" />
+          <span>Планер</span>
+        </router-link>
+        <router-link to="/recipes" class="nav-item" active-class="active">
           <ChefHat :size="18" />
           <span>AI Шеф</span>
         </router-link>
@@ -145,6 +150,10 @@ const handleLogout = async () => {
               <span>Покупки</span>
             </router-link>
             <router-link to="/planner" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
+              <Calendar :size="20" />
+              <span>Планер</span>
+            </router-link>
+            <router-link to="/recipes" class="mobile-nav-item" active-class="active" @click="closeMobileMenu">
               <ChefHat :size="20" />
               <span>AI Шеф</span>
             </router-link>
