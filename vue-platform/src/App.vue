@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Navbar from '@/components/layout/Navbar.vue';
+import BottomNav from '@/components/layout/BottomNav.vue';
 </script>
 
 <template>
@@ -8,6 +9,7 @@ import Navbar from '@/components/layout/Navbar.vue';
     <main class="main-content">
       <router-view />
     </main>
+    <BottomNav />
   </div>
 </template>
 
@@ -24,6 +26,12 @@ import Navbar from '@/components/layout/Navbar.vue';
   width: 100%;
   margin: 0 auto;
   padding: 12px;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding-bottom: 80px; /* Account for fixed BottomNav */
+  }
 }
 
 @media (min-width: 640px) {

@@ -133,7 +133,7 @@ const handleSubmit = async () => {
   gap: 10px;
 }
 .header-icon {
-  color: var(--accent-purple-hover);
+  color: var(--accent-orange);
 }
 .close-btn {
   color: var(--text-muted);

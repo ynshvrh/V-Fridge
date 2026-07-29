@@ -138,9 +138,9 @@ const handleSignUp = async () => {
   height: 48px;
   margin: 0 auto 16px;
   border-radius: 14px;
-  background: rgba(140, 83, 131, 0.2);
+  background: var(--accent-orange-bg);
   border: 1px solid var(--border-strong);
-  color: var(--accent-purple-hover);
+  color: var(--accent-orange);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -217,7 +217,7 @@ const handleSignUp = async () => {
 }
 
 .auth-link {
-  color: var(--accent-purple-hover);
+  color: var(--accent-orange);
   font-weight: 600;
 }
 

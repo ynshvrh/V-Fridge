@@ -71,8 +71,8 @@ const calculateHeight = (val: number) => {
   gap: 10px;
 }
 
-.header-icon {
-  color: var(--accent-purple-hover);
+.chart-icon {
+  color: var(--accent-orange);
 }
 
 .legend-row {

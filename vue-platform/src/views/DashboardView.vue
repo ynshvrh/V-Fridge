@@ -230,12 +230,34 @@ const handleEmptyFridge = async () => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .header-left, .header-right {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+@media (max-width: 580px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .header-left {
+    justify-content: space-between;
+    width: 100%;
+  }
+  .header-right {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .header-right .btn-primary,
+  .header-right .btn-destructive {
+    flex: 1;
+    justify-content: center;
+  }
 }
 
 .role-badge {
@@ -354,6 +376,20 @@ const handleEmptyFridge = async () => {
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
+  }
+  .tab-btn {
+    padding: 8px 6px;
+    font-size: 0.8rem;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 420px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+  .tab-btn span {
+    font-size: 0.75rem;
   }
 }
 </style>

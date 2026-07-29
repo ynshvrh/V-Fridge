@@ -87,7 +87,7 @@ const navigateHome = () => {
 }
 
 .spin-icon {
-  color: var(--accent-purple);
+  color: var(--accent-orange);
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
 }

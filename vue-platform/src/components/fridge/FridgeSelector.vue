@@ -107,8 +107,8 @@ onUnmounted(() => {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: var(--accent-purple-glow);
-  color: var(--accent-purple-hover);
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -166,7 +166,6 @@ onUnmounted(() => {
   color: var(--text-secondary);
   font-size: 0.875rem;
   transition: var(--transition-fast);
-
 }
 
 .menu-item:hover {
@@ -175,8 +174,8 @@ onUnmounted(() => {
 }
 
 .menu-item.active {
-  background: rgba(140, 83, 131, 0.2);
-  color: var(--text-primary);
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
 }
 
 .item-info {
@@ -198,7 +197,7 @@ onUnmounted(() => {
 }
 
 .check-icon {
-  color: var(--accent-purple-hover);
+  color: var(--accent-orange);
 }
 
 .dropdown-divider {
@@ -208,7 +207,7 @@ onUnmounted(() => {
 }
 
 .create-item {
-  color: var(--accent-purple-hover);
+  color: var(--accent-orange);
   justify-content: flex-start;
   gap: 8px;
   font-weight: 600;
