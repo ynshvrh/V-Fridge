@@ -78,8 +78,7 @@ const handleLogout = async () => {
         <template v-if="authStore.isAuthenticated">
           <router-link to="/settings" class="user-pill desktop-only">
             <div class="avatar-box">
-              <img v-if="authStore.user?.avatar" :src="authStore.user.avatar" alt="Avatar" class="avatar-img" />
-              <UserIcon v-else :size="16" />
+              <UserIcon :size="16" />
             </div>
             <span class="user-name">{{ authStore.user?.username }}</span>
           </router-link>
@@ -103,8 +102,7 @@ const handleLogout = async () => {
           <div class="drawer-header">
             <div class="user-info-mobile">
               <div class="avatar-box">
-                <img v-if="authStore.user?.avatar" :src="authStore.user.avatar" alt="Avatar" class="avatar-img" />
-                <UserIcon v-else :size="18" />
+                <UserIcon :size="18" />
               </div>
               <div class="user-text">
                 <span class="user-name-mobile">{{ authStore.user?.username }}</span>

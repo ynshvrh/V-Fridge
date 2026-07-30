@@ -7,7 +7,6 @@ import {
   User, 
   Globe, 
   Lock, 
-  Upload, 
   CheckCircle2, 
   AlertCircle, 
   Palette, 
@@ -30,11 +29,9 @@ const confirmPassword = ref('');
 
 const isSavingProfile = ref(false);
 const isSavingPassword = ref(false);
-const isUploadingAvatar = ref(false);
 
 const profileMessage = ref<string | null>(null);
 const passwordMessage = ref<string | null>(null);
-const avatarMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 
 const languages = [
@@ -90,31 +87,6 @@ const handleUpdatePassword = async () => {
     errorMessage.value = apiErr.error || 'Не вдалося оновити пароль';
   } finally {
     isSavingPassword.value = false;
-  }
-};
-
-const handleAvatarFile = async (e: Event) => {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (!file) return;
-  isUploadingAvatar.value = true;
-  avatarMessage.value = null;
-  errorMessage.value = null;
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-    const res = await api.fetch<{ avatarUrl: string }>('/auth/me/avatar', {
-      method: 'POST',
-      body: formData
-    });
-    if (res.avatarUrl && authStore.user) {
-      authStore.user.avatar = res.avatarUrl;
-      avatarMessage.value = 'Аватар успішно оновлено!';
-    }
-  } catch (err) {
-    const apiErr = err as ApiErrorResponse;
-    errorMessage.value = apiErr.error || 'Не вдалося завантажити аватар';
-  } finally {
-    isUploadingAvatar.value = false;
   }
 };
 </script>
@@ -273,29 +245,21 @@ const handleAvatarFile = async (e: Event) => {
         </form>
       </div>
 
-      <!-- Section 3: Avatar -->
+      <!-- Section 3: User Icon & Profile Status -->
       <div class="glass-card settings-card">
         <div class="card-header">
           <User :size="20" class="header-icon" />
-          <h3>Аватар та Фото профілю</h3>
-        </div>
-
-        <div v-if="avatarMessage" class="success-banner">
-          <CheckCircle2 :size="16" />
-          <span>{{ avatarMessage }}</span>
+          <h3>Іконка та Статус профілю</h3>
         </div>
 
         <div class="avatar-section">
           <div class="avatar-preview">
-            <img v-if="authStore.user?.avatar" :src="authStore.user.avatar" alt="Avatar" />
-            <User v-else :size="32" />
+            <User :size="32" />
           </div>
-
-          <label class="btn-secondary upload-btn">
-            <Upload :size="16" />
-            <span>{{ isUploadingAvatar ? 'Завантаження...' : 'Обрати фото' }}</span>
-            <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" class="file-input" @change="handleAvatarFile" />
-          </label>
+          <div class="profile-info-block">
+            <span class="profile-username">{{ authStore.user?.username }}</span>
+            <span class="profile-email">{{ authStore.user?.email }}</span>
+          </div>
         </div>
       </div>
 
@@ -582,38 +546,31 @@ input:checked + .slider:before {
 }
 
 .avatar-preview {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: var(--accent-orange);
-  color: #ffffff;
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 }
 
-.avatar-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.upload-btn {
+.profile-info-block {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  background: var(--border-subtle);
-  color: var(--text-primary);
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.file-input {
-  display: none;
+.profile-username {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.profile-email {
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .orange-icon {
