@@ -84,7 +84,7 @@ V-Fridge/
 │   │   ├── components/      # Modular UI components
 │   │   │   ├── chat/        # AI Chef Chat components
 │   │   │   ├── fridge/      # Fridge selector, product cards, modals, Fridges tab
-│   │   │   ├── layout/      # Navbar & responsive mobile drawer
+│   │   │   ├── layout/      # Navbar, off-canvas mobile drawer & BottomNav.vue
 │   │   │   ├── planner/     # Meal cards, gap items & Planner tab
 │   │   │   ├── products/    # BarcodeScannerModal
 │   │   │   └── shopping/    # Shopping rows & Shopping tab
