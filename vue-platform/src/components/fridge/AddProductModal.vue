@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useProductStore } from '@/stores/product';
-import { useI18n } from '@/i18n';
 import BarcodeScannerModal, { type ScannedProduct } from '@/components/products/BarcodeScannerModal.vue';
 import { Plus, X, Package, ScanBarcode } from '@lucide/vue';
 
@@ -10,7 +9,6 @@ const emit = defineEmits<{
 }>();
 
 const productStore = useProductStore();
-const { t } = useI18n();
 
 const name = ref('');
 const description = ref('');
@@ -59,22 +57,22 @@ const handleSubmit = async () => {
 
 <template>
   <div class="modal-backdrop" @click.self="emit('close')">
-    <div class="modal-card nordic-card fade-in">
+    <div class="glass-card modal-card fade-in">
       <div class="modal-header">
         <div class="header-title">
-          <Package :size="18" class="header-icon" />
-          <h3>{{ t('addProductModalTitle') || 'Додати продукт в холодильник' }}</h3>
+          <Package :size="20" class="header-icon" />
+          <h3>Додати продукт в холодильник</h3>
         </div>
 
         <div class="header-actions">
           <button
             type="button"
             class="scan-btn"
-            title="Сканувати штрих-код"
+            title="Сканувати штрих-код камери"
             @click="showScannerModal = true"
           >
-            <ScanBarcode :size="14" />
-            <span>{{ t('barcodeScannerTitle') || 'Штрих-код' }}</span>
+            <ScanBarcode :size="16" />
+            <span>Штрих-код</span>
           </button>
           <button class="close-btn" @click="emit('close')">
             <X :size="18" />
@@ -84,7 +82,7 @@ const handleSubmit = async () => {
 
       <form @submit.prevent="handleSubmit" class="modal-body">
         <div class="form-group">
-          <label class="form-label" for="prod-name">{{ t('productName') || 'Назва продукту' }} *</label>
+          <label class="form-label" for="prod-name">Назва продукту *</label>
           <input
             id="prod-name"
             v-model="name"
@@ -97,7 +95,7 @@ const handleSubmit = async () => {
 
         <div class="form-row">
           <div class="form-group flex-2">
-            <label class="form-label" for="prod-qty">{{ t('quantity') || 'Кількість' }} *</label>
+            <label class="form-label" for="prod-qty">Кількість *</label>
             <input
               id="prod-qty"
               v-model.number="quantity"
@@ -110,7 +108,7 @@ const handleSubmit = async () => {
           </div>
 
           <div class="form-group flex-1">
-            <label class="form-label" for="prod-unit">{{ t('unit') || 'Од.' }}</label>
+            <label class="form-label" for="prod-unit">Одиниця</label>
             <select id="prod-unit" v-model="unit" class="form-input">
               <option v-for="u in units" :key="u" :value="u">{{ u }}</option>
             </select>
@@ -119,14 +117,14 @@ const handleSubmit = async () => {
 
         <div class="form-row">
           <div class="form-group flex-1">
-            <label class="form-label" for="prod-cat">{{ t('category') || 'Категорія' }}</label>
+            <label class="form-label" for="prod-cat">Категорія</label>
             <select id="prod-cat" v-model="category" class="form-input">
               <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
             </select>
           </div>
 
           <div class="form-group flex-1">
-            <label class="form-label" for="prod-expiry">{{ t('expiryDate') || 'Придатний до' }}</label>
+            <label class="form-label" for="prod-expiry">Придатний до</label>
             <input
               id="prod-expiry"
               v-model="expiryDate"
@@ -137,7 +135,7 @@ const handleSubmit = async () => {
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="prod-desc">{{ t('note') || 'Примітка' }}</label>
+          <label class="form-label" for="prod-desc">Примітка (необов'язково)</label>
           <input
             id="prod-desc"
             v-model="description"
@@ -148,10 +146,10 @@ const handleSubmit = async () => {
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-secondary btn-sm" @click="emit('close')">{{ t('actionCancel') || 'Скасувати' }}</button>
-          <button type="submit" class="btn-primary btn-sm" :disabled="isSubmitting">
-            <Plus :size="14" />
-            <span>{{ isSubmitting ? (t('actionSaving') || 'Збереження...') : (t('actionAdd') || 'Додати') }}</span>
+          <button type="button" class="btn-ghost" @click="emit('close')">Скасувати</button>
+          <button type="submit" class="btn-primary" :disabled="isSubmitting">
+            <Plus :size="16" />
+            <span>{{ isSubmitting ? 'Збереження...' : 'Додати' }}</span>
           </button>
         </div>
       </form>
@@ -169,32 +167,27 @@ const handleSubmit = async () => {
 <style scoped>
 .modal-backdrop {
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(4px);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 20px;
 }
 
 .modal-card {
   width: 100%;
-  max-width: 440px;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-shadow: var(--shadow-lg);
+  max-width: 460px;
+  padding: 20px;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 16px;
 }
 
 .header-title {
@@ -203,44 +196,50 @@ const handleSubmit = async () => {
   gap: 8px;
 }
 
-.header-title h3 {
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
 .header-icon {
-  color: var(--text-muted);
+  color: var(--accent-orange);
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .scan-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 4px 8px;
-  border-radius: var(--radius-xs);
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  font-size: 0.74rem;
-  font-weight: 500;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
+  font-size: 0.75rem;
+  font-weight: 700;
   transition: var(--transition-fast);
 }
 
 .scan-btn:hover {
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: var(--accent-orange);
+  color: #ffffff;
+}
+
+.close-btn {
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.close-btn:hover {
+  color: var(--text-primary);
+  background: var(--border-subtle);
 }
 
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .form-row {
@@ -254,9 +253,9 @@ const handleSubmit = async () => {
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 4px;
-  padding-top: 10px;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 14px;
   border-top: 1px solid var(--border-subtle);
 }
 </style>

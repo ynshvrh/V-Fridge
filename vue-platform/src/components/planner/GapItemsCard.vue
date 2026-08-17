@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { type MealPlanGapItem, usePlannerStore } from '@/stores/planner';
-import { useI18n } from '@/i18n';
 import { ShoppingCart, Plus, CheckCircle2 } from '@lucide/vue';
 
 const props = defineProps<{
@@ -9,8 +8,6 @@ const props = defineProps<{
 }>();
 
 const plannerStore = usePlannerStore();
-const { t } = useI18n();
-
 const isImporting = ref(false);
 const importMessage = ref<string | null>(null);
 
@@ -21,17 +18,17 @@ const handleImportGaps = async () => {
   const res = await plannerStore.importGaps(props.gaps);
   isImporting.value = false;
   if (res) {
-    importMessage.value = `${t('plannerGapsAdded') || 'Додано до списку покупок'}: ${res.created} (${res.skipped} ${t('plannerGapsSkipped') || 'вже є'})`;
+    importMessage.value = `Added ${res.created} missing item(s) to shopping list (${res.skipped} already in list/fridge).`;
   }
 };
 </script>
 
 <template>
-  <div class="nordic-card gap-card fade-in">
+  <div class="glass-card gap-card fade-in">
     <div class="gap-header">
       <div class="header-title">
-        <ShoppingCart :size="18" class="header-icon" />
-        <h3>{{ t('plannerMissingIngredients') || 'Відсутні інгредієнти для плану' }} ({{ gaps.length }})</h3>
+        <ShoppingCart :size="20" class="header-icon" />
+        <h3>Missing Ingredients ({{ gaps.length }})</h3>
       </div>
       <button
         v-if="gaps.length > 0"
@@ -39,18 +36,18 @@ const handleImportGaps = async () => {
         :disabled="isImporting"
         @click="handleImportGaps"
       >
-        <Plus :size="15" />
-        <span>{{ isImporting ? (t('actionAdding') || 'Додавання...') : (t('plannerAddAllGaps') || 'Додати всі в покупки') }}</span>
+        <Plus :size="16" />
+        <span>{{ isImporting ? 'Adding...' : 'Add All to Shopping List' }}</span>
       </button>
     </div>
 
     <div v-if="importMessage" class="success-banner">
-      <CheckCircle2 :size="15" />
+      <CheckCircle2 :size="16" />
       <span>{{ importMessage }}</span>
     </div>
 
     <div v-if="gaps.length === 0" class="empty-gaps">
-      <span>{{ t('plannerAllIngredientsAvailable') || 'Усі необхідні інгредієнти є у вашому холодильнику!' }}</span>
+      <span>You have all necessary ingredients in your fridge!</span>
     </div>
 
     <div v-else class="gaps-grid">
@@ -64,10 +61,10 @@ const handleImportGaps = async () => {
 
 <style scoped>
 .gap-card {
-  padding: 16px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .gap-header {
@@ -75,62 +72,55 @@ const handleImportGaps = async () => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.header-title h3 {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  gap: 10px;
 }
 
 .header-icon {
-  color: var(--text-muted);
+  color: var(--accent-amber);
 }
 
 .btn-sm {
   padding: 6px 12px;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
 }
 
 .success-banner {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--status-fresh-bg);
-  border: 1px solid var(--status-fresh-border);
-  color: var(--status-fresh);
-  padding: 8px 12px;
-  border-radius: var(--radius-xs);
-  font-size: 0.82rem;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--accent-emerald);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
 }
 
 .empty-gaps {
-  color: var(--text-secondary);
-  font-size: 0.85rem;
+  color: var(--accent-emerald);
+  font-size: 0.9rem;
 }
 
 .gaps-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .gap-item-chip {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-subtle);
-  padding: 3px 8px;
-  border-radius: var(--radius-xs);
-  font-size: 0.78rem;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
 }
 
 .gap-name {
@@ -139,7 +129,7 @@ const handleImportGaps = async () => {
 }
 
 .gap-qty {
-  color: var(--text-muted);
-  font-size: 0.72rem;
+  color: var(--accent-amber);
+  font-size: 0.78rem;
 }
 </style>

@@ -2,13 +2,11 @@
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
-import { useI18n } from '@/i18n';
 import { LogIn, Mail, Lock, AlertCircle, ArrowRight } from '@lucide/vue';
 import GoogleSignInButton from '@/components/GoogleSignInButton.vue';
 
 const authStore = useAuthStore();
 const router = useRouter();
-const { t } = useI18n();
 
 const email = ref('');
 const password = ref('');
@@ -27,25 +25,25 @@ const handleLogin = async () => {
 
 <template>
   <div class="auth-page">
-    <div class="nordic-card auth-card fade-in">
+    <div class="glass-card auth-card fade-in">
       <div class="auth-header">
         <div class="auth-icon-badge">
-          <LogIn :size="20" />
+          <LogIn :size="24" />
         </div>
-        <h2>{{ t('authSignInTitle') || 'З поверненням' }}</h2>
-        <p class="auth-subtitle">{{ t('authSignInSubtitle') || 'Увійдіть для керування вашим холодильником' }}</p>
+        <h2>Welcome Back</h2>
+        <p class="auth-subtitle">Sign in to manage your smart fridge inventory</p>
       </div>
 
       <div v-if="authStore.error" class="error-banner">
-        <AlertCircle :size="16" />
+        <AlertCircle :size="18" />
         <span>{{ authStore.error }}</span>
       </div>
 
       <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
-          <label class="form-label" for="email">{{ t('authEmailLabel') || 'Email адреса' }}</label>
+          <label class="form-label" for="email">Email Address</label>
           <div class="input-wrapper">
-            <Mail class="input-icon" :size="16" />
+            <Mail class="input-icon" :size="18" />
             <input
               id="email"
               v-model="email"
@@ -58,9 +56,9 @@ const handleLogin = async () => {
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="password">{{ t('authPasswordLabel') || 'Пароль' }}</label>
+          <label class="form-label" for="password">Password</label>
           <div class="input-wrapper">
-            <Lock class="input-icon" :size="16" />
+            <Lock class="input-icon" :size="18" />
             <input
               id="password"
               v-model="password"
@@ -73,20 +71,16 @@ const handleLogin = async () => {
         </div>
 
         <button type="submit" class="btn-primary auth-btn" :disabled="isSubmitting || authStore.loading">
-          <span>{{ isSubmitting ? (t('authSigningIn') || 'Вхід...') : (t('authSignInBtn') || 'Увійти') }}</span>
-          <ArrowRight :size="16" />
+          <span>{{ isSubmitting ? 'Signing in...' : 'Sign In' }}</span>
+          <ArrowRight :size="18" />
         </button>
       </form>
-
-      <div class="divider-line">
-        <span>або</span>
-      </div>
 
       <GoogleSignInButton />
 
       <div class="auth-footer">
-        <span>{{ t('authNoAccount') || 'Ще немає акаунту?' }}</span>
-        <router-link to="/signup" class="auth-link">{{ t('authRegisterLink') || 'Створити акаунт' }}</router-link>
+        <span>Don't have an account?</span>
+        <router-link to="/signup" class="auth-link">Create Account</router-link>
       </div>
     </div>
   </div>
@@ -97,62 +91,57 @@ const handleLogin = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 100px);
+  min-height: calc(100vh - 120px);
   padding: 20px;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 400px;
-  padding: 28px 24px;
+  max-width: 420px;
+  padding: 36px 32px;
 }
 
 .auth-header {
   text-align: center;
-  margin-bottom: 22px;
+  margin-bottom: 28px;
 }
 
 .auth-icon-badge {
-  width: 42px;
-  height: 42px;
-  margin: 0 auto 12px;
-  border-radius: var(--radius-sm);
-  background: var(--primary);
-  color: var(--primary-foreground);
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  border-radius: 14px;
+  background: var(--accent-orange-bg);
+  border: 1px solid var(--border-strong);
+  color: var(--accent-orange);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.auth-header h2 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
 .auth-subtitle {
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-top: 6px;
 }
 
 .error-banner {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--status-expired-bg);
-  border: 1px solid var(--status-expired-border);
-  color: var(--status-expired);
-  padding: 10px 12px;
-  border-radius: var(--radius-xs);
-  font-size: 0.82rem;
-  margin-bottom: 16px;
+  gap: 10px;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: var(--accent-rose);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  margin-bottom: 20px;
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 20px;
 }
 
 .input-wrapper {
@@ -163,58 +152,33 @@ const handleLogin = async () => {
 
 .input-icon {
   position: absolute;
-  left: 12px;
+  left: 14px;
   color: var(--text-muted);
   pointer-events: none;
 }
 
 .form-input.with-icon {
-  padding-left: 38px;
+  padding-left: 42px;
 }
 
 .auth-btn {
   width: 100%;
-  padding: 10px;
-  margin-top: 4px;
-  justify-content: center;
-}
-
-.divider-line {
-  position: relative;
-  text-align: center;
-  margin: 18px 0;
-}
-
-.divider-line::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--border-subtle);
-}
-
-.divider-line span {
-  position: relative;
-  background: var(--bg-surface);
-  padding: 0 10px;
-  font-size: 0.74rem;
-  color: var(--text-muted);
+  padding: 12px;
+  margin-top: 8px;
 }
 
 .auth-footer {
   text-align: center;
-  margin-top: 20px;
-  font-size: 0.82rem;
+  margin-top: 24px;
+  font-size: 0.875rem;
   color: var(--text-secondary);
   display: flex;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .auth-link {
-  color: var(--text-primary);
+  color: var(--accent-orange);
   font-weight: 600;
 }
 

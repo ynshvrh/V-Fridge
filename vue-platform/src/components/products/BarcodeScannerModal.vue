@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue';
 import { BrowserMultiFormatReader, type Result } from '@zxing/library';
-import { useI18n } from '@/i18n';
 import { Camera, Loader2, RefreshCw, ScanBarcode, X } from '@lucide/vue';
 
 export type ScannedProduct = {
@@ -20,8 +19,6 @@ const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'resolved', product: ScannedProduct): void;
 }>();
-
-const { t } = useI18n();
 
 const videoRef = ref<HTMLVideoElement | null>(null);
 const readerRef = ref<BrowserMultiFormatReader | null>(null);
@@ -57,21 +54,21 @@ const startScanning = () => {
         const product = await lookupOpenFoodFacts(text);
         if (!product) {
           status.value = 'error';
-          errorMessage.value = t('barcodeNotFound') || 'Товар за цим штрих-кодом не знайдено в базі OpenFoodFacts.';
+          errorMessage.value = 'Товар за цим штрих-кодом не знайдено в базі OpenFoodFacts.';
           return;
         }
         emit('resolved', product);
         emit('close');
       } catch (e: any) {
         status.value = 'error';
-        errorMessage.value = e.message || t('barcodeLookupError') || 'Помилка пошуку товару за штрих-кодом.';
+        errorMessage.value = e.message || 'Помилка пошуку товару за штрих-кодом.';
       }
     })
     .catch((err: any) => {
       status.value = 'error';
       errorMessage.value =
         err.name === 'NotAllowedError'
-          ? (t('barcodeCameraDenied') || 'Доступ до камери відхилено. Надайте дозвіл у браузері.')
+          ? 'Доступ до камери відхилено. Надайте дозвіл у браузері.'
           : err.message || 'Не вдалося запустити камеру.';
     });
 };
@@ -147,7 +144,7 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
   const res = await fetch(`${STORE_URL}/${encodeURIComponent(barcode)}.json`);
   if (!res.ok) {
     if (res.status === 404) return null;
-    throw new Error(`Помилка OpenFoodFacts (${res.status})`);
+    throw new Error(`Помилка запиту OpenFoodFacts (${res.status})`);
   }
   const data = await res.json();
   if (data.status !== 1 || !data.product) return null;
@@ -163,14 +160,14 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
 <template>
   <transition name="fade">
     <div v-if="open" class="modal-overlay" @click.self="emit('close')">
-      <div class="modal-card nordic-card">
+      <div class="scanner-modal-content">
         <div class="modal-header">
-          <div class="header-title-box">
-            <ScanBarcode :size="18" />
-            <div>
-              <h3>{{ t('barcodeScannerTitle') || 'Сканер штрих-кодів' }}</h3>
-              <p class="header-sub">{{ t('barcodeScannerDesc') || 'Наведіть камеру на штрих-код' }}</p>
-            </div>
+          <div class="header-icon">
+            <ScanBarcode :size="20" />
+          </div>
+          <div>
+            <h3>Сканер штрих-кодів</h3>
+            <p>Наведіть камеру на штрих-код товару</p>
           </div>
           <button class="close-btn" @click="emit('close')">
             <X :size="18" />
@@ -181,26 +178,26 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
           <video ref="videoRef" class="video-element" autoplay muted playsinline />
 
           <div v-if="status === 'lookup'" class="video-overlay">
-            <Loader2 :size="28" class="spin-icon" />
-            <span>{{ t('barcodeLookupLoading') || 'Пошук в базі OpenFoodFacts...' }}</span>
+            <Loader2 :size="32" class="animate-spin orange-icon" />
+            <span>Пошук у базі OpenFoodFacts...</span>
           </div>
 
           <div v-if="status === 'scanning'" class="scan-pill">
-            <Camera :size="13" />
-            <span>{{ t('barcodeScanning') || 'Сканування...' }}</span>
+            <Camera :size="14" />
+            <span>Сканування...</span>
           </div>
         </div>
 
         <div v-if="errorMessage" class="error-banner">
-          <X :size="15" />
+          <X :size="16" class="shrink-0" />
           <span>{{ errorMessage }}</span>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-secondary btn-sm" @click="emit('close')">{{ t('actionCancel') || 'Скасувати' }}</button>
-          <button v-if="status === 'error'" type="button" class="btn-primary btn-sm" @click="retry">
-            <RefreshCw :size="14" />
-            <span>{{ t('actionRetry') || 'Спробувати знову' }}</span>
+          <button type="button" class="btn-secondary" @click="emit('close')">Скасувати</button>
+          <button v-if="status === 'error'" type="button" class="btn-primary" @click="retry">
+            <RefreshCw :size="16" />
+            <span>Спробувати знову</span>
           </button>
         </div>
       </div>
@@ -213,7 +210,7 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -221,47 +218,61 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
   padding: 16px;
 }
 
-.modal-card {
+.scanner-modal-content {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   width: 100%;
   max-width: 440px;
-  padding: 18px;
+  padding: 20px;
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  box-shadow: var(--shadow-lg);
+  gap: 16px;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-subtle);
+  gap: 12px;
+  position: relative;
 }
 
-.header-title-box {
+.header-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
 }
 
-.header-title-box h3 {
-  font-size: 0.95rem;
-  font-weight: 600;
+.modal-header h3 {
+  font-size: 1.1rem;
+  font-weight: 800;
   margin: 0;
 }
 
-.header-sub {
-  font-size: 0.74rem;
+.modal-header p {
+  font-size: 0.8rem;
   color: var(--text-muted);
   margin: 2px 0 0 0;
+}
+
+.close-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: var(--text-secondary);
 }
 
 .video-wrapper {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-md);
   overflow: hidden;
   background: #000000;
 }
@@ -280,52 +291,68 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   color: #ffffff;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 .scan-pill {
   position: absolute;
-  bottom: 10px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 20px;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   color: #ffffff;
-  font-size: 0.74rem;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .error-banner {
-  padding: 8px 12px;
-  border-radius: var(--radius-xs);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
   background: var(--status-expired-bg);
   color: var(--status-expired);
-  border: 1px solid var(--status-expired-border);
   font-size: 0.8rem;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
 }
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-subtle);
+  gap: 10px;
 }
 
-.spin-icon {
-  animation: spin 1s linear infinite;
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  background: var(--accent-orange);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85rem;
 }
 
-@keyframes spin {
-  100% { transform: rotate(360deg); }
+.btn-secondary {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  background: var(--border-subtle);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.orange-icon {
+  color: var(--accent-orange);
 }
 </style>

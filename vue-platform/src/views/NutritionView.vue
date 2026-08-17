@@ -2,8 +2,8 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useNutritionStore, type NutritionLog } from '@/stores/nutrition';
 import { useProductStore } from '@/stores/product';
-import { useI18n } from '@/i18n';
 import { 
+  Activity, 
   Flame, 
   Plus, 
   Settings, 
@@ -23,7 +23,6 @@ import {
 
 const nutritionStore = useNutritionStore();
 const productStore = useProductStore();
-const { t } = useI18n();
 
 const selectedDate = ref(new Date().toISOString().split('T')[0]);
 
@@ -36,7 +35,7 @@ const selectedProductId = ref<number | null>(null);
 const foodName = ref('');
 const mealType = ref('breakfast');
 const quantity = ref('100');
-const unit = ref('г');
+const unit = ref('g');
 const calories = ref('0');
 const protein = ref('0');
 const fat = ref('0');
@@ -94,38 +93,31 @@ const carbsPercent = computed(() => {
 });
 
 const mealsOrder = ['breakfast', 'lunch', 'dinner', 'snack'];
-const localizedMealLabels: Record<string, string> = {
-  breakfast: 'Сніданок',
-  lunch: 'Обід',
-  dinner: 'Вечеря',
-  snack: 'Перекус'
-};
-
 const groupedLogs = computed(() => {
   const logs = nutritionStore.currentData?.logs ?? [];
   return mealsOrder.map((mType) => ({
     type: mType,
-    label: localizedMealLabels[mType] || mType,
     items: logs.filter((l) => l.mealType === mType)
   }));
 });
 
-const getMealIcon = (type: string) => {
+const getMealLabel = (type: string) => {
   switch (type) {
-    case 'breakfast': return Coffee;
-    case 'lunch': return Soup;
-    case 'dinner': return Salad;
-    default: return Cookie;
+    case 'breakfast': return 'Сніданок';
+    case 'lunch': return 'Обід';
+    case 'dinner': return 'Вечеря';
+    case 'snack': return 'Перекус';
+    default: return type;
   }
 };
 
-const openAddModal = (mType = 'breakfast') => {
+const openAddModal = () => {
   editingLog.value = null;
   selectedProductId.value = null;
   foodName.value = '';
-  mealType.value = mType;
+  mealType.value = 'breakfast';
   quantity.value = '100';
-  unit.value = 'г';
+  unit.value = 'g';
   calories.value = '0';
   protein.value = '0';
   fat.value = '0';
@@ -138,12 +130,12 @@ const openEditModal = (log: NutritionLog) => {
   selectedProductId.value = null;
   foodName.value = log.foodName;
   mealType.value = log.mealType;
-  quantity.value = log.quantity?.toString() ?? '100';
-  unit.value = log.unit ?? 'г';
-  calories.value = log.calories?.toString() ?? '0';
-  protein.value = log.protein?.toString() ?? '0';
-  fat.value = log.fat?.toString() ?? '0';
-  carbs.value = log.carbs?.toString() ?? '0';
+  quantity.value = log.quantity?.toString() ?? '1';
+  unit.value = log.unit ?? 'порція';
+  calories.value = log.calories.toString();
+  protein.value = log.protein.toString();
+  fat.value = log.fat.toString();
+  carbs.value = log.carbs.toString();
   isLogModalOpen.value = true;
 };
 
@@ -213,7 +205,7 @@ const handleSubmitLog = async () => {
 };
 
 const handleDeleteLog = async (id: number) => {
-  if (!confirm(t('deleteConfirm') || 'Вилучити цей запис?')) return;
+  if (!confirm('Вилучити цей запис прийому їжі?')) return;
   await nutritionStore.deleteLog(id, selectedDate.value);
 };
 
@@ -234,161 +226,195 @@ const handleSubmitTargets = async () => {
 </script>
 
 <template>
-  <div class="nutrition-page fade-in">
+  <div class="nutrition-page">
     <!-- Header -->
     <header class="page-header">
-      <div>
-        <h2 class="section-heading">{{ t('navNutrition') }}</h2>
-        <p class="section-subheading">{{ t('dashboardQuickNutritionDesc') }}</p>
+      <div class="header-titles">
+        <div class="badge-pill">
+          <Activity :size="14" />
+          <span>Щоденник харчування</span>
+        </div>
+        <h1 class="page-title">Трекер калорій</h1>
+        <p class="page-subtitle">Відстежуйте споживання калорій, білків, жирів та вуглеводів за день</p>
       </div>
 
       <div class="header-actions">
-        <button class="btn-secondary btn-sm" :title="t('targetsModalTitle') || 'Цілі КБЖВ'" @click="openTargetsModal">
-          <Settings :size="15" />
-          <span>{{ t('targetsModalTitle') || 'Цілі КБЖВ' }}</span>
+        <button class="btn-icon" title="Налаштувати цілі" @click="openTargetsModal">
+          <Settings :size="18" />
         </button>
-        <button class="btn-primary btn-sm" @click="openAddModal()">
-          <Plus :size="16" />
-          <span>{{ t('nutritionAddMeal') || 'Додати прийом їжі' }}</span>
+        <button class="btn-primary" @click="openAddModal">
+          <Plus :size="18" />
+          <span>Додати прийом їжі</span>
         </button>
       </div>
     </header>
 
-    <!-- Date Navigation -->
-    <div class="date-bar nordic-card">
+    <!-- Date Navigation Bar -->
+    <div class="date-bar">
       <button class="date-nav-btn" @click="handlePrevDay">
-        <ChevronLeft :size="16" />
+        <ChevronLeft :size="18" />
       </button>
       <div class="date-display">
-        <Calendar :size="14" class="date-icon" />
-        <span>{{ isToday ? ('Сьогодні, ' + selectedDate) : selectedDate }}</span>
+        <Calendar :size="16" class="date-icon" />
+        <span>{{ isToday ? 'Сьогодні (' + selectedDate + ')' : selectedDate }}</span>
       </div>
       <button class="date-nav-btn" @click="handleNextDay">
-        <ChevronRight :size="16" />
+        <ChevronRight :size="18" />
       </button>
     </div>
 
-    <!-- Summary Overview -->
-    <div class="summary-grid">
-      <!-- Main Calories Card -->
-      <div class="nordic-card cal-main-card">
-        <div class="cal-header">
+    <!-- Main Dashboard Grid -->
+    <div v-if="nutritionStore.loading && !nutritionStore.currentData" class="loading-state">
+      <Loader2 :size="32" class="animate-spin" />
+    </div>
+
+    <div v-else class="dashboard-grid">
+      <!-- Calories Main Ring Card -->
+      <div class="calories-card card">
+        <div class="calories-info">
           <div class="card-tag">
-            <Flame :size="15" />
+            <Flame :size="16" class="orange-icon" />
             <span>Калорії</span>
           </div>
-          <span class="goal-sub">Ціль: {{ targets.calories || 2000 }} кКал</span>
+          <div class="calories-num">
+            {{ summary.calories }}
+            <span class="unit-text">кКал</span>
+          </div>
+          <p class="goal-text">
+            <template v-if="targets.calories">Ціль: {{ targets.calories }} кКал</template>
+            <template v-else>Ціль не встановлено</template>
+          </p>
         </div>
 
-        <div class="cal-number-row">
-          <span class="cal-value">{{ summary.calories }}</span>
-          <span class="cal-unit">кКал</span>
+        <div class="ring-wrapper">
+          <svg class="progress-ring" viewBox="0 0 36 36">
+            <path
+              class="ring-bg"
+              stroke-width="3.5"
+              stroke="currentColor"
+              fill="none"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            />
+            <path
+              class="ring-progress"
+              stroke-width="3.5"
+              :stroke-dasharray="`${calPercent}, 100`"
+              stroke-linecap="round"
+              stroke="currentColor"
+              fill="none"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            />
+          </svg>
+          <div class="ring-label">{{ calPercent }}%</div>
         </div>
-
-        <!-- Progress Bar -->
-        <div class="progress-track">
-          <div class="progress-fill fill-cal" :style="{ width: `${calPercent}%` }" />
-        </div>
-        <span class="pct-text">{{ calPercent }}% від денної норми</span>
       </div>
 
-      <!-- Macros Summary Card -->
-      <div class="nordic-card macros-summary-card">
-        <div class="macro-stat-row">
-          <div class="stat-info">
-            <span class="macro-name prot">Білки</span>
-            <span class="macro-vals"><strong>{{ Math.round(summary.protein) }}г</strong> / {{ targets.protein || 120 }}г</span>
+      <!-- Macros Mini Grid -->
+      <div class="macros-grid">
+        <!-- Protein -->
+        <div class="macro-card card protein-card">
+          <div class="macro-title">Білки</div>
+          <div class="macro-val">
+            {{ Math.round(summary.protein) }}<span class="macro-unit">г</span>
           </div>
-          <div class="progress-track">
-            <div class="progress-fill fill-prot" :style="{ width: `${protPercent}%` }" />
-          </div>
-        </div>
-
-        <div class="macro-stat-row">
-          <div class="stat-info">
-            <span class="macro-name fat">Жири</span>
-            <span class="macro-vals"><strong>{{ Math.round(summary.fat) }}г</strong> / {{ targets.fat || 65 }}г</span>
-          </div>
-          <div class="progress-track">
-            <div class="progress-fill fill-fat" :style="{ width: `${fatPercent}%` }" />
+          <div class="macro-goal">Ціль: {{ targets.protein ?? '—' }}г</div>
+          <div class="macro-bar-bg">
+            <div class="macro-bar-fill protein-fill" :style="{ width: `${protPercent}%` }" />
           </div>
         </div>
 
-        <div class="macro-stat-row">
-          <div class="stat-info">
-            <span class="macro-name carbs">Вуглеводи</span>
-            <span class="macro-vals"><strong>{{ Math.round(summary.carbs) }}г</strong> / {{ targets.carbs || 200 }}г</span>
+        <!-- Fat -->
+        <div class="macro-card card fat-card">
+          <div class="macro-title">Жири</div>
+          <div class="macro-val">
+            {{ Math.round(summary.fat) }}<span class="macro-unit">г</span>
           </div>
-          <div class="progress-track">
-            <div class="progress-fill fill-carbs" :style="{ width: `${carbsPercent}%` }" />
+          <div class="macro-goal">Ціль: {{ targets.fat ?? '—' }}г</div>
+          <div class="macro-bar-bg">
+            <div class="macro-bar-fill fat-fill" :style="{ width: `${fatPercent}%` }" />
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Meal Groups List -->
-    <div class="meal-groups-container">
-      <div v-for="group in groupedLogs" :key="group.type" class="nordic-card meal-group-card">
-        <div class="group-header">
-          <div class="group-title-row">
-            <component :is="getMealIcon(group.type)" :size="16" class="group-icon" />
-            <h3>{{ group.label }}</h3>
-            <span class="group-count">({{ group.items.length }})</span>
+        <!-- Carbs -->
+        <div class="macro-card card carbs-card">
+          <div class="macro-title">Вуглеводи</div>
+          <div class="macro-val">
+            {{ Math.round(summary.carbs) }}<span class="macro-unit">г</span>
           </div>
-          <button class="add-meal-icon-btn" title="Додати в цей прийом" @click="openAddModal(group.type)">
-            <Plus :size="14" />
-            <span>Додати</span>
-          </button>
-        </div>
-
-        <div v-if="group.items.length === 0" class="empty-group">
-          <span>Немає записів для цього прийому їжі.</span>
-        </div>
-
-        <div v-else class="logs-list">
-          <div v-for="log in group.items" :key="log.id" class="log-item-row">
-            <div class="log-info">
-              <span class="log-name">{{ log.foodName }}</span>
-              <span v-if="log.quantity" class="log-qty">{{ log.quantity }} {{ log.unit || '' }}</span>
-            </div>
-
-            <div class="log-macros">
-              <span class="log-kcal">{{ log.calories }} кКал</span>
-              <span class="macro-mini">Б: {{ Math.round(log.protein) }}г</span>
-              <span class="macro-mini">Ж: {{ Math.round(log.fat) }}г</span>
-              <span class="macro-mini">В: {{ Math.round(log.carbs) }}г</span>
-            </div>
-
-            <div class="log-actions">
-              <button class="icon-btn" title="Редагувати" @click="openEditModal(log)">
-                <Edit2 :size="13" />
-              </button>
-              <button class="icon-btn danger" title="Видалити" @click="handleDeleteLog(log.id)">
-                <Trash2 :size="13" />
-              </button>
-            </div>
+          <div class="macro-goal">Ціль: {{ targets.carbs ?? '—' }}г</div>
+          <div class="macro-bar-bg">
+            <div class="macro-bar-fill carbs-fill" :style="{ width: `${carbsPercent}%` }" />
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal: Add / Edit Food Log -->
+    <!-- Food Diary Groups -->
+    <section class="diary-section">
+      <h2 class="section-title">Прийоми їжі</h2>
+
+      <div class="meals-list">
+        <div v-for="group in groupedLogs" :key="group.type" class="meal-group">
+          <div class="meal-header">
+            <div class="meal-title">
+              <Coffee v-if="group.type === 'breakfast'" :size="18" class="meal-icon" />
+              <Soup v-else-if="group.type === 'lunch'" :size="18" class="meal-icon" />
+              <Salad v-else-if="group.type === 'dinner'" :size="18" class="meal-icon" />
+              <Cookie v-else :size="18" class="meal-icon" />
+              <span>{{ getMealLabel(group.type) }}</span>
+            </div>
+            <span v-if="group.items.length > 0" class="meal-calories">
+              {{ group.items.reduce((acc, i) => acc + i.calories, 0) }} кКал
+            </span>
+          </div>
+
+          <div v-if="group.items.length === 0" class="empty-meal-hint">
+            Записів немає
+          </div>
+
+          <div v-else class="logs-card card">
+            <div v-for="log in group.items" :key="log.id" class="log-item">
+              <div class="log-info">
+                <div class="log-name">{{ log.foodName }}</div>
+                <div class="log-details">
+                  {{ log.quantity }} {{ log.unit ?? 'порція' }} · Б: {{ Math.round(log.protein) }}г · Ж: {{ Math.round(log.fat) }}г · В: {{ Math.round(log.carbs) }}г
+                </div>
+              </div>
+
+              <div class="log-right">
+                <span class="log-kcal">{{ log.calories }} кКал</span>
+                <div class="log-actions">
+                  <button class="action-btn" title="Редагувати" @click="openEditModal(log)">
+                    <Edit2 :size="16" />
+                  </button>
+                  <button class="action-btn danger" title="Вилучити" @click="handleDeleteLog(log.id)">
+                    <Trash2 :size="16" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Modal: Log Food -->
     <transition name="fade">
       <div v-if="isLogModalOpen" class="modal-overlay" @click.self="isLogModalOpen = false">
-        <div class="modal-card nordic-card">
+        <div class="modal-content">
           <div class="modal-header">
-            <h3>{{ editingLog ? 'Редагувати запис' : 'Додати їжу в щоденник' }}</h3>
-            <button class="close-btn" @click="isLogModalOpen = false">
+            <h3>{{ editingLog ? 'Редагувати прийом їжі' : 'Додати прийом їжі' }}</h3>
+            <button class="close-modal-btn" @click="isLogModalOpen = false">
               <X :size="18" />
             </button>
           </div>
 
-          <form @submit.prevent="handleSubmitLog" class="modal-body">
-            <!-- Auto fill from fridge -->
+          <form @submit.prevent="handleSubmitLog" class="modal-form">
+            <!-- Select from active fridge option (only on Add) -->
             <div v-if="!editingLog && productStore.products.length > 0" class="form-group">
-              <label class="form-label flex-label">
-                <Refrigerator :size="14" />
-                <span>Вибрати з наявних у холодильнику</span>
+              <label class="form-label font-icon-label">
+                <Refrigerator :size="16" class="orange-icon" />
+                Вибрати з холодильника
               </label>
               <select class="form-input" @change="handleSelectFridgeProduct">
                 <option value="none">-- Ручне введення --</option>
@@ -400,11 +426,11 @@ const handleSubmitTargets = async () => {
 
             <div class="form-group">
               <label class="form-label">Назва страви / продукту</label>
-              <input v-model="foodName" type="text" class="form-input" placeholder="Наприклад: Вівсянка з ягодами" required />
+              <input v-model="foodName" type="text" class="form-input" placeholder="Наприклад: Овсянка з яблуком" required />
             </div>
 
             <div class="form-row">
-              <div class="form-group flex-1">
+              <div class="form-group">
                 <label class="form-label">Прийом їжі</label>
                 <select v-model="mealType" class="form-input">
                   <option value="breakfast">Сніданок</option>
@@ -414,39 +440,49 @@ const handleSubmitTargets = async () => {
                 </select>
               </div>
 
-              <div class="form-group flex-1">
-                <label class="form-label">Кількість та од.</label>
-                <div class="qty-unit-row">
+              <div class="form-row-inner">
+                <div class="form-group">
+                  <label class="form-label">Кількість</label>
                   <input v-model="quantity" type="number" step="0.1" min="0" class="form-input" />
-                  <input v-model="unit" type="text" class="form-input unit-input" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Од.</label>
+                  <input v-model="unit" type="text" class="form-input" />
                 </div>
               </div>
             </div>
 
-            <div class="macros-grid">
-              <div class="form-group">
-                <label class="form-label">Ккал</label>
-                <input v-model="calories" type="number" min="0" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Білки (г)</label>
-                <input v-model="protein" type="number" step="0.1" min="0" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Жири (г)</label>
-                <input v-model="fat" type="number" step="0.1" min="0" class="form-input" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Вуглеводи (г)</label>
-                <input v-model="carbs" type="number" step="0.1" min="0" class="form-input" />
+            <div v-if="selectedProductId" class="fridge-warning">
+              ⚠️ При збереженні кількість продукту в холодильнику буде автоматично зменшена на {{ quantity }} {{ unit }}.
+            </div>
+
+            <div class="macros-inputs-block">
+              <div class="block-title">Поживна цінність</div>
+              <div class="macros-inputs-grid">
+                <div class="form-group">
+                  <label class="form-label">Ккал</label>
+                  <input v-model="calories" type="number" min="0" class="form-input text-center" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label protein-text">Білки (г)</label>
+                  <input v-model="protein" type="number" step="0.1" min="0" class="form-input text-center" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label fat-text">Жири (г)</label>
+                  <input v-model="fat" type="number" step="0.1" min="0" class="form-input text-center" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label carbs-text">Вуглеводи (г)</label>
+                  <input v-model="carbs" type="number" step="0.1" min="0" class="form-input text-center" />
+                </div>
               </div>
             </div>
 
             <div class="modal-footer">
-              <button type="button" class="btn-secondary btn-sm" @click="isLogModalOpen = false">Скасувати</button>
-              <button type="submit" class="btn-primary btn-sm" :disabled="submitting">
-                <Loader2 v-if="submitting" :size="14" class="spin-icon" />
-                <span>{{ editingLog ? 'Оновити' : 'Додати' }}</span>
+              <button type="button" class="btn-secondary" @click="isLogModalOpen = false">Скасувати</button>
+              <button type="submit" class="btn-primary" :disabled="submitting">
+                <Loader2 v-if="submitting" :size="16" class="animate-spin" />
+                <span>Зберегти</span>
               </button>
             </div>
           </form>
@@ -454,42 +490,42 @@ const handleSubmitTargets = async () => {
       </div>
     </transition>
 
-    <!-- Modal: Goals / Targets -->
+    <!-- Modal: Nutrition Goals/Targets -->
     <transition name="fade">
       <div v-if="isTargetsModalOpen" class="modal-overlay" @click.self="isTargetsModalOpen = false">
-        <div class="modal-card nordic-card">
+        <div class="modal-content">
           <div class="modal-header">
-            <h3>Денні цілі калорій та БЖУ</h3>
-            <button class="close-btn" @click="isTargetsModalOpen = false">
+            <h3>Денні цілі КБЖВ</h3>
+            <button class="close-modal-btn" @click="isTargetsModalOpen = false">
               <X :size="18" />
             </button>
           </div>
 
-          <form @submit.prevent="handleSubmitTargets" class="modal-body">
+          <form @submit.prevent="handleSubmitTargets" class="modal-form">
             <div class="form-group">
-              <label class="form-label">Ціль калорій (кКал / день)</label>
-              <input v-model="targetCalories" type="number" min="0" class="form-input" required />
+              <label class="form-label font-bold">Денна ціль калорій (кКал)</label>
+              <input v-model="targetCalories" type="number" min="0" class="form-input font-bold" required />
             </div>
 
-            <div class="macros-grid">
+            <div class="macros-inputs-grid">
               <div class="form-group">
-                <label class="form-label">Білки (г)</label>
-                <input v-model="targetProtein" type="number" min="0" class="form-input" />
+                <label class="form-label protein-text">Білки (г)</label>
+                <input v-model="targetProtein" type="number" min="0" class="form-input text-center" />
               </div>
               <div class="form-group">
-                <label class="form-label">Жири (г)</label>
-                <input v-model="targetFat" type="number" min="0" class="form-input" />
+                <label class="form-label fat-text">Жири (г)</label>
+                <input v-model="targetFat" type="number" min="0" class="form-input text-center" />
               </div>
               <div class="form-group">
-                <label class="form-label">Вуглеводи (г)</label>
-                <input v-model="targetCarbs" type="number" min="0" class="form-input" />
+                <label class="form-label carbs-text">Вуглеводи (г)</label>
+                <input v-model="targetCarbs" type="number" min="0" class="form-input text-center" />
               </div>
             </div>
 
             <div class="modal-footer">
-              <button type="button" class="btn-secondary btn-sm" @click="isTargetsModalOpen = false">Скасувати</button>
-              <button type="submit" class="btn-primary btn-sm" :disabled="submitting">
-                <Loader2 v-if="submitting" :size="14" class="spin-icon" />
+              <button type="button" class="btn-secondary" @click="isTargetsModalOpen = false">Скасувати</button>
+              <button type="submit" class="btn-primary" :disabled="submitting">
+                <Loader2 v-if="submitting" :size="16" class="animate-spin" />
                 <span>Зберегти цілі</span>
               </button>
             </div>
@@ -504,292 +540,396 @@ const handleSubmitTargets = async () => {
 .nutrition-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
   flex-wrap: wrap;
+  gap: 16px;
 }
 
-.section-heading {
-  font-size: 1.15rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.page-title {
+  font-size: 1.85rem;
+  font-weight: 800;
   color: var(--text-primary);
+  margin: 0;
 }
 
-.section-subheading {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  margin-top: 2px;
+.page-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 4px 0 0 0;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.btn-sm {
-  padding: 7px 12px;
-  font-size: 0.82rem;
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  background: var(--accent-orange);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px var(--accent-orange-glow);
+  transition: var(--transition-fast);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.btn-secondary {
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  background: var(--border-subtle);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.btn-icon:hover {
+  color: var(--accent-orange);
+  border-color: var(--accent-orange);
 }
 
 .date-bar {
-  padding: 8px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  max-width: 360px;
+  margin: 0 auto;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  width: 100%;
 }
 
 .date-nav-btn {
-  padding: 4px;
-  border-radius: var(--radius-xs);
-  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
   transition: var(--transition-fast);
 }
 
 .date-nav-btn:hover {
+  background: var(--border-subtle);
   color: var(--text-primary);
-  background: var(--bg-subtle);
 }
 
 .date-display {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
   color: var(--text-primary);
 }
 
-.summary-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
+.date-icon {
+  color: var(--accent-orange);
 }
 
-@media (min-width: 680px) {
-  .summary-grid {
-    grid-template-columns: 1fr 1.3fr;
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+  color: var(--accent-orange);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-.cal-main-card {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
 }
 
-.cal-header {
+.calories-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .card-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.goal-sub {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.cal-number-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-orange);
 }
 
-.cal-value {
-  font-size: 1.8rem;
-  font-weight: 700;
+.calories-num {
+  font-size: 2.2rem;
+  font-weight: 900;
   color: var(--text-primary);
-  line-height: 1;
+  line-height: 1.1;
+  margin-top: 4px;
 }
 
-.cal-unit {
+.unit-text {
   font-size: 0.85rem;
+  font-weight: 600;
   color: var(--text-muted);
+  margin-left: 4px;
 }
 
-.progress-track {
+.goal-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.ring-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.progress-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  color: var(--border-subtle);
+}
+
+.ring-progress {
+  color: var(--accent-orange);
+  transition: stroke-dasharray 0.5s ease;
+}
+
+.ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.macros-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.macro-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14px;
+}
+
+.macro-title {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.protein-card .macro-title { color: #10b981; }
+.fat-card .macro-title { color: #f59e0b; }
+.carbs-card .macro-title { color: #06b6d4; }
+
+.macro-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 6px 0 2px 0;
+}
+
+.macro-unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.macro-goal {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.macro-bar-bg {
   width: 100%;
   height: 6px;
-  background: var(--bg-subtle);
   border-radius: 4px;
+  background: var(--border-subtle);
   overflow: hidden;
 }
 
-.progress-fill {
+.macro-bar-fill {
   height: 100%;
   border-radius: 4px;
-  transition: width 0.3s ease;
+  transition: width 0.4s ease;
 }
 
-.fill-cal { background: var(--primary); }
-.fill-prot { background: var(--status-fresh); }
-.fill-fat { background: var(--status-warning); }
-.fill-carbs { background: var(--text-muted); }
+.protein-fill { background: #10b981; }
+.fat-fill { background: #f59e0b; }
+.carbs-fill { background: #06b6d4; }
 
-.pct-text {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
-.macros-summary-card {
-  padding: 16px;
+.diary-section {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
-  gap: 12px;
+  gap: 14px;
 }
 
-.macro-stat-row {
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.meals-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 16px;
 }
 
-.stat-info {
+.meal-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.78rem;
-}
-
-.macro-name {
-  font-weight: 600;
-}
-
-.macro-name.prot { color: var(--status-fresh); }
-.macro-name.fat { color: var(--status-warning); }
-.macro-name.carbs { color: var(--text-secondary); }
-
-.meal-groups-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.meal-group-card {
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.group-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
-.group-title-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.group-title-row h3 {
-  font-size: 0.92rem;
-  font-weight: 600;
-}
-
-.group-count {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.add-meal-icon-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: var(--radius-xs);
-  background: var(--bg-subtle);
-  color: var(--text-secondary);
-  font-size: 0.74rem;
-  transition: var(--transition-fast);
-}
-
-.add-meal-icon-btn:hover {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.empty-group {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  padding: 6px 0;
-}
-
-.logs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.log-item-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 7px 10px;
-  background: var(--bg-subtle);
-  border-radius: var(--radius-xs);
-  border: 1px solid var(--border-subtle);
-  font-size: 0.82rem;
-  gap: 10px;
-}
-
-.log-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-  min-width: 0;
-}
-
-.log-name {
-  font-weight: 500;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.log-qty {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
-.log-macros {
+.meal-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.74rem;
-}
-
-.log-kcal {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 0.95rem;
   color: var(--text-primary);
 }
 
-.macro-mini {
+.meal-icon {
+  color: var(--accent-orange);
+}
+
+.meal-calories {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--accent-orange);
+}
+
+.empty-meal-hint {
+  font-size: 0.8rem;
   color: var(--text-muted);
+  font-style: italic;
+  padding: 8px 12px;
+}
+
+.logs-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.log-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.log-item:last-child {
+  border-bottom: none;
+}
+
+.log-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.log-details {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.log-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.log-kcal {
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--text-primary);
 }
 
 .log-actions {
@@ -798,28 +938,29 @@ const handleSubmitTargets = async () => {
   gap: 4px;
 }
 
-.icon-btn {
-  color: var(--text-muted);
-  padding: 3px;
-  border-radius: 3px;
+.action-btn {
+  padding: 6px;
+  border-radius: 6px;
+  color: var(--text-secondary);
   transition: var(--transition-fast);
 }
 
-.icon-btn:hover {
+.action-btn:hover {
   color: var(--text-primary);
-  background: var(--bg-surface);
+  background: var(--border-subtle);
 }
 
-.icon-btn.danger:hover {
+.action-btn.danger:hover {
   color: var(--status-expired);
+  background: var(--status-expired-bg);
 }
 
-/* Modal */
+/* Modals */
 .modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -827,56 +968,107 @@ const handleSubmitTargets = async () => {
   padding: 16px;
 }
 
-.modal-card {
+.modal-content {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   width: 100%;
-  max-width: 460px;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-shadow: var(--shadow-lg);
+  max-width: 480px;
+  padding: 24px;
+  box-shadow: var(--shadow-card);
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 16px;
 }
 
 .modal-header h3 {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin: 0;
 }
 
-.modal-body {
+.close-modal-btn {
+  color: var(--text-secondary);
+}
+
+.modal-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
-.flex-label {
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.font-icon-label {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.protein-text { color: #10b981; }
+.fat-text { color: #f59e0b; }
+.carbs-text { color: #06b6d4; }
+
+.form-input {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
 .form-row {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.qty-unit-row {
-  display: flex;
-  gap: 6px;
+.form-row-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
-.unit-input {
-  width: 60px;
+.fridge-warning {
+  font-size: 0.8rem;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
-.macros-grid {
+.macros-inputs-block {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 12px;
+}
+
+.block-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--accent-orange);
+  margin-bottom: 10px;
+}
+
+.macros-inputs-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
@@ -884,10 +1076,16 @@ const handleSubmitTargets = async () => {
 
 .modal-footer {
   display: flex;
-  align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-subtle);
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.orange-icon {
+  color: var(--accent-orange);
 }
 </style>

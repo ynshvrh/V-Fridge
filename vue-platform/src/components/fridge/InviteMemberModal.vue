@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useFridgeStore } from '@/stores/fridge';
-import { useI18n } from '@/i18n';
 import { UserPlus, X, Send, CheckCircle2, AlertCircle } from '@lucide/vue';
 
 const props = defineProps<{
@@ -14,7 +13,6 @@ const emit = defineEmits<{
 }>();
 
 const fridgeStore = useFridgeStore();
-const { t } = useI18n();
 
 const email = ref('');
 const isSubmitting = ref(false);
@@ -27,7 +25,7 @@ const handleSubmit = async () => {
   const success = await fridgeStore.createInvite(props.fridgeId, email.value.trim());
   isSubmitting.value = false;
   if (success) {
-    successMessage.value = `${t('inviteSentSuccess') || 'Запрошення надіслано на'} ${email.value.trim()}!`;
+    successMessage.value = `Invite email sent to ${email.value.trim()}! Valid for 7 days.`;
     email.value = '';
   }
 };
@@ -35,11 +33,11 @@ const handleSubmit = async () => {
 
 <template>
   <div class="modal-backdrop" @click.self="emit('close')">
-    <div class="modal-card nordic-card fade-in">
+    <div class="glass-card modal-card fade-in">
       <div class="modal-header">
         <div class="header-title">
-          <UserPlus :size="18" class="header-icon" />
-          <h3>{{ t('inviteModalTitle') || 'Запросити учасника до' }} "{{ fridgeName }}"</h3>
+          <UserPlus :size="20" class="header-icon" />
+          <h3>Invite Member to "{{ fridgeName }}"</h3>
         </div>
         <button class="close-btn" @click="emit('close')">
           <X :size="18" />
@@ -47,18 +45,18 @@ const handleSubmit = async () => {
       </div>
 
       <div v-if="successMessage" class="success-banner">
-        <CheckCircle2 :size="15" />
+        <CheckCircle2 :size="18" />
         <span>{{ successMessage }}</span>
       </div>
 
       <div v-if="fridgeStore.error" class="error-banner">
-        <AlertCircle :size="15" />
+        <AlertCircle :size="18" />
         <span>{{ fridgeStore.error }}</span>
       </div>
 
       <form @submit.prevent="handleSubmit" class="modal-body">
         <div class="form-group">
-          <label class="form-label" for="invite-email">{{ t('inviteEmailLabel') || 'Email адреса користувача' }}</label>
+          <label class="form-label" for="invite-email">Recipient Email Address</label>
           <input
             id="invite-email"
             v-model="email"
@@ -70,10 +68,10 @@ const handleSubmit = async () => {
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-secondary btn-sm" @click="emit('close')">{{ t('actionCancel') || 'Закрити' }}</button>
-          <button type="submit" class="btn-primary btn-sm" :disabled="isSubmitting">
-            <Send :size="14" />
-            <span>{{ isSubmitting ? (t('actionSaving') || 'Надсилання...') : (t('sendInviteBtn') || 'Надіслати запрошення') }}</span>
+          <button type="button" class="btn-secondary" @click="emit('close')">Done</button>
+          <button type="submit" class="btn-primary" :disabled="isSubmitting">
+            <Send :size="16" />
+            <span>{{ isSubmitting ? 'Sending...' : 'Send Invite' }}</span>
           </button>
         </div>
       </form>
@@ -84,85 +82,74 @@ const handleSubmit = async () => {
 <style scoped>
 .modal-backdrop {
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(4px);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 20px;
 }
-
 .modal-card {
   width: 100%;
-  max-width: 420px;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-shadow: var(--shadow-lg);
+  max-width: 440px;
+  padding: 24px;
 }
-
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 20px;
 }
-
 .header-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
-
-.header-title h3 {
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
 .header-icon {
-  color: var(--text-muted);
+  color: var(--accent-orange);
 }
-
+.close-btn {
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+}
 .success-banner {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--status-fresh-bg);
-  border: 1px solid var(--status-fresh-border);
-  color: var(--status-fresh);
-  padding: 8px 12px;
-  border-radius: var(--radius-xs);
-  font-size: 0.8rem;
+  gap: 10px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: var(--accent-emerald);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  margin-bottom: 16px;
 }
-
 .error-banner {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--status-expired-bg);
-  border: 1px solid var(--status-expired-border);
-  color: var(--status-expired);
-  padding: 8px 12px;
-  border-radius: var(--radius-xs);
-  font-size: 0.8rem;
+  gap: 10px;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: var(--accent-rose);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  margin-bottom: 16px;
 }
-
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
-
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 4px;
-  padding-top: 10px;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 16px;
   border-top: 1px solid var(--border-subtle);
 }
 </style>

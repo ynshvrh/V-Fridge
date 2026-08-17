@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { useSavedRecipeStore, type SavedRecipe } from '@/stores/savedRecipes';
 import { useNutritionStore } from '@/stores/nutrition';
-import { useShoppingStore } from '@/stores/shopping';
-import { useI18n } from '@/i18n';
+import { api } from '@/api/client';
 import ChefChat from '@/components/chat/ChefChat.vue';
+import PlannerTab from '@/components/planner/PlannerTab.vue';
 import { 
+  ChefHat, 
+  Calendar, 
   Bookmark, 
   Search, 
   Trash2, 
@@ -15,16 +18,17 @@ import {
   ShoppingBasket, 
   Loader2, 
   BookOpen, 
-  X,
-  ChefHat
+  X 
 } from '@lucide/vue';
 
+const route = useRoute();
 const savedRecipeStore = useSavedRecipeStore();
 const nutritionStore = useNutritionStore();
-const shoppingStore = useShoppingStore();
-const { t } = useI18n();
 
-const showSavedDrawer = ref(false);
+// Check query param tab or default to 'chat'
+const initialTab = (route.query.tab as 'chat' | 'planner' | 'saved') || 'chat';
+const activeTab = ref<'chat' | 'planner' | 'saved'>(initialTab);
+
 const searchQuery = ref('');
 const selectedRecipe = ref<SavedRecipe | null>(null);
 const checkedIngredients = ref<Record<string, boolean>>({});
@@ -55,7 +59,7 @@ const openRecipeModal = (recipe: SavedRecipe) => {
 };
 
 const handleDeleteRecipe = async (id: number) => {
-  if (!confirm(t('recipeDeleteConfirm') || 'Вилучити цей збережений рецепт?')) return;
+  if (!confirm('Вилучити цей збережений рецепт?')) return;
   deletingId.value = id;
   try {
     await savedRecipeStore.deleteSavedRecipe(id);
@@ -84,7 +88,7 @@ const handleLogToTracker = async (recipe: SavedRecipe) => {
     });
     alert(`Страва "${recipe.name}" успішно додана у щоденник калорій!`);
   } catch (err: any) {
-    alert(err.error || 'Не вдалося записати в трекер.');
+    alert(err.error || 'Не вдалося зберегти в трекер.');
   } finally {
     loggingId.value = null;
   }
@@ -94,12 +98,19 @@ const handleImportIngredients = async (recipe: SavedRecipe) => {
   if (!recipe.ingredients || recipe.ingredients.length === 0) return;
   importingId.value = recipe.id;
   try {
-    for (const ing of recipe.ingredients) {
-      await shoppingStore.addItem({ name: ing, category: 'other' });
-    }
-    alert(t('ingredientsImportedSuccess') || `Інгредієнти успішно додано до списку покупок!`);
+    const gapItems = recipe.ingredients.map((ing) => ({
+      name: ing,
+      quantity: null,
+      unit: null,
+      category: 'other'
+    }));
+    const resp = await api.fetch<{ created: number; skipped: number }>('/meal-plan/import-gaps', {
+      method: 'POST',
+      body: JSON.stringify({ items: gapItems })
+    });
+    alert(`Додано в список покупок: ${resp.created} інгредієнтів (пропущено як існуючі: ${resp.skipped}).`);
   } catch (err: any) {
-    alert(err.error || 'Не вдалося експортувати інгредієнти.');
+    alert(err.error || 'Не вдалося експортувати інгредієнти у список покупок.');
   } finally {
     importingId.value = null;
   }
@@ -107,194 +118,212 @@ const handleImportIngredients = async (recipe: SavedRecipe) => {
 </script>
 
 <template>
-  <div class="recipes-view fade-in">
-    <!-- Header with Quick Action to Saved Recipes -->
-    <header class="view-header">
-      <div>
-        <h2 class="view-title">{{ t('navChef') }}</h2>
-        <p class="view-subtitle">{{ t('dashboardQuickChefDesc') }}</p>
+  <div class="recipe-page">
+    <!-- Top Consolidated Culinary Hub Navigation Bar -->
+    <div class="top-nav-bar">
+      <div class="tab-buttons">
+        <button
+          :class="['tab-btn', activeTab === 'chat' ? 'active' : '']"
+          @click="activeTab = 'chat'"
+        >
+          <ChefHat :size="18" />
+          <span>AI Шеф-чат</span>
+        </button>
+
+        <button
+          :class="['tab-btn', activeTab === 'planner' ? 'active' : '']"
+          @click="activeTab = 'planner'"
+        >
+          <Calendar :size="18" />
+          <span>Тижневий планер</span>
+        </button>
+
+        <button
+          :class="['tab-btn', activeTab === 'saved' ? 'active' : '']"
+          @click="activeTab = 'saved'"
+        >
+          <Bookmark :size="18" />
+          <span>Збережені рецепти</span>
+          <span v-if="savedRecipeStore.savedRecipes.length > 0" class="counter-badge">
+            {{ savedRecipeStore.savedRecipes.length }}
+          </span>
+        </button>
       </div>
-
-      <button
-        class="btn-secondary btn-sm"
-        :class="{ active: showSavedDrawer }"
-        @click="showSavedDrawer = !showSavedDrawer"
-      >
-        <Bookmark :size="15" />
-        <span>{{ t('savedRecipesTab') || 'Збережені рецепти' }}</span>
-        <span v-if="savedRecipeStore.savedRecipes.length > 0" class="badge-count">
-          {{ savedRecipeStore.savedRecipes.length }}
-        </span>
-      </button>
-    </header>
-
-    <!-- Main Content Area: Spacious AI Chat + Optional Saved Sidebar -->
-    <div class="studio-layout">
-      <!-- Chef Chat Studio (Takes maximum workspace) -->
-      <div class="chat-main-area">
-        <ChefChat />
-      </div>
-
-      <!-- Saved Recipes Side Panel (Desktop toggle / Drawer) -->
-      <transition name="slide-panel">
-        <aside v-if="showSavedDrawer" class="saved-sidebar nordic-card">
-          <div class="saved-sidebar-header">
-            <div class="sidebar-title-row">
-              <Bookmark :size="16" />
-              <h3>{{ t('savedRecipesTab') || 'Збережені рецепти' }}</h3>
-            </div>
-            <button class="close-sidebar-btn" @click="showSavedDrawer = false">
-              <X :size="16" />
-            </button>
-          </div>
-
-          <div class="saved-search-box">
-            <Search :size="14" class="search-icon" />
-            <input
-              v-model="searchQuery"
-              type="text"
-              class="saved-search-input"
-              :placeholder="t('searchPlaceholder') || 'Пошук рецептів...'"
-            />
-          </div>
-
-          <div v-if="savedRecipeStore.loading && savedRecipeStore.savedRecipes.length === 0" class="loading-box">
-            <Loader2 :size="24" class="spin-icon" />
-          </div>
-
-          <div v-else-if="filteredRecipes.length === 0" class="empty-saved-box">
-            <BookOpen :size="28" class="empty-icon" />
-            <p>{{ t('noSavedRecipes') || 'Немає збережених рецептів.' }}</p>
-          </div>
-
-          <div v-else class="saved-list">
-            <div
-              v-for="recipe in filteredRecipes"
-              :key="recipe.id"
-              class="saved-item-card"
-              @click="openRecipeModal(recipe)"
-            >
-              <div class="saved-item-top">
-                <h4 class="saved-item-name">{{ recipe.name }}</h4>
-                <button
-                  class="item-delete-btn"
-                  title="Видалити"
-                  @click.stop="handleDeleteRecipe(recipe.id)"
-                >
-                  <Trash2 :size="13" />
-                </button>
-              </div>
-
-              <p v-if="recipe.description" class="saved-item-desc">{{ recipe.description }}</p>
-
-              <div class="saved-item-meta">
-                <span class="meta-ing-count">{{ recipe.ingredients?.length || 0 }} інгредієнтів</span>
-                <span v-if="recipe.calories > 0" class="meta-kcal">
-                  <Flame :size="12" /> {{ recipe.calories }} кКал
-                </span>
-              </div>
-            </div>
-          </div>
-        </aside>
-      </transition>
     </div>
 
-    <!-- Recipe Detail Modal -->
+    <!-- Tab 1: AI Chef Chat -->
+    <div v-if="activeTab === 'chat'" class="tab-content">
+      <ChefChat />
+    </div>
+
+    <!-- Tab 2: Weekly Planner -->
+    <div v-else-if="activeTab === 'planner'" class="tab-content">
+      <PlannerTab />
+    </div>
+
+    <!-- Tab 3: Saved Recipes Gallery -->
+    <div v-else class="tab-content saved-recipes-tab">
+      <div class="search-bar-row">
+        <div class="search-input-wrapper">
+          <Search :size="16" class="search-icon" />
+          <input
+            v-model="searchQuery"
+            type="text"
+            class="search-input"
+            placeholder="Пошук збережених рецептів за назвою чи інгредієнтом..."
+          />
+        </div>
+        <span class="count-text">Збережено: {{ filteredRecipes.length }}</span>
+      </div>
+
+      <div v-if="savedRecipeStore.loading && savedRecipeStore.savedRecipes.length === 0" class="loading-state">
+        <Loader2 :size="32" class="animate-spin orange-icon" />
+      </div>
+
+      <div v-else-if="filteredRecipes.length === 0" class="empty-card card">
+        <BookOpen :size="40" class="empty-icon" />
+        <h3>Немає збережених рецептів</h3>
+        <p>Під час спілкування з AI Шефом натисніть кнопку "Зберегти рецепт", щоб вони з'явилися тут.</p>
+      </div>
+
+      <div v-else class="recipes-grid">
+        <div
+          v-for="recipe in filteredRecipes"
+          :key="recipe.id"
+          class="recipe-grid-card card"
+          @click="openRecipeModal(recipe)"
+        >
+          <div class="card-top">
+            <span class="recipe-badge">
+              <Bookmark :size="12" />
+              Рецепт
+            </span>
+            <span v-if="recipe.calories > 0" class="calories-badge">
+              <Flame :size="12" />
+              {{ recipe.calories }} кКал
+            </span>
+          </div>
+
+          <h4 class="card-title">{{ recipe.name }}</h4>
+          <p v-if="recipe.description" class="card-desc">{{ recipe.description }}</p>
+
+          <div class="card-footer">
+            <span>{{ recipe.ingredients?.length || 0 }} інгредієнтів</span>
+            <button
+              class="delete-btn"
+              title="Вилучити рецепт"
+              @click.stop="handleDeleteRecipe(recipe.id)"
+            >
+              <Trash2 :size="14" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Recipe Details Sheet -->
     <transition name="fade">
       <div v-if="selectedRecipe" class="modal-overlay" @click.self="selectedRecipe = null">
-        <div class="modal-card nordic-card">
-          <div class="modal-header">
-            <div class="badge badge-ai">
-              <ChefHat :size="12" />
-              <span>Рецепт</span>
+        <div class="drawer-modal">
+          <div class="drawer-header">
+            <div class="badge">
+              <Bookmark :size="14" />
+              <span>Збережений рецепт</span>
             </div>
             <button class="close-btn" @click="selectedRecipe = null">
-              <X :size="18" />
+              <X :size="20" />
             </button>
           </div>
 
-          <div class="modal-body">
-            <h2 class="modal-recipe-title">{{ selectedRecipe.name }}</h2>
-            <p v-if="selectedRecipe.description" class="modal-recipe-desc">{{ selectedRecipe.description }}</p>
+          <div class="drawer-body">
+            <h2 class="recipe-modal-title">{{ selectedRecipe.name }}</h2>
+            <p v-if="selectedRecipe.description" class="recipe-modal-desc">{{ selectedRecipe.description }}</p>
 
-            <!-- Nutrition bar -->
-            <div v-if="selectedRecipe.calories > 0" class="nutrition-strip">
-              <div class="nutr-stat">
-                <span class="stat-label">Калорії</span>
-                <strong class="stat-value">{{ selectedRecipe.calories }} кКал</strong>
+            <!-- Nutritional Info & Log Button -->
+            <div v-if="selectedRecipe.calories > 0" class="nutrition-block">
+              <div class="nutr-header">
+                <span class="nutr-title">
+                  <Flame :size="16" class="orange-icon" /> Поживна цінність
+                </span>
+                <span class="nutr-kcal">{{ selectedRecipe.calories }} кКал</span>
               </div>
-              <div class="nutr-stat">
-                <span class="stat-label">Білки</span>
-                <strong class="stat-value">{{ Math.round(selectedRecipe.protein) }}г</strong>
-              </div>
-              <div class="nutr-stat">
-                <span class="stat-label">Жири</span>
-                <strong class="stat-value">{{ Math.round(selectedRecipe.fat) }}г</strong>
-              </div>
-              <div class="nutr-stat">
-                <span class="stat-label">Вуглеводи</span>
-                <strong class="stat-value">{{ Math.round(selectedRecipe.carbs) }}г</strong>
-              </div>
-            </div>
 
-            <!-- Action buttons inside modal -->
-            <div class="modal-quick-actions">
+              <div class="macros-row">
+                <div class="macro-item">
+                  <span class="m-label prot">Білки</span>
+                  <span class="m-val">{{ Math.round(selectedRecipe.protein) }}г</span>
+                </div>
+                <div class="macro-item">
+                  <span class="m-label fat">Жири</span>
+                  <span class="m-val">{{ Math.round(selectedRecipe.fat) }}г</span>
+                </div>
+                <div class="macro-item">
+                  <span class="m-label carbs">Вуглеводи</span>
+                  <span class="m-val">{{ Math.round(selectedRecipe.carbs) }}г</span>
+                </div>
+              </div>
+
               <button
-                class="btn-secondary btn-sm flex-1"
+                class="btn-primary full-btn"
                 :disabled="loggingId === selectedRecipe.id"
                 @click="handleLogToTracker(selectedRecipe)"
               >
-                <Plus :size="14" />
-                <span>Записати в калорії</span>
-              </button>
-              <button
-                class="btn-secondary btn-sm flex-1"
-                :disabled="importingId === selectedRecipe.id"
-                @click="handleImportIngredients(selectedRecipe)"
-              >
-                <ShoppingBasket :size="14" />
-                <span>В список покупок</span>
+                <Loader2 v-if="loggingId === selectedRecipe.id" :size="16" class="animate-spin" />
+                <Plus v-else :size="16" />
+                <span>Записати в Трекер калорій</span>
               </button>
             </div>
 
-            <!-- Ingredients checklist -->
-            <div v-if="selectedRecipe.ingredients && selectedRecipe.ingredients.length > 0" class="ingredients-section">
-              <h4 class="section-title">Інгредієнти ({{ selectedRecipe.ingredients.length }})</h4>
-              <div class="ingredients-grid">
+            <!-- Ingredients Checklist -->
+            <div v-if="selectedRecipe.ingredients && selectedRecipe.ingredients.length > 0" class="ingredients-block">
+              <div class="sec-header">
+                <span>Інгредієнти</span>
+                <button
+                  class="import-btn"
+                  :disabled="importingId === selectedRecipe.id"
+                  @click="handleImportIngredients(selectedRecipe)"
+                >
+                  <Loader2 v-if="importingId === selectedRecipe.id" :size="14" class="animate-spin" />
+                  <ShoppingBasket v-else :size="14" />
+                  <span>В список покупок</span>
+                </button>
+              </div>
+
+              <div class="ingredients-list">
                 <div
                   v-for="(ing, idx) in selectedRecipe.ingredients"
                   :key="idx"
-                  :class="['ing-check-item', checkedIngredients[ing] ? 'checked' : '']"
+                  :class="['ing-item', checkedIngredients[ing] ? 'checked' : '']"
                   @click="checkedIngredients[ing] = !checkedIngredients[ing]"
                 >
-                  <div class="check-box">
-                    <Check v-if="checkedIngredients[ing]" :size="11" />
+                  <div class="checkbox">
+                    <Check v-if="checkedIngredients[ing]" :size="12" />
                   </div>
-                  <span class="ing-name">{{ ing }}</span>
+                  <span class="ing-text">{{ ing }}</span>
                 </div>
               </div>
             </div>
 
-            <!-- Cooking steps -->
-            <div v-if="selectedRecipe.steps && selectedRecipe.steps.length > 0" class="steps-section">
-              <h4 class="section-title">Кроки приготування</h4>
-              <ol class="steps-list">
-                <li v-for="(step, idx) in selectedRecipe.steps" :key="idx" class="step-item">
-                  <span class="step-counter">{{ idx + 1 }}</span>
-                  <p class="step-desc">{{ step }}</p>
+            <!-- Cooking Steps Timeline -->
+            <div v-if="selectedRecipe.steps && selectedRecipe.steps.length > 0" class="steps-block">
+              <div class="sec-header">Кроки приготування</div>
+              <ol class="steps-timeline">
+                <li v-for="(step, idx) in selectedRecipe.steps" :key="idx" class="timeline-step">
+                  <div class="step-num">{{ idx + 1 }}</div>
+                  <p class="step-text">{{ step }}</p>
                 </li>
               </ol>
             </div>
           </div>
 
-          <div class="modal-footer">
+          <div class="drawer-footer">
             <button
-              class="btn-destructive btn-sm"
+              class="btn-danger full-btn"
               :disabled="deletingId === selectedRecipe.id"
               @click="handleDeleteRecipe(selectedRecipe.id)"
             >
-              <Trash2 :size="14" />
-              <span>Видалити рецепт</span>
+              <Trash2 :size="16" />
+              <span>Вилучити рецепт</span>
             </button>
           </div>
         </div>
@@ -304,178 +333,187 @@ const handleImportIngredients = async (recipe: SavedRecipe) => {
 </template>
 
 <style scoped>
-.recipes-view {
+.recipe-page {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
-.view-header {
+.top-nav-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-}
-
-.view-title {
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-
-.view-subtitle {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  margin-top: 2px;
-}
-
-.btn-sm {
-  padding: 7px 12px;
-  font-size: 0.82rem;
-}
-
-.badge-count {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 10px;
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-
-.studio-layout {
-  display: flex;
-  gap: 16px;
-  align-items: stretch;
-  position: relative;
-}
-
-.chat-main-area {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Saved Sidebar */
-.saved-sidebar {
-  width: 320px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 120px);
-  min-height: 580px;
-  overflow: hidden;
-}
-
-@media (max-width: 900px) {
-  .saved-sidebar {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 300px;
-    height: 100vh;
-    z-index: 150;
-    box-shadow: var(--shadow-lg);
-  }
-}
-
-.saved-sidebar-header {
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.sidebar-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.close-sidebar-btn {
-  color: var(--text-muted);
-  padding: 2px;
-}
-
-.saved-search-box {
-  margin: 10px 14px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  background: var(--bg-subtle);
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+}
+
+.tab-buttons {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: var(--transition-fast);
+}
+
+.tab-btn.active {
+  background: var(--accent-orange);
+  color: #ffffff;
+  box-shadow: 0 2px 10px var(--accent-orange-glow);
+}
+
+.counter-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.saved-recipes-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.search-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
 }
 
 .search-icon {
   color: var(--text-muted);
 }
 
-.saved-search-input {
+.search-input {
   width: 100%;
   border: none;
   background: transparent;
-  font-size: 0.8rem;
   color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
 }
 
-.saved-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 14px 14px;
+.count-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+.empty-card {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  text-align: center;
+  padding: 48px 24px;
 }
 
-.saved-item-card {
-  padding: 10px 12px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xs);
+.empty-icon {
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.recipes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.recipe-grid-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   cursor: pointer;
   transition: var(--transition-fast);
 }
 
-.saved-item-card:hover {
-  background: var(--bg-subtle);
-  border-color: var(--border-strong);
+.recipe-grid-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-orange);
 }
 
-.saved-item-top {
+.card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  margin-bottom: 8px;
 }
 
-.saved-item-name {
-  font-size: 0.86rem;
-  font-weight: 600;
+.recipe-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--accent-orange);
+}
+
+.calories-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 800;
   color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin: 0 0 6px 0;
 }
 
-.item-delete-btn {
+.card-desc {
+  font-size: 0.8rem;
   color: var(--text-muted);
-  padding: 2px;
-  border-radius: 2px;
-}
-
-.item-delete-btn:hover {
-  color: var(--status-expired);
-}
-
-.saved-item-desc {
-  font-size: 0.74rem;
-  color: var(--text-muted);
-  margin-top: 2px;
+  line-height: 1.4;
+  margin-bottom: 14px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -483,214 +521,284 @@ const handleImportIngredients = async (recipe: SavedRecipe) => {
   overflow: hidden;
 }
 
-.saved-item-meta {
+.card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 6px;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-
-.meta-kcal {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  color: var(--status-warning);
-  font-weight: 600;
-}
-
-.loading-box, .empty-saved-box {
-  padding: 30px 14px;
-  text-align: center;
-  color: var(--text-muted);
   font-size: 0.8rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
 }
 
-/* Modal */
+.delete-btn {
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: 6px;
+  transition: var(--transition-fast);
+}
+
+.delete-btn:hover {
+  color: var(--status-expired);
+  background: var(--status-expired-bg);
+}
+
+/* Drawer modal for details */
 .modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
+  justify-content: flex-end;
 }
 
-.modal-card {
+.drawer-modal {
   width: 100%;
-  max-width: 560px;
-  max-height: 85vh;
+  max-width: 440px;
+  height: 100%;
+  background: var(--bg-primary);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-card);
 }
 
-.modal-header {
-  padding: 14px 18px;
+.drawer-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
-.modal-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--accent-orange);
 }
 
-.modal-recipe-title {
-  font-size: 1.25rem;
-  font-weight: 600;
+.close-btn {
+  color: var(--text-secondary);
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.recipe-modal-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
   color: var(--text-primary);
 }
 
-.modal-recipe-desc {
-  font-size: 0.84rem;
-  color: var(--text-secondary);
-  margin-top: -6px;
-}
-
-.nutrition-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  padding: 10px;
-  background: var(--bg-subtle);
-  border-radius: var(--radius-xs);
-  border: 1px solid var(--border-subtle);
-  text-align: center;
-}
-
-.stat-label {
-  display: block;
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-.stat-value {
+.recipe-modal-desc {
   font-size: 0.85rem;
-  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: -12px 0 0 0;
 }
 
-.modal-quick-actions {
+.nutrition-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.flex-1 {
-  flex: 1;
+.nutr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.section-title {
+.nutr-title {
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: 800;
   text-transform: uppercase;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.ingredients-grid {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  align-items: center;
   gap: 6px;
 }
 
-@media (min-width: 480px) {
-  .ingredients-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+.nutr-kcal {
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: var(--accent-orange);
 }
 
-.ing-check-item {
+.macros-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  text-align: center;
+}
+
+.macro-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.m-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.m-label.prot { color: #10b981; }
+.m-label.fat { color: #f59e0b; }
+.m-label.carbs { color: #06b6d4; }
+
+.m-val {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.full-btn {
+  width: 100%;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 7px 10px;
-  border-radius: var(--radius-xs);
-  background: var(--bg-subtle);
+}
+
+.btn-primary {
+  padding: 10px;
+  border-radius: var(--radius-md);
+  background: var(--accent-orange);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.btn-danger {
+  padding: 10px;
+  border-radius: var(--radius-md);
+  background: var(--status-expired-bg);
+  color: var(--status-expired);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.sec-header {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.import-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-orange);
+}
+
+.ingredients-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ing-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   cursor: pointer;
+  transition: var(--transition-fast);
 }
 
-.ing-check-item.checked {
-  opacity: 0.5;
+.ing-item.checked {
+  opacity: 0.6;
 }
 
-.ing-check-item.checked .ing-name {
+.ing-item.checked .ing-text {
   text-decoration: line-through;
 }
 
-.check-box {
-  width: 15px;
-  height: 15px;
-  border-radius: 3px;
-  border: 1px solid var(--border-strong);
+.checkbox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.ing-check-item.checked .check-box {
-  background: var(--status-fresh);
-  border-color: var(--status-fresh);
-  color: #fff;
+.ing-item.checked .checkbox {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
 }
 
-.steps-list {
+.steps-timeline {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
-.step-item {
+.timeline-step {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  font-size: 0.84rem;
+  gap: 12px;
 }
 
-.step-counter {
-  width: 20px;
-  height: 20px;
+.step-num {
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-subtle);
-  font-size: 0.72rem;
-  font-weight: 700;
+  background: var(--accent-orange-bg);
+  color: var(--accent-orange);
+  font-size: 0.75rem;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-top: 1px;
 }
 
-.step-desc {
-  margin: 0;
+.step-text {
+  font-size: 0.85rem;
   line-height: 1.4;
+  margin: 0;
 }
 
-.modal-footer {
-  padding: 12px 18px;
+.drawer-footer {
+  padding: 16px 20px;
   border-top: 1px solid var(--border-subtle);
-  display: flex;
-  justify-content: flex-end;
+}
+
+.orange-icon {
+  color: var(--accent-orange);
 }
 </style>
