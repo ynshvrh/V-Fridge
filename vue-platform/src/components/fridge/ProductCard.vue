@@ -10,15 +10,15 @@ const props = defineProps<{
 const productStore = useProductStore();
 
 const status = computed(() => {
-  if (!props.product.expiryDate) return { label: 'Fresh', badgeClass: 'badge-fresh', isAlert: false };
+  if (!props.product.expiryDate) return { label: 'Свіжий', badgeClass: 'badge-fresh', isAlert: false };
   const expiry = new Date(props.product.expiryDate);
   const today = new Date();
-  today.setHours(0,0,0,0);
+  today.setHours(0, 0, 0, 0);
   const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 3600 * 24));
 
-  if (diffDays < 0) return { label: 'Expired', badgeClass: 'badge-expired', isAlert: true };
-  if (diffDays <= 2) return { label: 'Expiring Soon', badgeClass: 'badge-warning', isAlert: true };
-  return { label: 'Fresh', badgeClass: 'badge-fresh', isAlert: false };
+  if (diffDays < 0) return { label: 'Прострочено', badgeClass: 'badge-expired', isAlert: true };
+  if (diffDays <= 2) return { label: 'Спливає', badgeClass: 'badge-warning', isAlert: true };
+  return { label: 'Свіжий', badgeClass: 'badge-fresh', isAlert: false };
 });
 
 const increaseQuantity = async () => {
@@ -42,7 +42,7 @@ const handleDelete = async () => {
 </script>
 
 <template>
-  <div class="glass-card product-card fade-in">
+  <div class="nordic-card product-card fade-in">
     <!-- Single line header with Category & Status Badge -->
     <div class="card-header">
       <span class="category-chip">{{ product.category }}</span>
@@ -57,22 +57,22 @@ const handleDelete = async () => {
     <div class="card-body">
       <h3 class="product-name">{{ product.name }}</h3>
       <p v-if="product.description" class="product-desc">{{ product.description }}</p>
-      <p v-if="product.expiryDate" class="expiry-date">Expires: {{ product.expiryDate }}</p>
+      <p v-if="product.expiryDate" class="expiry-date">Термін: {{ product.expiryDate }}</p>
     </div>
 
     <!-- Quantity & Action controls -->
     <div class="card-footer">
       <div class="quantity-controls">
-        <button class="qty-btn" title="Decrease / Consume" @click="decreaseQuantity">
+        <button class="qty-btn" title="Зменшити / Спожити" @click="decreaseQuantity">
           <Minus :size="13" />
         </button>
         <span class="qty-val">{{ product.quantity }} <small>{{ product.unit }}</small></span>
-        <button class="qty-btn" title="Increase" @click="increaseQuantity">
+        <button class="qty-btn" title="Збільшити" @click="increaseQuantity">
           <Plus :size="13" />
         </button>
       </div>
 
-      <button class="delete-btn" title="Delete Product" @click="handleDelete">
+      <button class="delete-btn" title="Видалити продукт" @click="handleDelete">
         <Trash2 :size="15" />
       </button>
     </div>
@@ -96,13 +96,13 @@ const handleDelete = async () => {
 }
 
 .category-chip {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--border-subtle);
+  border-radius: var(--radius-xs);
+  background: var(--bg-subtle);
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -110,14 +110,14 @@ const handleDelete = async () => {
 }
 
 .product-name {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .product-desc {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
   margin-top: 2px;
   display: -webkit-box;
@@ -127,7 +127,7 @@ const handleDelete = async () => {
 }
 
 .expiry-date {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   margin-top: 4px;
 }
@@ -144,9 +144,9 @@ const handleDelete = async () => {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--bg-primary);
+  background: var(--bg-subtle);
   padding: 2px 6px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   border: 1px solid var(--border-subtle);
 }
 
@@ -155,33 +155,33 @@ const handleDelete = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-xs);
   transition: var(--transition-fast);
 }
 
 .qty-btn:hover {
-  background: var(--accent-orange-bg);
-  color: var(--accent-orange);
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .qty-val {
   font-weight: 600;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   color: var(--text-primary);
 }
 
 .qty-val small {
   font-weight: 400;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
 }
 
 .delete-btn {
   color: var(--text-muted);
-  padding: 5px;
-  border-radius: var(--radius-sm);
+  padding: 4px;
+  border-radius: var(--radius-xs);
   transition: var(--transition-fast);
 }
 

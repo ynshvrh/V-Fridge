@@ -41,7 +41,7 @@ const handleDelete = async () => {
 </script>
 
 <template>
-  <div class="glass-card shopping-row fade-in" :class="{ checked: item.checked }">
+  <div class="nordic-card shopping-row fade-in" :class="{ checked: item.checked }">
     <button class="checkbox-btn" @click="toggleCheck">
       <CheckSquare v-if="item.checked" :size="18" class="checked-icon" />
       <Square v-else :size="18" class="unchecked-icon" />
@@ -92,8 +92,8 @@ const handleDelete = async () => {
 }
 
 .shopping-row.checked {
-  opacity: 0.65;
-  background: var(--border-subtle);
+  opacity: 0.6;
+  background: var(--bg-subtle);
 }
 
 .checkbox-btn {
@@ -105,11 +105,11 @@ const handleDelete = async () => {
 }
 
 .checkbox-btn:hover {
-  color: var(--accent-orange);
+  color: var(--text-primary);
 }
 
 .checked-icon {
-  color: var(--accent-orange);
+  color: var(--primary);
 }
 
 .unchecked-icon {
@@ -126,7 +126,7 @@ const handleDelete = async () => {
 
 .item-name {
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   color: var(--text-primary);
 }
 
@@ -142,13 +142,13 @@ const handleDelete = async () => {
 }
 
 .category-chip {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--border-subtle);
+  border-radius: var(--radius-xs);
+  background: var(--bg-subtle);
   color: var(--text-secondary);
 }
 
@@ -162,9 +162,9 @@ const handleDelete = async () => {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: var(--bg-primary);
+  background: var(--bg-subtle);
   padding: 2px 6px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   border: 1px solid var(--border-subtle);
 }
 
@@ -173,19 +173,19 @@ const handleDelete = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-xs);
   transition: var(--transition-fast);
 }
 
 .qty-btn:hover {
-  background: var(--accent-orange-bg);
-  color: var(--accent-orange);
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .qty-text {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
@@ -198,25 +198,26 @@ const handleDelete = async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--accent-orange-bg);
-  border: 1px solid var(--accent-orange-glow);
-  color: var(--accent-orange);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
   padding: 5px 10px;
-  border-radius: var(--radius-md);
-  font-size: 0.78rem;
-  font-weight: 600;
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  font-weight: 500;
   transition: var(--transition-fast);
 }
 
 .purchase-btn:hover {
-  background: var(--accent-orange);
-  color: #ffffff;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
 }
 
 .delete-btn {
   color: var(--text-muted);
-  padding: 5px;
-  border-radius: var(--radius-sm);
+  padding: 4px;
+  border-radius: var(--radius-xs);
   transition: var(--transition-fast);
 }
 

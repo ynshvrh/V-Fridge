@@ -1,30 +1,20 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
 import { useFridgeStore } from '@/stores/fridge';
 import { useProductStore } from '@/stores/product';
-import FridgeSelector from '@/components/fridge/FridgeSelector.vue';
 import ProductCard from '@/components/fridge/ProductCard.vue';
 import AddProductModal from '@/components/fridge/AddProductModal.vue';
 import CreateFridgeModal from '@/components/fridge/CreateFridgeModal.vue';
-import ShoppingTab from '@/components/shopping/ShoppingTab.vue';
-import FridgesTab from '@/components/fridge/FridgesTab.vue';
 import { 
-  Refrigerator, 
-  ShoppingCart, 
-  Users, 
   Plus, 
   Search, 
   Trash2, 
-  Package 
+  Package,
+  SlidersHorizontal
 } from '@lucide/vue';
 
-const route = useRoute();
 const fridgeStore = useFridgeStore();
 const productStore = useProductStore();
-
-const initialTab = (route.query.tab as 'inventory' | 'shopping' | 'fridges') || 'inventory';
-const activeTab = ref<'inventory' | 'shopping' | 'fridges'>(initialTab);
 
 const searchQuery = ref('');
 const selectedCategory = ref('all');
@@ -32,8 +22,17 @@ const showAddModal = ref(false);
 const showCreateFridgeModal = ref(false);
 
 const categories = [
-  'all', 'dairy', 'fruits', 'vegetables', 'meat', 'poultry', 
-  'seafood', 'bakery', 'beverages', 'condiments', 'other'
+  { id: 'all', label: 'Всі товари' },
+  { id: 'dairy', label: 'Молочне' },
+  { id: 'fruits', label: 'Фрукти' },
+  { id: 'vegetables', label: 'Овочі' },
+  { id: 'meat', label: 'М\'ясо' },
+  { id: 'poultry', label: 'Птиця' },
+  { id: 'seafood', label: 'Морепродукти' },
+  { id: 'bakery', label: 'Випічка' },
+  { id: 'beverages', label: 'Напої' },
+  { id: 'condiments', label: 'Соуси/Спеції' },
+  { id: 'other', label: 'Інше' }
 ];
 
 onMounted(async () => {
@@ -45,7 +44,7 @@ const filteredProducts = computed(() => {
   return productStore.products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       (p.description && p.description.toLowerCase().includes(searchQuery.value.toLowerCase()));
-    const matchesCategory = selectedCategory.value === 'all' || p.category === selectedCategory.value;
+    const matchesCategory = selectedCategory.value === 'all' || p.category.toLowerCase() === selectedCategory.value.toLowerCase();
     return matchesSearch && matchesCategory;
   });
 });
@@ -59,126 +58,102 @@ const handleEmptyFridge = async () => {
 
 <template>
   <div class="dashboard-page fade-in">
-    <!-- Top Consolidated Nav Bar for Storage Hub -->
-    <div class="top-nav-bar">
-      <div class="tab-buttons">
+    <!-- Header Controls -->
+    <header class="inventory-header">
+      <div class="header-titles">
+        <h2 class="section-heading">Інвентар продуктів</h2>
+        <p class="section-subheading">
+          У холодильнику: <strong class="text-strong">{{ productStore.products.length }}</strong> шт.
+        </p>
+      </div>
+
+      <div class="header-actions">
         <button
-          :class="['tab-btn', activeTab === 'inventory' ? 'active' : '']"
-          @click="activeTab = 'inventory'"
+          v-if="productStore.products.length > 0"
+          class="btn-destructive btn-sm"
+          @click="handleEmptyFridge"
         >
-          <Refrigerator :size="18" />
-          <span>Інвентар</span>
+          <Trash2 :size="15" />
+          <span>Очистити</span>
         </button>
 
-        <button
-          :class="['tab-btn', activeTab === 'shopping' ? 'active' : '']"
-          @click="activeTab = 'shopping'"
-        >
-          <ShoppingCart :size="18" />
-          <span>Покупки</span>
-        </button>
-
-        <button
-          :class="['tab-btn', activeTab === 'fridges' ? 'active' : '']"
-          @click="activeTab = 'fridges'"
-        >
-          <Users :size="18" />
-          <span>Спільні холодильники</span>
+        <button class="btn-primary btn-sm" @click="showAddModal = true">
+          <Plus :size="16" />
+          <span>Додати продукт</span>
         </button>
       </div>
-    </div>
+    </header>
 
-    <!-- Tab 1: Inventory -->
-    <div v-if="activeTab === 'inventory'" class="tab-content">
-      <header class="page-header">
-        <div class="header-left">
-          <FridgeSelector @open-create-modal="showCreateFridgeModal = true" />
-          <span v-if="fridgeStore.activeFridge" class="role-badge">
-            {{ fridgeStore.activeFridge.role }}
-          </span>
-        </div>
-
-        <div class="header-right">
-          <button v-if="productStore.products.length > 0" class="btn-destructive" @click="handleEmptyFridge">
-            <Trash2 :size="16" />
-            <span>Очистити</span>
-          </button>
-          <button class="btn-primary" @click="showAddModal = true">
-            <Plus :size="18" />
-            <span>Додати товар</span>
-          </button>
-        </div>
-      </header>
-
-      <div v-if="productStore.products.length > 0" class="controls-bar glass-card">
-        <div class="search-box">
-          <Search :size="16" class="search-icon" />
-          <input v-model="searchQuery" type="text" class="search-input" placeholder="Пошук продуктів..." />
-        </div>
-
-        <div class="category-filter">
-          <button
-            v-for="cat in categories"
-            :key="cat"
-            class="cat-tab"
-            :class="{ active: selectedCategory === cat }"
-            @click="selectedCategory = cat"
-          >
-            {{ cat }}
-          </button>
-        </div>
-      </div>
-
-      <div v-if="productStore.loading" class="loading-state glass-card">
-        <Package class="spin-icon" :size="32" />
-        <p>Завантаження інвентарю...</p>
-      </div>
-
-      <div v-else-if="!fridgeStore.activeFridge" class="empty-state glass-card">
-        <div class="empty-icon-bg">
-          <Refrigerator :size="36" />
-        </div>
-        <h3>Холодильники не знайдені</h3>
-        <p>Створіть свій перший холодильник для відстеження продуктів.</p>
-        <button class="btn-primary" style="margin-top: 16px;" @click="showCreateFridgeModal = true">
-          <Plus :size="18" />
-          <span>Створити холодильник</span>
-        </button>
-      </div>
-
-      <div v-else-if="filteredProducts.length === 0" class="empty-state glass-card">
-        <div class="empty-icon-bg">
-          <Package :size="36" />
-        </div>
-        <h3>Продуктів не знайдено</h3>
-        <p>У цьому холодильнику ще немає товарів за обраними фільтрами.</p>
-        <button class="btn-primary" style="margin-top: 16px;" @click="showAddModal = true">
-          <Plus :size="18" />
-          <span>Додати товар</span>
-        </button>
-      </div>
-
-      <div v-else class="products-grid">
-        <ProductCard
-          v-for="product in filteredProducts"
-          :key="product.id"
-          :product="product"
+    <!-- Search and Filter Bar -->
+    <div class="controls-panel nordic-card">
+      <div class="search-box">
+        <Search :size="15" class="search-icon" />
+        <input
+          v-model="searchQuery"
+          type="text"
+          class="search-input"
+          placeholder="Пошук за назвою або описом..."
         />
       </div>
 
-      <AddProductModal v-if="showAddModal" @close="showAddModal = false" />
-      <CreateFridgeModal v-if="showCreateFridgeModal" @close="showCreateFridgeModal = false" />
+      <div class="category-scroll">
+        <button
+          v-for="cat in categories"
+          :key="cat.id"
+          :class="['cat-chip', selectedCategory === cat.id ? 'active' : '']"
+          @click="selectedCategory = cat.id"
+        >
+          <span>{{ cat.label }}</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Tab 2: Shopping -->
-    <div v-else-if="activeTab === 'shopping'" class="tab-content">
-      <ShoppingTab />
+    <!-- Content States -->
+    <div v-if="productStore.loading" class="loading-state nordic-card">
+      <Package class="spin-icon" :size="28" />
+      <p>Завантаження продуктів...</p>
     </div>
 
-    <!-- Tab 3: Shared Fridges -->
-    <div v-else class="tab-content">
-      <FridgesTab />
+    <div v-else-if="!fridgeStore.activeFridge" class="empty-state nordic-card">
+      <div class="empty-icon-box">
+        <SlidersHorizontal :size="24" />
+      </div>
+      <h3>Немає активного холодильника</h3>
+      <p>Створіть свій перший холодильник для організації продуктів.</p>
+      <button class="btn-primary" style="margin-top: 14px;" @click="showCreateFridgeModal = true">
+        <Plus :size="16" />
+        <span>Створити холодильник</span>
+      </button>
     </div>
+
+    <div v-else-if="filteredProducts.length === 0" class="empty-state nordic-card">
+      <div class="empty-icon-box">
+        <Package :size="24" />
+      </div>
+      <h3>Продуктів не знайдено</h3>
+      <p v-if="searchQuery || selectedCategory !== 'all'">
+        Спробуйте змінити фільтри або пошуковий запит.
+      </p>
+      <p v-else>
+        Холодильник порожній. Додайте перші продукти для контролю свіжості.
+      </p>
+      <button class="btn-primary" style="margin-top: 14px;" @click="showAddModal = true">
+        <Plus :size="16" />
+        <span>Додати перший продукт</span>
+      </button>
+    </div>
+
+    <div v-else class="products-grid">
+      <ProductCard
+        v-for="product in filteredProducts"
+        :key="product.id"
+        :product="product"
+      />
+    </div>
+
+    <!-- Modals -->
+    <AddProductModal v-if="showAddModal" @close="showAddModal = false" />
+    <CreateFridgeModal v-if="showCreateFridgeModal" @close="showCreateFridgeModal = false" />
   </div>
 </template>
 
@@ -186,46 +161,10 @@ const handleEmptyFridge = async () => {
 .dashboard-page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
-.top-nav-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 6px;
-}
-
-.tab-buttons {
-  display: flex;
-  gap: 6px;
-  width: 100%;
-}
-
-.tab-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex: 1;
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  font-size: 0.88rem;
-  font-weight: 700;
-  transition: var(--transition-fast);
-}
-
-.tab-btn.active {
-  background: var(--accent-orange);
-  color: #ffffff;
-  box-shadow: 0 2px 10px var(--accent-orange-glow);
-}
-
-.page-header {
+.inventory-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -233,62 +172,55 @@ const handleEmptyFridge = async () => {
   flex-wrap: wrap;
 }
 
-.header-left, .header-right {
+.section-heading {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.section-subheading {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.text-strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-@media (max-width: 580px) {
-  .page-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-  .header-left {
-    justify-content: space-between;
-    width: 100%;
-  }
-  .header-right {
-    width: 100%;
-    justify-content: stretch;
-  }
-  .header-right .btn-primary,
-  .header-right .btn-destructive {
-    flex: 1;
-    justify-content: center;
-  }
+.btn-sm {
+  padding: 7px 12px;
+  font-size: 0.82rem;
 }
 
-.role-badge {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 6px;
-  background: var(--accent-orange-bg);
-  color: var(--accent-orange);
-}
-
-.controls-bar {
+.controls-panel {
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
 }
 
 .search-box {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  background: var(--bg-primary);
+  gap: 8px;
+  padding: 7px 10px;
+  background: var(--bg-subtle);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
 }
 
 .search-icon {
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .search-input {
@@ -296,47 +228,52 @@ const handleEmptyFridge = async () => {
   border: none;
   background: transparent;
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
-.category-filter {
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.category-scroll {
   display: flex;
   align-items: center;
   gap: 6px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 2px;
   scrollbar-width: none;
 }
 
-.category-filter::-webkit-scrollbar {
+.category-scroll::-webkit-scrollbar {
   display: none;
 }
 
-.cat-tab {
-  padding: 5px 12px;
-  border-radius: 16px;
-  font-size: 0.78rem;
-  text-transform: capitalize;
+.cat-chip {
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  font-size: 0.76rem;
+  font-weight: 500;
   color: var(--text-secondary);
-  background: var(--bg-primary);
+  background: var(--bg-subtle);
   border: 1px solid var(--border-subtle);
   white-space: nowrap;
   transition: var(--transition-fast);
 }
 
-.cat-tab:hover {
-  background: var(--border-subtle);
+.cat-chip:hover {
+  background: var(--bg-hover);
   color: var(--text-primary);
 }
 
-.cat-tab.active {
-  background: var(--accent-orange);
-  color: #ffffff;
-  border-color: var(--accent-orange);
+.cat-chip.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+  font-weight: 600;
 }
 
 .loading-state, .empty-state {
-  padding: 48px 20px;
+  padding: 40px 20px;
   text-align: center;
   color: var(--text-secondary);
   display: flex;
@@ -345,8 +282,8 @@ const handleEmptyFridge = async () => {
 }
 
 .spin-icon {
-  color: var(--accent-orange);
-  margin-bottom: 12px;
+  color: var(--text-primary);
+  margin-bottom: 10px;
   animation: spin 1s linear infinite;
 }
 
@@ -354,16 +291,28 @@ const handleEmptyFridge = async () => {
   100% { transform: rotate(360deg); }
 }
 
-.empty-icon-bg {
-  width: 56px;
-  height: 56px;
-  margin-bottom: 14px;
-  border-radius: 50%;
-  background: var(--accent-orange-bg);
-  color: var(--accent-orange);
+.empty-icon-box {
+  width: 46px;
+  height: 46px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.empty-state h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.empty-state p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  max-width: 320px;
 }
 
 .products-grid {
@@ -372,24 +321,16 @@ const handleEmptyFridge = async () => {
   gap: 12px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 600px) {
   .products-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  .tab-btn {
-    padding: 8px 6px;
-    font-size: 0.8rem;
-    gap: 4px;
+    gap: 8px;
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 400px) {
   .products-grid {
     grid-template-columns: 1fr;
-  }
-  .tab-btn span {
-    font-size: 0.75rem;
   }
 }
 </style>

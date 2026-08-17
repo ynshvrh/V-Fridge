@@ -33,22 +33,36 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/fridge',
+      redirect: '/'
+    },
+    {
       path: '/fridges',
-      redirect: '/?tab=fridges'
+      name: 'Fridges',
+      component: () => import('@/views/FridgesView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/shopping',
-      redirect: '/?tab=shopping'
+      name: 'Shopping',
+      component: () => import('@/views/ShoppingView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/planner',
-      redirect: '/recipes?tab=planner'
+      name: 'Planner',
+      component: () => import('@/views/PlannerView.vue'),
+      meta: { requiresAuth: true }
     },
     {
-      path: '/analytics',
-      name: 'Analytics',
-      component: () => import('@/views/AnalyticsView.vue'),
+      path: '/recipes',
+      name: 'Recipes',
+      component: () => import('@/views/RecipeView.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/recipe',
+      redirect: '/recipes'
     },
     {
       path: '/nutrition',
@@ -57,9 +71,9 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/recipes',
-      name: 'Recipes',
-      component: () => import('@/views/RecipeView.vue'),
+      path: '/analytics',
+      name: 'Analytics',
+      component: () => import('@/views/AnalyticsView.vue'),
       meta: { requiresAuth: true }
     },
     {
