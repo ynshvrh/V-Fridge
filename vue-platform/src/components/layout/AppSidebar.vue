@@ -12,7 +12,6 @@ import {
   CalendarDays,
   ChefHat,
   Flame,
-  BarChart3,
   Users,
   Settings,
   Sun,
@@ -42,7 +41,6 @@ const navItems = [
   { path: '/planner', label: 'Планувальник', icon: CalendarDays },
   { path: '/recipes', label: 'Шеф-кухар AI', icon: ChefHat },
   { path: '/nutrition', label: 'Калорії та БЖУ', icon: Flame },
-  { path: '/analytics', label: 'Аналітика', icon: BarChart3 },
   { path: '/fridges', label: 'Спільні холодильники', icon: Users },
   { path: '/settings', label: 'Налаштування', icon: Settings },
 ];
