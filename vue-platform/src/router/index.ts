@@ -61,6 +61,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/saved-recipes',
+      name: 'SavedRecipes',
+      component: () => import('@/views/SavedRecipesView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/recipe',
       redirect: '/recipes'
     },

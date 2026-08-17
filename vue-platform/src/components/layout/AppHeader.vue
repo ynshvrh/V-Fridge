@@ -23,6 +23,8 @@ const pageTitle = computed(() => {
       return 'Планувальник меню';
     case 'Recipes':
       return 'Шеф-кухар AI';
+    case 'SavedRecipes':
+      return 'Збережені рецепти';
     case 'Nutrition':
       return 'Калорії та БЖУ';
     case 'Analytics':
