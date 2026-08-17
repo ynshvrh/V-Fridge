@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useFridgeStore } from '@/stores/fridge';
 import { useAuthStore } from '@/stores/auth';
+import { useI18n } from '@/i18n';
 import { Menu, Refrigerator } from '@lucide/vue';
 
 const emit = defineEmits<{
@@ -12,25 +13,26 @@ const emit = defineEmits<{
 const route = useRoute();
 const fridgeStore = useFridgeStore();
 const authStore = useAuthStore();
+const { t } = useI18n();
 
 const pageTitle = computed(() => {
   switch (route.name) {
     case 'Dashboard':
-      return 'Мій холодильник';
+      return t('navDashboard');
     case 'Shopping':
-      return 'Список покупок';
+      return t('navShopping');
     case 'Planner':
-      return 'Планувальник меню';
+      return t('navPlanner');
     case 'Recipes':
-      return 'Шеф-кухар AI';
+      return t('navChef');
     case 'Nutrition':
-      return 'Калорії та БЖУ';
+      return t('navNutrition');
     case 'Analytics':
-      return 'Аналітика продуктів';
+      return t('analyticsTitle') || 'Аналітика продуктів';
     case 'Fridges':
-      return 'Спільні холодильники';
+      return t('fridgesTabTitle') || 'Спільні холодильники';
     case 'Settings':
-      return 'Налаштування';
+      return t('navSettings');
     default:
       return 'V-Fridge';
   }

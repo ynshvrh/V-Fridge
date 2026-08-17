@@ -2,13 +2,14 @@
 import { ref, onMounted } from 'vue';
 import { useAnalyticsStore } from '@/stores/analytics';
 import { useFridgeStore } from '@/stores/fridge';
-import FridgeSelector from '@/components/fridge/FridgeSelector.vue';
+import { useI18n } from '@/i18n';
 import WeeklyChartCard from '@/components/analytics/WeeklyChartCard.vue';
 import CreateFridgeModal from '@/components/fridge/CreateFridgeModal.vue';
 import { BarChart3, AlertTriangle, Zap, Clock } from '@lucide/vue';
 
 const analyticsStore = useAnalyticsStore();
 const fridgeStore = useFridgeStore();
+const { t } = useI18n();
 
 const showCreateFridgeModal = ref(false);
 
@@ -21,36 +22,38 @@ onMounted(async () => {
 <template>
   <div class="analytics-page fade-in">
     <header class="page-header">
-      <div class="header-left">
-        <FridgeSelector @open-create-modal="showCreateFridgeModal = true" />
+      <div>
+        <h2 class="section-heading">{{ t('analyticsTitle') || 'Аналітика продуктів' }}</h2>
+        <p class="section-subheading">{{ t('analyticsSubtitle') || 'Статистика споживання, термінів та списань' }}</p>
       </div>
     </header>
 
-    <div v-if="analyticsStore.loading" class="loading-state glass-card">
-      <BarChart3 class="spin-icon" :size="36" />
-      <p>Завантаження звіту аналітики...</p>
+    <div v-if="analyticsStore.loading" class="loading-state nordic-card">
+      <BarChart3 class="spin-icon" :size="28" />
+      <p>{{ t('analyticsLoading') || 'Завантаження звіту аналітики...' }}</p>
     </div>
 
-    <div v-else-if="!analyticsStore.summary" class="empty-state glass-card">
-      <div class="empty-icon-bg">
-        <BarChart3 :size="36" />
+    <div v-else-if="!analyticsStore.summary" class="empty-state nordic-card">
+      <div class="empty-icon-box">
+        <BarChart3 :size="24" />
       </div>
-      <h3>Немає даних аналітики</h3>
-      <p>Фіксуйте споживання або списання продуктів у холодильнику для відображення аналітики.</p>
+      <h3>{{ t('analyticsEmptyTitle') || 'Немає даних аналітики' }}</h3>
+      <p>{{ t('analyticsEmptyDesc') || 'Фіксуйте споживання або списання продуктів у холодильнику для відображення графіків.' }}</p>
     </div>
 
     <div v-else class="analytics-content">
       <WeeklyChartCard :trends="analyticsStore.summary.weeklyTrends" />
 
       <div class="metrics-grid">
-        <div class="glass-card metric-card">
+        <!-- Most Wasted -->
+        <div class="nordic-card metric-card">
           <div class="card-title text-warning">
-            <AlertTriangle :size="20" />
-            <h3>Найчастіше списані (30 днів)</h3>
+            <AlertTriangle :size="16" />
+            <h3>{{ t('analyticsMostWasted') || 'Найчастіше списані (30 днів)' }}</h3>
           </div>
 
           <div v-if="analyticsStore.summary.mostWasted.length === 0" class="empty-list">
-            Списаних продуктів немає! Чудова робота зі зменшення відходів.
+            {{ t('analyticsNoWasted') || 'Списаних продуктів немає! Чудова робота зі зменшення відходів.' }}
           </div>
 
           <div v-else class="leaderboard-list">
@@ -61,20 +64,21 @@ onMounted(async () => {
               </div>
               <div class="leader-stats">
                 <span class="badge-tag">{{ item.category }}</span>
-                <span class="stat-value text-warning">{{ item.totalQuantity }} од. ({{ item.occurrences }}x)</span>
+                <span class="stat-value text-warning">{{ item.totalQuantity }} шт. ({{ item.occurrences }}x)</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="glass-card metric-card">
-          <div class="card-title text-blue">
-            <Zap :size="20" />
-            <h3>Найшвидше споживані продукти</h3>
+        <!-- Fastest Consumed -->
+        <div class="nordic-card metric-card">
+          <div class="card-title text-fresh">
+            <Zap :size="16" />
+            <h3>{{ t('analyticsFastestConsumed') || 'Найшвидше споживані продукти' }}</h3>
           </div>
 
           <div v-if="analyticsStore.summary.fastestConsumed.length === 0" class="empty-list">
-            Записи споживання поки відсутні.
+            {{ t('analyticsNoConsumed') || 'Записи споживання поки відсутні.' }}
           </div>
 
           <div v-else class="leaderboard-list">
@@ -85,8 +89,8 @@ onMounted(async () => {
               </div>
               <div class="leader-stats">
                 <span class="badge-tag">{{ item.category }}</span>
-                <span class="stat-value text-blue">
-                  <Clock :size="12" /> {{ item.ageDays }} дн{{ item.ageDays === 1 ? 'ь' : 'ів' }}
+                <span class="stat-value text-fresh">
+                  <Clock :size="12" /> {{ item.ageDays }} {{ t('daysUnit') || 'дн.' }}
                 </span>
               </div>
             </div>
@@ -100,12 +104,31 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.analytics-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .page-header {
-  margin-bottom: 20px;
+  margin-bottom: 4px;
+}
+
+.section-heading {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.section-subheading {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
 }
 
 .loading-state, .empty-state {
-  padding: 48px 20px;
+  padding: 40px 20px;
   text-align: center;
   color: var(--text-secondary);
   display: flex;
@@ -114,17 +137,22 @@ onMounted(async () => {
 }
 
 .spin-icon {
-  color: var(--accent-orange);
-  margin-bottom: 12px;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  animation: spin 1s linear infinite;
 }
 
-.empty-icon-bg {
-  width: 56px;
-  height: 56px;
-  margin-bottom: 14px;
-  border-radius: 50%;
-  background: var(--accent-orange-bg);
-  color: var(--accent-orange);
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.empty-icon-box {
+  width: 46px;
+  height: 46px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -133,20 +161,20 @@ onMounted(async () => {
 .analytics-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 
 .metric-card {
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .card-title {
@@ -156,31 +184,32 @@ onMounted(async () => {
 }
 
 .card-title h3 {
-  font-size: 1rem;
+  font-size: 0.92rem;
+  font-weight: 600;
 }
 
 .text-warning { color: var(--status-warning); }
-.text-blue { color: var(--accent-blue); }
+.text-fresh { color: var(--status-fresh); }
 
 .empty-list {
   color: var(--text-muted);
-  font-size: 0.85rem;
-  padding: 16px 0;
+  font-size: 0.82rem;
+  padding: 12px 0;
 }
 
 .leaderboard-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .leader-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px;
-  background: var(--bg-primary);
-  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-xs);
   border: 1px solid var(--border-subtle);
 }
 
@@ -192,33 +221,34 @@ onMounted(async () => {
 
 .leader-rank {
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
 }
 
 .leader-name {
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   color: var(--text-primary);
 }
 
 .leader-stats {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .badge-tag {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
-  background: var(--border-subtle);
-  padding: 2px 6px;
-  border-radius: 4px;
+  background: var(--bg-surface);
+  padding: 2px 5px;
+  border-radius: 3px;
   color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
 }
 
 .stat-value {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
   display: flex;
   align-items: center;

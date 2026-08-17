@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useThemeStore } from '@/stores/theme';
+import { useI18n, type Locale } from '@/i18n';
 import { api, type ApiErrorResponse } from '@/api/client';
 import { 
   User, 
@@ -12,15 +13,15 @@ import {
   Palette, 
   Sun, 
   Moon, 
-  Sparkles, 
   Contrast, 
   Sliders 
 } from '@lucide/vue';
 
 const authStore = useAuthStore();
 const themeStore = useThemeStore();
+const { t, locale, setLocale } = useI18n();
 
-const preferredLanguage = ref(authStore.user?.preferredLanguage || 'en');
+const preferredLanguage = ref<Locale>(locale.value);
 const cuisinePreference = ref(authStore.user?.cuisinePreference || 'General');
 const dietaryProfile = ref(authStore.user?.dietaryProfile || '');
 
@@ -34,9 +35,13 @@ const profileMessage = ref<string | null>(null);
 const passwordMessage = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
 
+watch(locale, (newLoc) => {
+  preferredLanguage.value = newLoc;
+});
+
 const languages = [
-  { code: 'en', label: 'English' },
-  { code: 'uk', label: 'Українська' }
+  { code: 'uk', label: 'Українська' },
+  { code: 'en', label: 'English' }
 ];
 
 const cuisines = ['General', 'Italian', 'Mexican', 'Asian', 'Mediterranean', 'American', 'Ukrainian'];
@@ -46,6 +51,7 @@ const handleUpdateProfile = async () => {
   profileMessage.value = null;
   errorMessage.value = null;
   try {
+    setLocale(preferredLanguage.value);
     const updated = await api.fetch<typeof authStore.user>('/auth/profile', {
       method: 'PATCH',
       body: JSON.stringify({
@@ -56,7 +62,7 @@ const handleUpdateProfile = async () => {
     });
     if (updated) {
       authStore.user = updated;
-      profileMessage.value = 'Налаштування профілю успішно оновлено!';
+      profileMessage.value = t('settingsSavedSuccess') || 'Налаштування успішно збережено!';
     }
   } catch (err) {
     const apiErr = err as ApiErrorResponse;
@@ -68,7 +74,7 @@ const handleUpdateProfile = async () => {
 
 const handleUpdatePassword = async () => {
   if (newPassword.value !== confirmPassword.value) {
-    errorMessage.value = 'Паролі не збігаються';
+    errorMessage.value = t('passwordMismatch') || 'Паролі не збігаються';
     return;
   }
   isSavingPassword.value = true;
@@ -79,7 +85,7 @@ const handleUpdatePassword = async () => {
       method: 'PATCH',
       body: JSON.stringify({ newPassword: newPassword.value })
     });
-    passwordMessage.value = 'Пароль успішно оновлено!';
+    passwordMessage.value = t('passwordUpdatedSuccess') || 'Пароль успішно оновлено!';
     newPassword.value = '';
     confirmPassword.value = '';
   } catch (err) {
@@ -95,75 +101,56 @@ const handleUpdatePassword = async () => {
   <div class="settings-page fade-in">
     <header class="page-header">
       <div>
-        <h1>Налаштування акаунту та інтерфейсу</h1>
-        <p class="subtitle">Персоналізація оформлення, акцентні кольори, профіль та безпека</p>
+        <h2 class="section-heading">{{ t('navSettings') }}</h2>
+        <p class="section-subheading">{{ t('dashboardQuickSettingsDesc') }}</p>
       </div>
     </header>
 
     <div v-if="errorMessage" class="error-banner">
-      <AlertCircle :size="18" />
+      <AlertCircle :size="16" />
       <span>{{ errorMessage }}</span>
     </div>
 
     <div class="settings-grid">
-      <!-- Section 1: UI Preferences & Accent Themes -->
-      <div class="glass-card settings-card col-span-full">
+      <!-- Section 1: UI & Appearance -->
+      <div class="nordic-card settings-card col-span-full">
         <div class="card-header">
-          <Palette :size="20" class="header-icon" />
-          <h3>Теми оформлення та візуальні ефекти</h3>
+          <Palette :size="17" class="header-icon" />
+          <h3>{{ t('appearanceTitle') || 'Оформлення та вигляд' }}</h3>
         </div>
 
         <div class="theme-options-grid">
-          <!-- Theme mode switcher -->
+          <!-- Theme Mode -->
           <div class="pref-item">
             <div class="pref-info">
-              <span class="pref-title">Основна тема</span>
-              <span class="pref-desc">Перемикання між темним та світлим оформленням</span>
+              <span class="pref-title">{{ t('themeModeTitle') || 'Тема інтерфейсу' }}</span>
+              <span class="pref-desc">{{ t('themeModeDesc') || 'Перемикання між темною та світлою темою' }}</span>
             </div>
             <div class="toggle-buttons">
               <button
                 :class="['toggle-btn', themeStore.theme === 'light' ? 'active' : '']"
                 @click="themeStore.setTheme('light')"
               >
-                <Sun :size="16" />
-                <span>Світла</span>
+                <Sun :size="14" />
+                <span>{{ t('lightTheme') || 'Світла' }}</span>
               </button>
               <button
                 :class="['toggle-btn', themeStore.theme === 'dark' ? 'active' : '']"
                 @click="themeStore.setTheme('dark')"
               >
-                <Moon :size="16" />
-                <span>Темна</span>
+                <Moon :size="14" />
+                <span>{{ t('darkTheme') || 'Темна' }}</span>
               </button>
             </div>
-          </div>
-
-
-          <!-- Ambient Glow Switch -->
-          <div class="pref-item">
-            <div class="pref-info">
-              <span class="pref-title flex-title">
-                <Sparkles :size="16" class="orange-icon" /> Ambient Glow Ефекти
-              </span>
-              <span class="pref-desc">М'яке підсвічування та фонове сяйво карток</span>
-            </div>
-            <label class="switch-label">
-              <input
-                type="checkbox"
-                :checked="themeStore.ambientGlow"
-                @change="themeStore.setAmbientGlow(($event.target as HTMLInputElement).checked)"
-              />
-              <span class="slider" />
-            </label>
           </div>
 
           <!-- High Contrast -->
           <div class="pref-item">
             <div class="pref-info">
               <span class="pref-title flex-title">
-                <Contrast :size="16" /> Високий контраст
+                <Contrast :size="15" /> {{ t('highContrastTitle') || 'Високий контраст' }}
               </span>
-              <span class="pref-desc">Підвищена чіткість меж карток та текстів</span>
+              <span class="pref-desc">{{ t('highContrastDesc') || 'Посилена чіткість меж та ліній' }}</span>
             </div>
             <label class="switch-label">
               <input
@@ -179,9 +166,9 @@ const handleUpdatePassword = async () => {
           <div class="pref-item">
             <div class="pref-info">
               <span class="pref-title flex-title">
-                <Sliders :size="16" /> Режим списку покупок
+                <Sliders :size="15" /> {{ t('shoppingModeTitle') || 'Режим списку покупок' }}
               </span>
-              <span class="pref-desc">Спосіб викреслення покупок (кнопки або свайп)</span>
+              <span class="pref-desc">{{ t('shoppingModeDesc') || 'Викреслення покупок кнопкою чи свайпом' }}</span>
             </div>
             <div class="toggle-buttons">
               <button
@@ -201,99 +188,98 @@ const handleUpdatePassword = async () => {
         </div>
       </div>
 
-      <!-- Section 2: AI Chef & Language Preferences -->
-      <div class="glass-card settings-card">
+      <!-- Section 2: AI Chef & Localization Preferences -->
+      <div class="nordic-card settings-card">
         <div class="card-header">
-          <Globe :size="20" class="header-icon" />
-          <h3>Переваги та Налаштування AI Шефа</h3>
+          <Globe :size="17" class="header-icon" />
+          <h3>{{ t('languageAndDietTitle') || 'Мова та Кулінарні переваги' }}</h3>
         </div>
 
         <div v-if="profileMessage" class="success-banner">
-          <CheckCircle2 :size="16" />
+          <CheckCircle2 :size="15" />
           <span>{{ profileMessage }}</span>
         </div>
 
         <form @submit.prevent="handleUpdateProfile" class="card-form">
           <div class="form-group">
-            <label class="form-label" for="pref-lang">Бажана мова</label>
-            <select id="pref-lang" v-model="preferredLanguage" class="form-input">
+            <label class="form-label">{{ t('languageLabel') || 'Мова інтерфейсу' }}</label>
+            <select v-model="preferredLanguage" class="form-input">
               <option v-for="l in languages" :key="l.code" :value="l.code">{{ l.label }}</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="pref-cuisine">Стиль кухні</label>
-            <select id="pref-cuisine" v-model="cuisinePreference" class="form-input">
+            <label class="form-label">{{ t('cuisineLabel') || 'Улюблена кухня' }}</label>
+            <select v-model="cuisinePreference" class="form-input">
               <option v-for="c in cuisines" :key="c" :value="c">{{ c }}</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="pref-diet">Дієтичні обмеження (необов'язково)</label>
+            <label class="form-label">{{ t('dietaryLabel') || 'Дієтичні обмеження' }}</label>
             <input
-              id="pref-diet"
               v-model="dietaryProfile"
               type="text"
               class="form-input"
-              placeholder="Вегетаріанське, Без глютену..."
+              :placeholder="t('dietaryPlaceholder') || 'Вегетаріанське, Без лактози...'"
             />
           </div>
 
-          <button type="submit" class="btn-primary" :disabled="isSavingProfile">
-            <span>{{ isSavingProfile ? 'Збереження...' : 'Зберегти налаштування' }}</span>
+          <button type="submit" class="btn-primary btn-sm" :disabled="isSavingProfile">
+            <span>{{ isSavingProfile ? (t('actionSaving') || 'Збереження...') : (t('actionSave') || 'Зберегти налаштування') }}</span>
           </button>
         </form>
       </div>
 
-      <!-- Section 3: User Icon & Profile Status -->
-      <div class="glass-card settings-card">
+      <!-- Section 3: Profile Info -->
+      <div class="nordic-card settings-card">
         <div class="card-header">
-          <User :size="20" class="header-icon" />
-          <h3>Іконка та Статус профілю</h3>
+          <User :size="17" class="header-icon" />
+          <h3>{{ t('profileStatusTitle') || 'Профіль користувача' }}</h3>
         </div>
 
-        <div class="avatar-section">
-          <div class="avatar-preview">
-            <User :size="32" />
+        <div class="profile-box">
+          <div class="avatar-circle">
+            {{ (authStore.user?.username || authStore.user?.email || 'U')[0].toUpperCase() }}
           </div>
-          <div class="profile-info-block">
-            <span class="profile-username">{{ authStore.user?.username }}</span>
-            <span class="profile-email">{{ authStore.user?.email }}</span>
+          <div class="profile-details">
+            <span class="user-name-text">{{ authStore.user?.username || 'User' }}</span>
+            <span class="user-email-text">{{ authStore.user?.email }}</span>
+            <span v-if="authStore.user?.emailVerified" class="verified-badge">
+              ✓ Email підтверджено
+            </span>
           </div>
         </div>
       </div>
 
-      <!-- Section 4: Security & Password -->
-      <div class="glass-card settings-card">
+      <!-- Section 4: Password Security -->
+      <div class="nordic-card settings-card">
         <div class="card-header">
-          <Lock :size="20" class="header-icon" />
-          <h3>Безпека та Зміна пароля</h3>
+          <Lock :size="17" class="header-icon" />
+          <h3>{{ t('securityTitle') || 'Зміна пароля' }}</h3>
         </div>
 
         <div v-if="passwordMessage" class="success-banner">
-          <CheckCircle2 :size="16" />
+          <CheckCircle2 :size="15" />
           <span>{{ passwordMessage }}</span>
         </div>
 
         <form @submit.prevent="handleUpdatePassword" class="card-form">
           <div class="form-group">
-            <label class="form-label" for="new-pass">Новий пароль (мін. 8 символів)</label>
+            <label class="form-label">{{ t('newPasswordLabel') || 'Новий пароль (мін. 8 символів)' }}</label>
             <input
-              id="new-pass"
               v-model="newPassword"
               type="password"
               class="form-input"
               placeholder="••••••••"
               minlength="8"
-              maxlength="72"
               required
             />
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="confirm-pass">Підтвердження пароля</label>
+            <label class="form-label">{{ t('confirmPasswordLabel') || 'Підтвердження пароля' }}</label>
             <input
-              id="confirm-pass"
               v-model="confirmPassword"
               type="password"
               class="form-input"
@@ -302,8 +288,8 @@ const handleUpdatePassword = async () => {
             />
           </div>
 
-          <button type="submit" class="btn-primary" :disabled="isSavingPassword || !newPassword">
-            <span>{{ isSavingPassword ? 'Оновлення...' : 'Оновити пароль' }}</span>
+          <button type="submit" class="btn-primary btn-sm" :disabled="isSavingPassword || !newPassword">
+            <span>{{ isSavingPassword ? (t('actionSaving') || 'Оновлення...') : (t('updatePasswordBtn') || 'Оновити пароль') }}</span>
           </button>
         </form>
       </div>
@@ -312,46 +298,54 @@ const handleUpdatePassword = async () => {
 </template>
 
 <style scoped>
-.page-header {
-  margin-bottom: 20px;
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.subtitle {
+.section-heading {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.section-subheading {
+  font-size: 0.82rem;
   color: var(--text-secondary);
-  font-size: 0.88rem;
   margin-top: 2px;
 }
 
 .error-banner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-xs);
   background: var(--status-expired-bg);
+  border: 1px solid var(--status-expired-border);
   color: var(--status-expired);
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 20px;
+  font-size: 0.82rem;
 }
 
 .success-banner {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-  font-size: 0.82rem;
-  font-weight: 600;
-  margin-bottom: 14px;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  background: var(--status-fresh-bg);
+  border: 1px solid var(--status-fresh-border);
+  color: var(--status-fresh);
+  font-size: 0.8rem;
+  margin-bottom: 10px;
 }
 
 .settings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
 }
 
 .col-span-full {
@@ -359,48 +353,44 @@ const handleUpdatePassword = async () => {
 }
 
 .settings-card {
-  padding: 24px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  gap: 14px;
 }
 
 .card-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 18px;
-  padding-bottom: 12px;
+  gap: 8px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .card-header h3 {
-  font-size: 1.05rem;
-  font-weight: 800;
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--text-primary);
-  margin: 0;
 }
 
 .header-icon {
-  color: var(--accent-orange);
+  color: var(--text-muted);
 }
 
 .theme-options-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
 }
 
 .pref-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px;
-  border-radius: var(--radius-md);
-  background: var(--bg-primary);
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-subtle);
   border: 1px solid var(--border-subtle);
 }
 
@@ -411,8 +401,8 @@ const handleUpdatePassword = async () => {
 }
 
 .pref-title {
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: 0.84rem;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -423,42 +413,41 @@ const handleUpdatePassword = async () => {
 }
 
 .pref-desc {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
 
 .toggle-buttons {
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 
 .toggle-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-card);
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.76rem;
+  font-weight: 500;
   transition: var(--transition-fast);
 }
 
 .toggle-btn.active {
-  background: var(--accent-orange);
-  color: #ffffff;
-  border-color: var(--accent-orange);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
 }
 
-
-/* Switch Slider */
+/* Switch */
 .switch-label {
   position: relative;
   display: inline-block;
-  width: 44px;
-  height: 24px;
+  width: 38px;
+  height: 20px;
 }
 
 .switch-label input {
@@ -471,109 +460,84 @@ const handleUpdatePassword = async () => {
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background-color: var(--border-subtle);
-  transition: .3s;
-  border-radius: 24px;
+  background-color: var(--border-strong);
+  transition: .2s;
+  border-radius: 20px;
 }
 
 .slider:before {
   position: absolute;
   content: "";
-  height: 18px;
-  width: 18px;
+  height: 14px;
+  width: 14px;
   left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: .3s;
+  transition: .2s;
   border-radius: 50%;
 }
 
 input:checked + .slider {
-  background-color: var(--accent-orange);
+  background-color: var(--primary);
 }
 
 input:checked + .slider:before {
-  transform: translateX(20px);
+  transform: translateX(18px);
 }
 
 .card-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-label {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text-secondary);
-}
-
-.form-input {
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: 0.9rem;
-}
-
-.btn-primary {
-  padding: 10px 18px;
-  border-radius: var(--radius-md);
-  background: var(--accent-orange);
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 0.88rem;
+.btn-sm {
   align-self: flex-start;
-  margin-top: 6px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
 }
 
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.avatar-section {
+.profile-box {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+  padding: 8px 0;
 }
 
-.avatar-preview {
-  width: 56px;
-  height: 56px;
+.avatar-circle {
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: var(--accent-orange-bg);
-  color: var(--accent-orange);
+  background: var(--primary);
+  color: var(--primary-foreground);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
 }
 
-.profile-info-block {
+.profile-details {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.profile-username {
-  font-size: 1.05rem;
-  font-weight: 700;
+.user-name-text {
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
-.profile-email {
-  font-size: 0.85rem;
+.user-email-text {
+  font-size: 0.78rem;
   color: var(--text-muted);
 }
 
-.orange-icon {
-  color: var(--accent-orange);
+.verified-badge {
+  font-size: 0.68rem;
+  color: var(--status-fresh);
+  font-weight: 600;
+  margin-top: 2px;
 }
 </style>

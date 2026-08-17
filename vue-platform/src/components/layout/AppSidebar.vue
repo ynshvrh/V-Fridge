@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useThemeStore } from '@/stores/theme';
+import { useI18n } from '@/i18n';
 import FridgeSelector from '@/components/fridge/FridgeSelector.vue';
 import CreateFridgeModal from '@/components/fridge/CreateFridgeModal.vue';
 import {
@@ -18,6 +19,7 @@ import {
   Sun,
   Moon,
   LogOut,
+  Globe,
   X
 } from '@lucide/vue';
 
@@ -33,19 +35,20 @@ const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const themeStore = useThemeStore();
+const { t, locale, setLocale } = useI18n();
 
 const showCreateModal = ref(false);
 
-const navItems = [
-  { path: '/', label: 'Головна', icon: LayoutDashboard, exact: true },
-  { path: '/shopping', label: 'Список покупок', icon: ShoppingCart },
-  { path: '/planner', label: 'Планувальник', icon: CalendarDays },
-  { path: '/recipes', label: 'Шеф-кухар AI', icon: ChefHat },
-  { path: '/nutrition', label: 'Калорії та БЖУ', icon: Flame },
-  { path: '/analytics', label: 'Аналітика', icon: BarChart3 },
-  { path: '/fridges', label: 'Спільні холодильники', icon: Users },
-  { path: '/settings', label: 'Налаштування', icon: Settings },
-];
+const navItems = computed(() => [
+  { path: '/', label: t('navDashboard'), icon: LayoutDashboard, exact: true },
+  { path: '/shopping', label: t('navShopping'), icon: ShoppingCart },
+  { path: '/planner', label: t('navPlanner'), icon: CalendarDays },
+  { path: '/recipes', label: t('navChef'), icon: ChefHat },
+  { path: '/nutrition', label: t('navNutrition'), icon: Flame },
+  { path: '/analytics', label: t('analyticsTitle') || 'Аналітика', icon: BarChart3 },
+  { path: '/fridges', label: t('fridgesTabTitle') || 'Холодильники', icon: Users },
+  { path: '/settings', label: t('navSettings'), icon: Settings },
+]);
 
 const isActive = (path: string, exact = false) => {
   if (exact) {
@@ -62,6 +65,10 @@ const handleLogout = async () => {
   emit('close-mobile');
   await authStore.logout();
   router.push('/login');
+};
+
+const toggleLocale = () => {
+  setLocale(locale.value === 'uk' ? 'en' : 'uk');
 };
 </script>
 
@@ -104,13 +111,22 @@ const handleLogout = async () => {
       <div class="sidebar-footer">
         <div class="footer-controls">
           <button
-            class="theme-btn"
+            class="control-btn"
+            :title="locale === 'uk' ? 'Switch to English' : 'Перемкнути на українську'"
+            @click="toggleLocale"
+          >
+            <Globe :size="14" />
+            <span>{{ locale === 'uk' ? 'УКР' : 'ENG' }}</span>
+          </button>
+
+          <button
+            class="control-btn"
             :title="themeStore.theme === 'dark' ? 'Світла тема' : 'Темна тема'"
             @click="themeStore.toggleTheme"
           >
-            <Sun v-if="themeStore.theme === 'dark'" :size="16" />
-            <Moon v-else :size="16" />
-            <span class="theme-text">{{ themeStore.theme === 'dark' ? 'Світла тема' : 'Темна тема' }}</span>
+            <Sun v-if="themeStore.theme === 'dark'" :size="14" />
+            <Moon v-else :size="14" />
+            <span>{{ themeStore.theme === 'dark' ? 'Light' : 'Dark' }}</span>
           </button>
         </div>
 
@@ -120,11 +136,11 @@ const handleLogout = async () => {
               {{ (authStore.user?.username || authStore.user?.email || 'U')[0].toUpperCase() }}
             </div>
             <div class="user-meta">
-              <span class="user-name">{{ authStore.user?.username || 'Користувач' }}</span>
+              <span class="user-name">{{ authStore.user?.username || t('settingsTitle') }}</span>
               <span class="user-email">{{ authStore.user?.email }}</span>
             </div>
           </div>
-          <button class="logout-btn" title="Вийти" @click="handleLogout">
+          <button class="logout-btn" :title="t('settingsSignOut')" @click="handleLogout">
             <LogOut :size="16" />
           </button>
         </div>
@@ -172,14 +188,24 @@ const handleLogout = async () => {
           </nav>
 
           <div class="sidebar-footer">
-            <button
-              class="theme-btn"
-              @click="themeStore.toggleTheme"
-            >
-              <Sun v-if="themeStore.theme === 'dark'" :size="16" />
-              <Moon v-else :size="16" />
-              <span class="theme-text">{{ themeStore.theme === 'dark' ? 'Світла тема' : 'Темна тема' }}</span>
-            </button>
+            <div class="footer-controls">
+              <button
+                class="control-btn"
+                @click="toggleLocale"
+              >
+                <Globe :size="14" />
+                <span>{{ locale === 'uk' ? 'УКР' : 'ENG' }}</span>
+              </button>
+
+              <button
+                class="control-btn"
+                @click="themeStore.toggleTheme"
+              >
+                <Sun v-if="themeStore.theme === 'dark'" :size="14" />
+                <Moon v-else :size="14" />
+                <span>{{ themeStore.theme === 'dark' ? 'Light' : 'Dark' }}</span>
+              </button>
+            </div>
 
             <div v-if="authStore.isAuthenticated" class="user-card">
               <div class="user-info">
@@ -187,11 +213,11 @@ const handleLogout = async () => {
                   {{ (authStore.user?.username || authStore.user?.email || 'U')[0].toUpperCase() }}
                 </div>
                 <div class="user-meta">
-                  <span class="user-name">{{ authStore.user?.username || 'Користувач' }}</span>
+                  <span class="user-name">{{ authStore.user?.username || 'User' }}</span>
                   <span class="user-email">{{ authStore.user?.email }}</span>
                 </div>
               </div>
-              <button class="logout-btn" title="Вийти" @click="handleLogout">
+              <button class="logout-btn" :title="t('settingsSignOut')" @click="handleLogout">
                 <LogOut :size="16" />
               </button>
             </div>
@@ -349,24 +375,26 @@ const handleLogout = async () => {
 .footer-controls {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
 }
 
-.theme-btn {
-  width: 100%;
+.control-btn {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 8px;
   border-radius: var(--radius-sm);
   background: var(--bg-subtle);
   color: var(--text-secondary);
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 0.76rem;
+  font-weight: 600;
   transition: var(--transition-fast);
+  border: 1px solid var(--border-subtle);
 }
 
-.theme-btn:hover {
+.control-btn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
 }

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import { useI18n } from '@/i18n';
 import { UserPlus, User, Mail, Lock, AlertCircle, CheckCircle2, ArrowRight } from '@lucide/vue';
 import GoogleSignInButton from '@/components/GoogleSignInButton.vue';
 
 const authStore = useAuthStore();
+const { t } = useI18n();
 
 const username = ref('');
 const email = ref('');
@@ -19,41 +21,41 @@ const handleSignUp = async () => {
   const res = await authStore.signup(email.value, password.value, username.value || undefined);
   isSubmitting.value = false;
   if (res.ok) {
-    successMessage.value = res.message || 'Account created successfully! Check your inbox to verify your email.';
+    successMessage.value = res.message || 'Акаунт створено! Перевірте пошту для активації.';
   }
 };
 </script>
 
 <template>
   <div class="auth-page">
-    <div class="glass-card auth-card fade-in">
+    <div class="nordic-card auth-card fade-in">
       <div class="auth-header">
         <div class="auth-icon-badge">
-          <UserPlus :size="24" />
+          <UserPlus :size="20" />
         </div>
-        <h2>Create Account</h2>
-        <p class="auth-subtitle">Get started with V-Fridge smart food tracker</p>
+        <h2>{{ t('authSignUpTitle') || 'Створити акаунт' }}</h2>
+        <p class="auth-subtitle">{{ t('authSignUpSubtitle') || 'Почніть користуватися розумним холодильником V-Fridge' }}</p>
       </div>
 
       <div v-if="successMessage" class="success-banner">
-        <CheckCircle2 :size="20" />
+        <CheckCircle2 :size="18" />
         <div>
-          <strong>Account Registered!</strong>
+          <strong>{{ t('authSuccessTitle') || 'Акаунт зареєстровано!' }}</strong>
           <p>{{ successMessage }}</p>
         </div>
       </div>
 
       <div v-else>
         <div v-if="authStore.error" class="error-banner">
-          <AlertCircle :size="18" />
+          <AlertCircle :size="16" />
           <span>{{ authStore.error }}</span>
         </div>
 
         <form @submit.prevent="handleSignUp" class="auth-form">
           <div class="form-group">
-            <label class="form-label" for="username">Username (Optional)</label>
+            <label class="form-label" for="username">{{ t('authUsernameLabel') || "Ім'я користувача (необов'язково)" }}</label>
             <div class="input-wrapper">
-              <User class="input-icon" :size="18" />
+              <User class="input-icon" :size="16" />
               <input
                 id="username"
                 v-model="username"
@@ -65,9 +67,9 @@ const handleSignUp = async () => {
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="email">Email Address</label>
+            <label class="form-label" for="email">{{ t('authEmailLabel') || 'Email адреса' }}</label>
             <div class="input-wrapper">
-              <Mail class="input-icon" :size="18" />
+              <Mail class="input-icon" :size="16" />
               <input
                 id="email"
                 v-model="email"
@@ -80,9 +82,9 @@ const handleSignUp = async () => {
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="password">Password (Min 8 chars, Max 72)</label>
+            <label class="form-label" for="password">{{ t('authPasswordRules') || 'Пароль (мін. 8 символів)' }}</label>
             <div class="input-wrapper">
-              <Lock class="input-icon" :size="18" />
+              <Lock class="input-icon" :size="16" />
               <input
                 id="password"
                 v-model="password"
@@ -97,17 +99,21 @@ const handleSignUp = async () => {
           </div>
 
           <button type="submit" class="btn-primary auth-btn" :disabled="isSubmitting || authStore.loading">
-            <span>{{ isSubmitting ? 'Creating account...' : 'Register' }}</span>
-            <ArrowRight :size="18" />
+            <span>{{ isSubmitting ? (t('authCreatingAccount') || 'Створення акаунту...') : (t('authRegisterBtn') || 'Зареєструватися') }}</span>
+            <ArrowRight :size="16" />
           </button>
         </form>
+
+        <div class="divider-line">
+          <span>або</span>
+        </div>
 
         <GoogleSignInButton />
       </div>
 
       <div class="auth-footer">
-        <span>Already have an account?</span>
-        <router-link to="/login" class="auth-link">Sign In</router-link>
+        <span>{{ t('authHaveAccount') || 'Вже маєте акаунт?' }}</span>
+        <router-link to="/login" class="auth-link">{{ t('authSignInLink') || 'Увійти' }}</router-link>
       </div>
     </div>
   </div>
@@ -118,69 +124,74 @@ const handleSignUp = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 120px);
+  min-height: calc(100vh - 100px);
   padding: 20px;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 440px;
-  padding: 36px 32px;
+  max-width: 400px;
+  padding: 28px 24px;
 }
 
 .auth-header {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 22px;
 }
 
 .auth-icon-badge {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 16px;
-  border-radius: 14px;
-  background: var(--accent-orange-bg);
-  border: 1px solid var(--border-strong);
-  color: var(--accent-orange);
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 12px;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--primary-foreground);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.auth-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
 .auth-subtitle {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-top: 4px;
 }
 
 .error-banner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(244, 63, 94, 0.12);
-  border: 1px solid rgba(244, 63, 94, 0.3);
-  color: var(--accent-rose);
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  margin-bottom: 20px;
+  gap: 8px;
+  background: var(--status-expired-bg);
+  border: 1px solid var(--status-expired-border);
+  color: var(--status-expired);
+  padding: 10px 12px;
+  border-radius: var(--radius-xs);
+  font-size: 0.82rem;
+  margin-bottom: 16px;
 }
 
 .success-banner {
   display: flex;
-  gap: 12px;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: var(--accent-emerald);
-  padding: 16px;
-  border-radius: var(--radius-md);
-  font-size: 0.9rem;
-  margin-bottom: 20px;
+  gap: 10px;
+  background: var(--status-fresh-bg);
+  border: 1px solid var(--status-fresh-border);
+  color: var(--status-fresh);
+  padding: 12px;
+  border-radius: var(--radius-xs);
+  font-size: 0.82rem;
+  margin-bottom: 16px;
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .input-wrapper {
@@ -191,33 +202,58 @@ const handleSignUp = async () => {
 
 .input-icon {
   position: absolute;
-  left: 14px;
+  left: 12px;
   color: var(--text-muted);
   pointer-events: none;
 }
 
 .form-input.with-icon {
-  padding-left: 42px;
+  padding-left: 38px;
 }
 
 .auth-btn {
   width: 100%;
-  padding: 12px;
-  margin-top: 8px;
+  padding: 10px;
+  margin-top: 4px;
+  justify-content: center;
+}
+
+.divider-line {
+  position: relative;
+  text-align: center;
+  margin: 18px 0;
+}
+
+.divider-line::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+.divider-line span {
+  position: relative;
+  background: var(--bg-surface);
+  padding: 0 10px;
+  font-size: 0.74rem;
+  color: var(--text-muted);
 }
 
 .auth-footer {
   text-align: center;
-  margin-top: 24px;
-  font-size: 0.875rem;
+  margin-top: 20px;
+  font-size: 0.82rem;
   color: var(--text-secondary);
   display: flex;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .auth-link {
-  color: var(--accent-orange);
+  color: var(--text-primary);
   font-weight: 600;
 }
 
