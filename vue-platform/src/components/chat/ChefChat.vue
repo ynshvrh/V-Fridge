@@ -17,22 +17,42 @@ import {
   Check,
   Flame,
   Clock,
-  Apple
+  Apple,
+  Utensils,
+  Plus,
+  Minus,
+  X
 } from '@lucide/vue';
 
 export interface ChatMessage {
+  id?: number;
   role: 'user' | 'assistant' | 'model';
   content: string;
 }
 
-export interface ParsedRecipeBlock {
-  preText: string;
-  recipeName: string;
-  recipeDescription: string;
+export interface ParsedRecipe {
+  name: string;
+  description: string;
   ingredients: string[];
   steps: string[];
-  postText: string;
-  hasRecipe: boolean;
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  portions: number;
+}
+
+export interface ParsedShoppingItem {
+  name: string;
+  quantity?: number | string;
+  unit?: string;
+  category: string;
+}
+
+export interface ParsedChefResponse {
+  dialogueText: string;
+  recipe: ParsedRecipe | null;
+  shoppingItems: ParsedShoppingItem[];
 }
 
 const savedRecipeStore = useSavedRecipeStore();
@@ -43,26 +63,63 @@ const messages = ref<ChatMessage[]>([]);
 const input = ref('');
 const loading = ref(false);
 const scrollContainerRef = ref<HTMLDivElement | null>(null);
+
 const copiedIndex = ref<number | null>(null);
 const addedShoppingIndex = ref<number | null>(null);
 const savedRecipeIndex = ref<number | null>(null);
 
+// Cook Modal State
+const cookingRecipe = ref<ParsedRecipe | null>(null);
+const cookPortions = ref(2);
+const cookExpiryDays = ref(3);
+const isCooking = ref(false);
+const cookSuccessMessage = ref<string | null>(null);
+
 // Chef Modes
 const activeMode = ref<'fridge-only' | 'quick' | 'protein' | 'healthy'>('fridge-only');
 
-const extractRecipeData = (content: string): ParsedRecipeBlock => {
-  const codeBlockMatch = content.match(/```(?:recipe)?\s*([\s\S]*?)```/i);
-  if (codeBlockMatch) {
-    const rawBlock = codeBlockMatch[1];
-    const preText = content.slice(0, codeBlockMatch.index).trim();
-    const postText = content.slice(codeBlockMatch.index! + codeBlockMatch[0].length).trim();
+const parseChefMessage = (content: string): ParsedChefResponse => {
+  const trimmed = content.trim();
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      return {
+        dialogueText: parsed.message || '',
+        recipe: parsed.recipe ? {
+          name: parsed.recipe.name || 'Рецепт від AI Шефа',
+          description: parsed.recipe.description || '',
+          ingredients: Array.isArray(parsed.recipe.ingredients) ? parsed.recipe.ingredients : [],
+          steps: Array.isArray(parsed.recipe.steps) ? parsed.recipe.steps : [],
+          calories: Number(parsed.recipe.calories) || 0,
+          protein: Number(parsed.recipe.protein) || 0,
+          fat: Number(parsed.recipe.fat) || 0,
+          carbs: Number(parsed.recipe.carbs) || 0,
+          portions: Number(parsed.recipe.portions) || 2
+        } : null,
+        shoppingItems: Array.isArray(parsed.suggestedShoppingItems) ? parsed.suggestedShoppingItems : []
+      };
+    } catch {
+      // Fall through to markdown parser
+    }
+  }
+
+  let textWithoutBlocks = content;
+  let parsedRecipe: ParsedRecipe | null = null;
+  const shoppingItems: ParsedShoppingItem[] = [];
+
+  // 1. Extract ```recipe codeblock
+  const recipeMatch = content.match(/```(?:recipe)?\s*([\s\S]*?)```/i);
+  if (recipeMatch) {
+    const rawRecipe = recipeMatch[1];
+    textWithoutBlocks = textWithoutBlocks.replace(recipeMatch[0], '').trim();
 
     let name = 'Рецепт від AI Шефа';
     let description = '';
+    let calories = 0, protein = 0, fat = 0, carbs = 0, portions = 2;
     const ingredients: string[] = [];
     const steps: string[] = [];
 
-    const lines = rawBlock.split('\n').map((l) => l.trim()).filter(Boolean);
+    const lines = rawRecipe.split('\n').map((l) => l.trim()).filter(Boolean);
     let section: 'none' | 'ingredients' | 'steps' = 'none';
 
     for (const line of lines) {
@@ -70,6 +127,21 @@ const extractRecipeData = (content: string): ParsedRecipeBlock => {
         name = line.replace(/^(?:Title|Name|Назва|Рецепт):\s*/i, '').replace(/[*#]/g, '').trim();
       } else if (/^(?:Description|Опис):/i.test(line)) {
         description = line.replace(/^(?:Description|Опис):\s*/i, '').trim();
+      } else if (/^(?:Calories|Калорії|кКал):/i.test(line)) {
+        const num = line.match(/\d+/);
+        if (num) calories = parseInt(num[0], 10);
+      } else if (/^(?:Protein|Білки|Б):/i.test(line)) {
+        const num = line.match(/\d+(?:[\.,]\d+)?/);
+        if (num) protein = parseFloat(num[0].replace(',', '.'));
+      } else if (/^(?:Fat|Жири|Ж):/i.test(line)) {
+        const num = line.match(/\d+(?:[\.,]\d+)?/);
+        if (num) fat = parseFloat(num[0].replace(',', '.'));
+      } else if (/^(?:Carbs|Вуглеводи|В):/i.test(line)) {
+        const num = line.match(/\d+(?:[\.,]\d+)?/);
+        if (num) carbs = parseFloat(num[0].replace(',', '.'));
+      } else if (/^(?:Portions|Порції):/i.test(line)) {
+        const num = line.match(/\d+/);
+        if (num) portions = parseInt(num[0], 10);
       } else if (/^(?:Ingredients|Інгредієнти):/i.test(line)) {
         section = 'ingredients';
       } else if (/^(?:Steps|Кроки|Приготування):/i.test(line)) {
@@ -87,70 +159,44 @@ const extractRecipeData = (content: string): ParsedRecipeBlock => {
       }
     }
 
-    return {
-      preText,
-      recipeName: name,
-      recipeDescription: description,
+    parsedRecipe = {
+      name,
+      description,
       ingredients,
       steps,
-      postText,
-      hasRecipe: true
+      calories,
+      protein,
+      fat,
+      carbs,
+      portions
     };
   }
 
-  const ingIndex = content.search(/(?:Інгредієнти|Ingredients):/i);
-  if (ingIndex !== -1) {
-    const preText = content.slice(0, ingIndex).trim();
-    const recipeText = content.slice(ingIndex).trim();
+  // 2. Extract ```shopping codeblock
+  const shoppingMatch = content.match(/```(?:shopping)?\s*([\s\S]*?)```/i);
+  if (shoppingMatch && shoppingMatch[0] !== recipeMatch?.[0]) {
+    const rawShopping = shoppingMatch[1];
+    textWithoutBlocks = textWithoutBlocks.replace(shoppingMatch[0], '').trim();
 
-    let name = 'Рецепт від AI Шефа';
-    const titleMatch = preText.match(/\*\*(.*?)\*\*/) || preText.match(/^#+\s*(.*)/m);
-    if (titleMatch) {
-      name = titleMatch[1].replace(/[*#]/g, '').trim();
-    }
-
-    const ingredients: string[] = [];
-    const steps: string[] = [];
-    const lines = recipeText.split('\n').map((l) => l.trim()).filter(Boolean);
-    let section: 'ingredients' | 'steps' = 'ingredients';
-
+    const lines = rawShopping.split('\n').map((l) => l.trim()).filter(Boolean);
     for (const line of lines) {
-      if (/(?:Кроки|Приготування|Steps):/i.test(line)) {
-        section = 'steps';
-        continue;
-      }
-      if (/(?:Інгредієнти|Ingredients):/i.test(line)) {
-        section = 'ingredients';
-        continue;
-      }
       if (line.startsWith('-') || line.startsWith('*')) {
-        const item = line.replace(/^[-*]\s*/, '').trim();
-        if (section === 'steps') steps.push(item);
-        else ingredients.push(item);
-      } else if (/^\d+\./.test(line)) {
-        steps.push(line.replace(/^\d+\.\s*/, '').trim());
+        let clean = line.replace(/^[-*]\s*/, '').trim();
+        let cat = 'other';
+        const catMatch = clean.match(/\[([a-zA-Z\-]+)\]$/);
+        if (catMatch) {
+          cat = catMatch[1];
+          clean = clean.replace(/\[[a-zA-Z\-]+\]$/, '').trim();
+        }
+        shoppingItems.push({ name: clean, category: cat });
       }
     }
-
-    return {
-      preText,
-      recipeName: name,
-      recipeDescription: '',
-      ingredients,
-      steps,
-      postText: '',
-      hasRecipe: true
-    };
   }
 
   return {
-    preText: content,
-    recipeName: '',
-    recipeDescription: '',
-    ingredients: [],
-    steps: [],
-    postText: '',
-    hasRecipe: false
+    dialogueText: textWithoutBlocks,
+    recipe: parsedRecipe,
+    shoppingItems
   };
 };
 
@@ -205,18 +251,17 @@ const sendMessage = async (text: string) => {
   }
 };
 
-const handleSaveRecipeFromChat = async (parsed: ParsedRecipeBlock, index: number) => {
-  const name = parsed.recipeName || 'Рецепт від AI Шефа';
+const handleSaveRecipeFromChat = async (recipe: ParsedRecipe, index: number) => {
   try {
     await savedRecipeStore.saveRecipe({
-      name,
-      description: parsed.recipeDescription || null,
-      ingredients: parsed.ingredients,
-      steps: parsed.steps,
-      calories: 0,
-      protein: 0,
-      fat: 0,
-      carbs: 0
+      name: recipe.name,
+      description: recipe.description || null,
+      ingredients: recipe.ingredients,
+      steps: recipe.steps,
+      calories: recipe.calories,
+      protein: recipe.protein,
+      fat: recipe.fat,
+      carbs: recipe.carbs
     });
     savedRecipeIndex.value = index;
     setTimeout(() => {
@@ -227,11 +272,48 @@ const handleSaveRecipeFromChat = async (parsed: ParsedRecipeBlock, index: number
   }
 };
 
-const handleAddIngredientsToShopping = async (ingredients: string[], index: number) => {
-  if (!ingredients.length) return;
+const openCookModal = (recipe: ParsedRecipe) => {
+  cookingRecipe.value = recipe;
+  cookPortions.value = recipe.portions || 2;
+  cookExpiryDays.value = 3;
+  cookSuccessMessage.value = null;
+};
+
+const executeCookRecipe = async () => {
+  if (!cookingRecipe.value) return;
+  isCooking.value = true;
   try {
-    for (const ing of ingredients) {
-      await shoppingStore.addItem({ name: ing, category: 'other' });
+    const res = await productStore.cookRecipe({
+      name: cookingRecipe.value.name,
+      description: cookingRecipe.value.description,
+      portions: cookPortions.value,
+      ingredients: cookingRecipe.value.ingredients,
+      caloriesPerPortion: cookingRecipe.value.calories,
+      proteinPerPortion: cookingRecipe.value.protein,
+      fatPerPortion: cookingRecipe.value.fat,
+      carbsPerPortion: cookingRecipe.value.carbs,
+      expiryDays: cookExpiryDays.value
+    });
+
+    if (res) {
+      cookSuccessMessage.value = res.message;
+      setTimeout(() => {
+        cookingRecipe.value = null;
+        cookSuccessMessage.value = null;
+      }, 2200);
+    } else {
+      alert(productStore.error || 'Помилка списання інгредієнтів.');
+    }
+  } finally {
+    isCooking.value = false;
+  }
+};
+
+const handleAddAllShoppingItems = async (items: ParsedShoppingItem[], index: number) => {
+  if (!items.length) return;
+  try {
+    for (const item of items) {
+      await shoppingStore.addItem({ name: item.name, category: item.category || 'other' });
     }
     addedShoppingIndex.value = index;
     setTimeout(() => {
@@ -355,7 +437,6 @@ const quickPrompts = [
         </div>
       </div>
 
-      <!-- Message Bubbles -->
       <div
         v-for="(m, i) in messages"
         :key="i"
@@ -367,20 +448,16 @@ const quickPrompts = [
         </div>
 
         <div class="message-bubble-wrapper">
-          <!-- User bubble -->
           <div v-if="m.role === 'user'" class="user-bubble">
             <p class="bubble-text">{{ m.content }}</p>
           </div>
 
-          <!-- AI bubble -->
           <div v-else class="ai-bubble">
-            <!-- Text before recipe -->
-            <p v-if="extractRecipeData(m.content).preText" class="bubble-paragraph">
-              {{ extractRecipeData(m.content).preText }}
-            </p>
+            <div v-if="parseChefMessage(m.content).dialogueText" class="chef-dialogue-block">
+              <p class="bubble-paragraph">{{ parseChefMessage(m.content).dialogueText }}</p>
+            </div>
 
-            <!-- Structured Recipe Box -->
-            <div v-if="extractRecipeData(m.content).hasRecipe" class="recipe-card-box">
+            <div v-if="parseChefMessage(m.content).recipe" class="recipe-card-box">
               <div class="recipe-card-header">
                 <div class="badge badge-ai">
                   <ChefHat :size="12" />
@@ -388,48 +465,63 @@ const quickPrompts = [
                 </div>
                 <div class="recipe-actions">
                   <button
+                    class="action-pill-btn btn-cook"
+                    title="Приготувати та списати сирі інгредієнти"
+                    @click="openCookModal(parseChefMessage(m.content).recipe!)"
+                  >
+                    <Utensils :size="13" />
+                    <span>Приготувати</span>
+                  </button>
+                  <button
                     class="action-pill-btn"
-                    title="Зберегти в мої рецепти"
-                    @click="handleSaveRecipeFromChat(extractRecipeData(m.content), i)"
+                    title="Зберегти в обрані рецепти"
+                    @click="handleSaveRecipeFromChat(parseChefMessage(m.content).recipe!, i)"
                   >
                     <Check v-if="savedRecipeIndex === i" :size="13" />
                     <Bookmark v-else :size="13" />
                     <span>{{ savedRecipeIndex === i ? 'Збережено!' : 'Зберегти' }}</span>
                   </button>
-                  <button
-                    v-if="extractRecipeData(m.content).ingredients.length > 0"
-                    class="action-pill-btn"
-                    title="Додати інгредієнти до списку покупок"
-                    @click="handleAddIngredientsToShopping(extractRecipeData(m.content).ingredients, i)"
-                  >
-                    <Check v-if="addedShoppingIndex === i" :size="13" />
-                    <ShoppingCart v-else :size="13" />
-                    <span>{{ addedShoppingIndex === i ? 'Додано!' : '+ В покупки' }}</span>
-                  </button>
                 </div>
               </div>
 
-              <h4 class="recipe-heading">{{ extractRecipeData(m.content).recipeName }}</h4>
-              <p v-if="extractRecipeData(m.content).recipeDescription" class="recipe-desc">
-                {{ extractRecipeData(m.content).recipeDescription }}
+              <h4 class="recipe-heading">{{ parseChefMessage(m.content).recipe!.name }}</h4>
+              <p v-if="parseChefMessage(m.content).recipe!.description" class="recipe-desc">
+                {{ parseChefMessage(m.content).recipe!.description }}
               </p>
 
-              <!-- Ingredients -->
-              <div v-if="extractRecipeData(m.content).ingredients.length > 0" class="recipe-section">
+              <div v-if="parseChefMessage(m.content).recipe!.calories > 0" class="recipe-nutr-strip">
+                <div class="nutr-stat-item">
+                  <span class="stat-lbl">Калорії</span>
+                  <strong class="stat-num">{{ parseChefMessage(m.content).recipe!.calories }} кКал</strong>
+                </div>
+                <div class="nutr-stat-item">
+                  <span class="stat-lbl">Білки</span>
+                  <strong class="stat-num">{{ Math.round(parseChefMessage(m.content).recipe!.protein) }}г</strong>
+                </div>
+                <div class="nutr-stat-item">
+                  <span class="stat-lbl">Жири</span>
+                  <strong class="stat-num">{{ Math.round(parseChefMessage(m.content).recipe!.fat) }}г</strong>
+                </div>
+                <div class="nutr-stat-item">
+                  <span class="stat-lbl">Вуглеводи</span>
+                  <strong class="stat-num">{{ Math.round(parseChefMessage(m.content).recipe!.carbs) }}г</strong>
+                </div>
+              </div>
+
+              <div v-if="parseChefMessage(m.content).recipe!.ingredients.length > 0" class="recipe-section">
                 <span class="section-label">Інгредієнти:</span>
                 <ul class="ingredients-list">
-                  <li v-for="(ing, ix) in extractRecipeData(m.content).ingredients" :key="ix">
+                  <li v-for="(ing, ix) in parseChefMessage(m.content).recipe!.ingredients" :key="ix">
                     <span class="bullet" />
                     <span>{{ ing }}</span>
                   </li>
                 </ul>
               </div>
 
-              <!-- Steps -->
-              <div v-if="extractRecipeData(m.content).steps.length > 0" class="recipe-section">
+              <div v-if="parseChefMessage(m.content).recipe!.steps.length > 0" class="recipe-section">
                 <span class="section-label">Кроки приготування:</span>
                 <ol class="steps-list">
-                  <li v-for="(step, ix) in extractRecipeData(m.content).steps" :key="ix">
+                  <li v-for="(step, ix) in parseChefMessage(m.content).recipe!.steps" :key="ix">
                     <span class="step-badge">{{ ix + 1 }}</span>
                     <span class="step-text">{{ step }}</span>
                   </li>
@@ -437,12 +529,34 @@ const quickPrompts = [
               </div>
             </div>
 
-            <!-- Text after recipe -->
-            <p v-if="extractRecipeData(m.content).postText" class="bubble-paragraph">
-              {{ extractRecipeData(m.content).postText }}
-            </p>
+            <div v-if="parseChefMessage(m.content).shoppingItems.length > 0" class="shopping-suggestion-box">
+              <div class="shopping-box-header">
+                <div class="shopping-box-title">
+                  <ShoppingCart :size="14" />
+                  <span>Чого бракує в холодильнику ({{ parseChefMessage(m.content).shoppingItems.length }})</span>
+                </div>
+                <button
+                  class="action-pill-btn btn-shopping-add"
+                  @click="handleAddAllShoppingItems(parseChefMessage(m.content).shoppingItems, i)"
+                >
+                  <Check v-if="addedShoppingIndex === i" :size="13" />
+                  <ShoppingCart v-else :size="13" />
+                  <span>{{ addedShoppingIndex === i ? 'Додано у список!' : '+ Додати всі в покупки' }}</span>
+                </button>
+              </div>
 
-            <!-- Bottom utility buttons -->
+              <div class="shopping-items-chips">
+                <div
+                  v-for="(item, sIdx) in parseChefMessage(m.content).shoppingItems"
+                  :key="sIdx"
+                  class="shopping-item-chip"
+                >
+                  <span class="shop-item-name">{{ item.name }}</span>
+                  <span v-if="item.category" class="shop-item-cat">{{ item.category }}</span>
+                </div>
+              </div>
+            </div>
+
             <div class="message-meta-actions">
               <button class="icon-utility-btn" title="Копіювати відповідь" @click="copyMessage(m.content, i)">
                 <Check v-if="copiedIndex === i" :size="13" />
@@ -454,19 +568,17 @@ const quickPrompts = [
         </div>
       </div>
 
-      <!-- Loading indicator -->
       <div v-if="loading" class="message-row ai-row">
         <div class="avatar-box">
           <ChefHat :size="15" />
         </div>
         <div class="ai-bubble loading-state-bubble">
           <Loader2 :size="16" class="spin-icon" />
-          <span>AI Шеф складає персональний рецепт...</span>
+          <span>AI Шеф аналізує холодильник і готує персональну відповідь...</span>
         </div>
       </div>
     </div>
 
-    <!-- Chat Prompt Input Form -->
     <form @submit.prevent="sendMessage(input)" class="chat-input-bar">
       <div class="input-container">
         <input
@@ -481,6 +593,80 @@ const quickPrompts = [
         </button>
       </div>
     </form>
+
+    <transition name="fade">
+      <div v-if="cookingRecipe" class="modal-overlay" @click.self="cookingRecipe = null">
+        <div class="modal-card nordic-card">
+          <div class="modal-header">
+            <div class="badge badge-ai">
+              <Utensils :size="12" />
+              <span>Приготувати страву</span>
+            </div>
+            <button class="close-btn" @click="cookingRecipe = null">
+              <X :size="18" />
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <h3 class="cook-dish-title">{{ cookingRecipe.name }}</h3>
+            <p class="cook-dish-desc">
+              Приготування страви автоматично <strong>спише сирі інгредієнти з холодильника</strong> та створить контейнер готової страви на поличці.
+            </p>
+
+            <div class="cook-controls-grid">
+              <div class="control-box">
+                <span class="control-label">Кількість порцій у контейнері:</span>
+                <div class="qty-selector">
+                  <button class="qty-circle-btn" :disabled="cookPortions <= 1" @click="cookPortions--">
+                    <Minus :size="14" />
+                  </button>
+                  <span class="qty-number">{{ cookPortions }}</span>
+                  <button class="qty-circle-btn" :disabled="cookPortions >= 20" @click="cookPortions++">
+                    <Plus :size="14" />
+                  </button>
+                </div>
+              </div>
+
+              <div class="control-box">
+                <span class="control-label">Термін зберігання:</span>
+                <div class="expiry-selector">
+                  <select v-model="cookExpiryDays" class="form-select">
+                    <option :value="2">2 дні (салати / риба)</option>
+                    <option :value="3">3 дні (супи / м'ясо)</option>
+                    <option :value="4">4 дні</option>
+                    <option :value="7">7 днів (запіканки / соуси)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="cookingRecipe.ingredients.length > 0" class="deduct-preview-box">
+              <span class="preview-title">Буде списано з холодильника:</span>
+              <ul class="preview-list">
+                <li v-for="(ing, ix) in cookingRecipe.ingredients" :key="ix">
+                  <span class="bullet" />
+                  <span>{{ ing }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <div v-if="cookSuccessMessage" class="success-alert">
+              <Check :size="16" />
+              <span>{{ cookSuccessMessage }}</span>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-secondary btn-sm" @click="cookingRecipe = null">Скасувати</button>
+            <button class="btn-primary btn-sm" :disabled="isCooking" @click="executeCookRecipe">
+              <Loader2 v-if="isCooking" :size="14" class="spin-icon" />
+              <Utensils v-else :size="14" />
+              <span>{{ isCooking ? 'Готуємо...' : 'Списати продукти та поставити в холодильник' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -619,7 +805,6 @@ const quickPrompts = [
   border-color: var(--primary);
 }
 
-/* Chat Viewport */
 .chat-viewport {
   flex: 1;
   overflow-y: auto;
@@ -705,7 +890,6 @@ const quickPrompts = [
   line-height: 1.25;
 }
 
-/* Messages */
 .message-row {
   display: flex;
   gap: 12px;
@@ -767,7 +951,12 @@ const quickPrompts = [
   line-height: 1.5;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+}
+
+.chef-dialogue-block {
+  margin: 0;
+  line-height: 1.5;
 }
 
 .bubble-paragraph {
@@ -779,7 +968,6 @@ const quickPrompts = [
   background: var(--bg-subtle);
   border-radius: var(--radius-sm);
   padding: 14px;
-  margin: 6px 0;
 }
 
 .recipe-card-header {
@@ -815,6 +1003,16 @@ const quickPrompts = [
   color: var(--primary-foreground);
 }
 
+.btn-cook {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.btn-cook:hover {
+  opacity: 0.9;
+}
+
 .recipe-heading {
   font-size: 1.05rem;
   font-weight: 600;
@@ -825,7 +1023,31 @@ const quickPrompts = [
 .recipe-desc {
   font-size: 0.8rem;
   color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.recipe-nutr-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
   margin-bottom: 10px;
+  text-align: center;
+}
+
+.stat-lbl {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.stat-num {
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
 .recipe-section {
@@ -897,6 +1119,60 @@ const quickPrompts = [
   margin-top: 2px;
 }
 
+.shopping-suggestion-box {
+  padding: 12px 14px;
+  background: var(--bg-subtle);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shopping-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.shopping-box-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.btn-shopping-add {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.shopping-items-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.shopping-item-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.74rem;
+}
+
+.shop-item-cat {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
 .message-meta-actions {
   display: flex;
   justify-content: flex-end;
@@ -935,7 +1211,6 @@ const quickPrompts = [
   100% { transform: rotate(360deg); }
 }
 
-/* Input Bar */
 .chat-input-bar {
   padding: 12px 18px;
   background: var(--bg-surface);
@@ -986,9 +1261,186 @@ const quickPrompts = [
   cursor: not-allowed;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 500px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cook-dish-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.cook-dish-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.cook-controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.control-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.control-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.qty-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.qty-circle-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.qty-circle-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+.qty-number {
+  font-size: 1rem;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.form-select {
+  padding: 6px 10px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.deduct-preview-box {
+  padding: 10px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+}
+
+.preview-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.preview-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.78rem;
+  color: var(--text-primary);
+}
+
+.preview-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.success-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: var(--status-fresh-bg);
+  border: 1px solid var(--status-fresh-border);
+  color: var(--status-fresh);
+  border-radius: var(--radius-xs);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.modal-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 @media (max-width: 600px) {
   .btn-text-hide {
     display: none;
+  }
+  .cook-controls-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

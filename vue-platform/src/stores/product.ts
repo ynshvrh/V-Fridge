@@ -32,6 +32,50 @@ export interface UpdateProductInput {
   category?: string;
 }
 
+export interface CookRecipeInput {
+  name: string;
+  description?: string | null;
+  portions?: number;
+  ingredients?: string[];
+  caloriesPerPortion?: number;
+  proteinPerPortion?: number;
+  fatPerPortion?: number;
+  carbsPerPortion?: number;
+  expiryDays?: number;
+  savedRecipeId?: number;
+}
+
+export interface DeductedIngredientSummary {
+  rawIngredient: string;
+  matchedProductName: string;
+  deductedQuantity: number;
+  unit: string;
+  fullyConsumed: boolean;
+}
+
+export interface CookRecipeResult {
+  preparedMealProduct: Product;
+  deductions: DeductedIngredientSummary[];
+  message: string;
+}
+
+export interface ConsumeProductInput {
+  portions?: number;
+  mealType?: string;
+  date?: string;
+  calories?: number;
+  protein?: number;
+  fat?: number;
+  carbs?: number;
+}
+
+export interface ConsumeProductResult {
+  productRemoved: boolean;
+  remainingQuantity: number;
+  nutritionLogId?: number;
+  message: string;
+}
+
 export const useProductStore = defineStore('product', () => {
   const products = ref<Product[]>([]);
   const loading = ref<boolean>(false);
@@ -91,6 +135,51 @@ export const useProductStore = defineStore('product', () => {
     }
   }
 
+  async function cookRecipe(input: CookRecipeInput): Promise<CookRecipeResult | null> {
+    loading.value = true;
+    error.value = null;
+    try {
+      const result = await api.fetch<CookRecipeResult>('/products/cook', {
+        method: 'POST',
+        body: JSON.stringify(input)
+      });
+      await fetchProducts();
+      return result;
+    } catch (err) {
+      const apiErr = err as ApiErrorResponse;
+      error.value = apiErr.error || 'Failed to cook recipe';
+      return null;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function consumeProduct(id: number, input: ConsumeProductInput = {}): Promise<ConsumeProductResult | null> {
+    loading.value = true;
+    error.value = null;
+    try {
+      const result = await api.fetch<ConsumeProductResult>(`/products/${id}/consume`, {
+        method: 'POST',
+        body: JSON.stringify(input)
+      });
+      if (result.productRemoved) {
+        products.value = products.value.filter(p => p.id !== id);
+      } else {
+        const index = products.value.findIndex(p => p.id === id);
+        if (index !== -1) {
+          products.value[index].quantity = result.remainingQuantity;
+        }
+      }
+      return result;
+    } catch (err) {
+      const apiErr = err as ApiErrorResponse;
+      error.value = apiErr.error || 'Failed to consume portion';
+      return null;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   async function deleteProduct(id: number): Promise<boolean> {
     loading.value = true;
     error.value = null;
@@ -130,6 +219,8 @@ export const useProductStore = defineStore('product', () => {
     fetchProducts,
     addProduct,
     updateProduct,
+    cookRecipe,
+    consumeProduct,
     deleteProduct,
     deleteAllProducts
   };

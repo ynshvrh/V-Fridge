@@ -23,15 +23,18 @@ const showCreateFridgeModal = ref(false);
 
 const categories = [
   { id: 'all', label: 'Всі товари' },
+  { id: 'prepared-meals', label: 'Готові страви' },
   { id: 'dairy', label: 'Молочне' },
-  { id: 'fruits', label: 'Фрукти' },
-  { id: 'vegetables', label: 'Овочі' },
-  { id: 'meat', label: 'М\'ясо' },
-  { id: 'poultry', label: 'Птиця' },
-  { id: 'seafood', label: 'Морепродукти' },
+  { id: 'meat-fish', label: 'М\'ясо та риба' },
+  { id: 'vegetables', label: 'Овочі та зелень' },
+  { id: 'fruits', label: 'Фрукти та ягоди' },
   { id: 'bakery', label: 'Випічка' },
-  { id: 'beverages', label: 'Напої' },
-  { id: 'condiments', label: 'Соуси/Спеції' },
+  { id: 'pantry', label: 'Бакалія' },
+  { id: 'sauces', label: 'Соуси та спеції' },
+  { id: 'drinks', label: 'Напої' },
+  { id: 'frozen', label: 'Заморозка' },
+  { id: 'canned-prepared', label: 'Консерви' },
+  { id: 'snacks', label: 'Снеки' },
   { id: 'other', label: 'Інше' }
 ];
 

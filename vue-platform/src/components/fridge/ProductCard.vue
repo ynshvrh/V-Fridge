@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { type Product, useProductStore } from '@/stores/product';
 import { Plus, Minus, Trash2, Clock, AlertTriangle } from '@lucide/vue';
 
@@ -36,6 +36,28 @@ const decreaseQuantity = async () => {
   }
 };
 
+const isPreparedMeal = computed(() => {
+  return props.product.category === 'prepared-meals' ||
+    props.product.unit.toLowerCase().includes('порц') ||
+    (props.product.description && props.product.description.includes('КБЖВ'));
+});
+
+const isEating = ref(false);
+const eatSuccess = ref(false);
+
+const handleEatPortion = async () => {
+  isEating.value = true;
+  try {
+    const res = await productStore.consumeProduct(props.product.id, { portions: 1 });
+    if (res) {
+      eatSuccess.value = true;
+      setTimeout(() => { eatSuccess.value = false; }, 1800);
+    }
+  } finally {
+    isEating.value = false;
+  }
+};
+
 const handleDelete = async () => {
   await productStore.deleteProduct(props.product.id);
 };
@@ -58,6 +80,19 @@ const handleDelete = async () => {
       <h3 class="product-name">{{ product.name }}</h3>
       <p v-if="product.description" class="product-desc">{{ product.description }}</p>
       <p v-if="product.expiryDate" class="expiry-date">Термін: {{ product.expiryDate }}</p>
+    </div>
+
+    <!-- Prepared Meal Quick Eat Action Strip -->
+    <div v-if="isPreparedMeal" class="prepared-meal-action-row">
+      <button
+        class="eat-portion-btn"
+        :disabled="isEating"
+        title="З'їсти 1 порцію та автоматично внести КБЖВ у щоденник"
+        @click="handleEatPortion"
+      >
+        <span v-if="eatSuccess">✓ З'їдено і внесено в щоденник!</span>
+        <span v-else>🍽️ З'їсти 1 порцію</span>
+      </button>
     </div>
 
     <!-- Quantity & Action controls -->
@@ -86,6 +121,33 @@ const handleDelete = async () => {
   flex-direction: column;
   justify-content: space-between;
   gap: 10px;
+}
+
+.prepared-meal-action-row {
+  margin: -2px 0 2px 0;
+}
+
+.eat-portion-btn {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: var(--transition-fast);
+}
+
+.eat-portion-btn:hover:not(:disabled) {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
 }
 
 .card-header {

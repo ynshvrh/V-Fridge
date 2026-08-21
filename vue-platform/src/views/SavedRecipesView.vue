@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useSavedRecipeStore, type SavedRecipe } from '@/stores/savedRecipes';
 import { useNutritionStore } from '@/stores/nutrition';
 import { useShoppingStore } from '@/stores/shopping';
+import { useProductStore } from '@/stores/product';
 import { 
   Search, 
   Trash2, 
@@ -15,13 +16,15 @@ import {
   BookOpen, 
   X,
   ChefHat,
-  Sparkles
+  Sparkles,
+  Utensils
 } from '@lucide/vue';
 
 const router = useRouter();
 const savedRecipeStore = useSavedRecipeStore();
 const nutritionStore = useNutritionStore();
 const shoppingStore = useShoppingStore();
+const productStore = useProductStore();
 
 const searchQuery = ref('');
 const selectedRecipe = ref<SavedRecipe | null>(null);
@@ -30,6 +33,7 @@ const checkedIngredients = ref<Record<string, boolean>>({});
 const deletingId = ref<number | null>(null);
 const loggingId = ref<number | null>(null);
 const importingId = ref<number | null>(null);
+const cookingId = ref<number | null>(null);
 
 onMounted(async () => {
   await savedRecipeStore.fetchSavedRecipes();
@@ -100,6 +104,31 @@ const handleImportIngredients = async (recipe: SavedRecipe) => {
     alert(err.error || 'Не вдалося експортувати інгредієнти.');
   } finally {
     importingId.value = null;
+  }
+};
+
+const handleCookSavedRecipe = async (recipe: SavedRecipe) => {
+  cookingId.value = recipe.id;
+  try {
+    const res = await productStore.cookRecipe({
+      name: recipe.name,
+      description: recipe.description,
+      portions: 2,
+      ingredients: recipe.ingredients,
+      caloriesPerPortion: recipe.calories,
+      proteinPerPortion: Number(recipe.protein) || 0,
+      fatPerPortion: Number(recipe.fat) || 0,
+      carbsPerPortion: Number(recipe.carbs) || 0,
+      expiryDays: 3,
+      savedRecipeId: recipe.id
+    });
+    if (res) {
+      alert(`Страва "${recipe.name}" приготована! Інгредієнти списано з холодильника, а контейнер додано на полицю.`);
+    }
+  } catch (err: any) {
+    alert(err.error || 'Не вдалося списати інгредієнти.');
+  } finally {
+    cookingId.value = null;
   }
 };
 </script>
@@ -226,6 +255,14 @@ const handleImportIngredients = async (recipe: SavedRecipe) => {
 
             <!-- Action buttons inside modal -->
             <div class="modal-quick-actions">
+              <button
+                class="btn-primary btn-sm flex-1"
+                :disabled="cookingId === selectedRecipe.id"
+                @click="handleCookSavedRecipe(selectedRecipe)"
+              >
+                <Utensils :size="14" />
+                <span>{{ cookingId === selectedRecipe.id ? 'Готуємо...' : 'Приготувати страву' }}</span>
+              </button>
               <button
                 class="btn-secondary btn-sm flex-1"
                 :disabled="loggingId === selectedRecipe.id"
