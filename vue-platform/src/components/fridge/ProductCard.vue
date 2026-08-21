@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { type Product, useProductStore } from '@/stores/product';
-import { Plus, Minus, Trash2, Clock, AlertTriangle } from '@lucide/vue';
+import { Plus, Minus, Trash2, Clock, AlertTriangle, Utensils, X, Check } from '@lucide/vue';
 
 const props = defineProps<{
   product: Product;
@@ -42,16 +42,62 @@ const isPreparedMeal = computed(() => {
     (props.product.description && props.product.description.includes('КБЖВ'));
 });
 
+// Eat Portion Modal State
+const showEatModal = ref(false);
+const selectedPortions = ref(1);
+const selectedMealType = ref<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
 const isEating = ref(false);
 const eatSuccess = ref(false);
 
-const handleEatPortion = async () => {
+const getInitialMealType = (): 'breakfast' | 'lunch' | 'dinner' | 'snack' => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 11) return 'breakfast';
+  if (hour >= 11 && hour < 16) return 'lunch';
+  if (hour >= 16 && hour < 21) return 'dinner';
+  return 'snack';
+};
+
+const openEatModal = () => {
+  selectedPortions.value = Math.min(1, props.product.quantity);
+  selectedMealType.value = getInitialMealType();
+  showEatModal.value = true;
+};
+
+// Parse single portion macros from description
+const parsedMacros = computed(() => {
+  const desc = props.product.description || '';
+  let calories = 0, protein = 0, fat = 0, carbs = 0;
+  const calMatch = desc.match(/(\d+)\s*(?:кКал|kcal)/i);
+  if (calMatch) calories = parseInt(calMatch[1], 10);
+  const protMatch = desc.match(/Б:\s*([\d\.,]+)/i);
+  if (protMatch) protein = parseFloat(protMatch[1].replace(',', '.'));
+  const fatMatch = desc.match(/Ж:\s*([\d\.,]+)/i);
+  if (fatMatch) fat = parseFloat(fatMatch[1].replace(',', '.'));
+  const carbsMatch = desc.match(/В:\s*([\d\.,]+)/i);
+  if (carbsMatch) carbs = parseFloat(carbsMatch[1].replace(',', '.'));
+
+  return {
+    calories: Math.round(calories * selectedPortions.value),
+    protein: Number((protein * selectedPortions.value).toFixed(1)),
+    fat: Number((fat * selectedPortions.value).toFixed(1)),
+    carbs: Number((carbs * selectedPortions.value).toFixed(1)),
+    hasMacros: calories > 0 || protein > 0
+  };
+});
+
+const handleConfirmEat = async () => {
   isEating.value = true;
   try {
-    const res = await productStore.consumeProduct(props.product.id, { portions: 1 });
+    const res = await productStore.consumeProduct(props.product.id, {
+      portions: selectedPortions.value,
+      mealType: selectedMealType.value
+    });
     if (res) {
       eatSuccess.value = true;
-      setTimeout(() => { eatSuccess.value = false; }, 1800);
+      setTimeout(() => {
+        eatSuccess.value = false;
+        showEatModal.value = false;
+      }, 1200);
     }
   } finally {
     isEating.value = false;
@@ -86,12 +132,11 @@ const handleDelete = async () => {
     <div v-if="isPreparedMeal" class="prepared-meal-action-row">
       <button
         class="eat-portion-btn"
-        :disabled="isEating"
-        title="З'їсти 1 порцію та автоматично внести КБЖВ у щоденник"
-        @click="handleEatPortion"
+        title="З'їсти порцію та внести КБЖВ у щоденник"
+        @click="openEatModal"
       >
-        <span v-if="eatSuccess">✓ З'їдено і внесено в щоденник!</span>
-        <span v-else>🍽️ З'їсти 1 порцію</span>
+        <Utensils :size="13" />
+        <span>З'їсти порцію</span>
       </button>
     </div>
 
@@ -111,6 +156,163 @@ const handleDelete = async () => {
         <Trash2 :size="15" />
       </button>
     </div>
+
+    <!-- Eat Portion Modal -->
+    <transition name="fade">
+      <div v-if="showEatModal" class="modal-overlay" @click.self="showEatModal = false">
+        <div class="modal-card nordic-card">
+          <div class="modal-header">
+            <div class="badge badge-ai">
+              <Utensils :size="12" />
+              <span>З'їсти порцію</span>
+            </div>
+            <button class="close-btn" @click="showEatModal = false">
+              <X :size="18" />
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <h3 class="eat-dish-title">{{ product.name }}</h3>
+            <p class="eat-dish-subtitle">
+              Доступно в холодильнику: <strong>{{ product.quantity }} {{ product.unit }}</strong>
+            </p>
+
+            <!-- Portion Selector -->
+            <div class="portion-select-group">
+              <span class="field-label">Скільки порцій з'їсти?</span>
+              <div class="quick-portion-chips">
+                <button
+                  type="button"
+                  :class="['chip-btn', selectedPortions === 0.5 ? 'active' : '']"
+                  :disabled="product.quantity < 0.5"
+                  @click="selectedPortions = 0.5"
+                >
+                  0.5
+                </button>
+                <button
+                  type="button"
+                  :class="['chip-btn', selectedPortions === 1 ? 'active' : '']"
+                  :disabled="product.quantity < 1"
+                  @click="selectedPortions = 1"
+                >
+                  1 порція
+                </button>
+                <button
+                  type="button"
+                  :class="['chip-btn', selectedPortions === 1.5 ? 'active' : '']"
+                  :disabled="product.quantity < 1.5"
+                  @click="selectedPortions = 1.5"
+                >
+                  1.5
+                </button>
+                <button
+                  type="button"
+                  :class="['chip-btn', selectedPortions === 2 ? 'active' : '']"
+                  :disabled="product.quantity < 2"
+                  @click="selectedPortions = 2"
+                >
+                  2 порції
+                </button>
+                <button
+                  type="button"
+                  :class="['chip-btn', selectedPortions === product.quantity ? 'active' : '']"
+                  @click="selectedPortions = product.quantity"
+                >
+                  Всі ({{ product.quantity }})
+                </button>
+              </div>
+
+              <!-- Stepper -->
+              <div class="stepper-row">
+                <button
+                  class="stepper-btn"
+                  :disabled="selectedPortions <= 0.5"
+                  @click="selectedPortions = Math.max(0.5, Number((selectedPortions - 0.5).toFixed(1)))"
+                >
+                  <Minus :size="14" />
+                </button>
+                <span class="stepper-val">{{ selectedPortions }} <small>{{ product.unit }}</small></span>
+                <button
+                  class="stepper-btn"
+                  :disabled="selectedPortions >= product.quantity"
+                  @click="selectedPortions = Math.min(product.quantity, Number((selectedPortions + 0.5).toFixed(1)))"
+                >
+                  <Plus :size="14" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Meal Type Selector -->
+            <div class="meal-type-group">
+              <span class="field-label">Прийом їжі для щоденника:</span>
+              <div class="meal-type-chips">
+                <button
+                  type="button"
+                  :class="['meal-chip', selectedMealType === 'breakfast' ? 'active' : '']"
+                  @click="selectedMealType = 'breakfast'"
+                >
+                  🌅 Сніданок
+                </button>
+                <button
+                  type="button"
+                  :class="['meal-chip', selectedMealType === 'lunch' ? 'active' : '']"
+                  @click="selectedMealType = 'lunch'"
+                >
+                  🍲 Обід
+                </button>
+                <button
+                  type="button"
+                  :class="['meal-chip', selectedMealType === 'dinner' ? 'active' : '']"
+                  @click="selectedMealType = 'dinner'"
+                >
+                  🌙 Вечеря
+                </button>
+                <button
+                  type="button"
+                  :class="['meal-chip', selectedMealType === 'snack' ? 'active' : '']"
+                  @click="selectedMealType = 'snack'"
+                >
+                  🥪 Перекус
+                </button>
+              </div>
+            </div>
+
+            <!-- Calculated Macros Preview -->
+            <div v-if="parsedMacros.hasMacros" class="macros-preview-strip">
+              <div class="macro-cell">
+                <span class="m-lbl">Калорії</span>
+                <strong class="m-val">{{ parsedMacros.calories }} кКал</strong>
+              </div>
+              <div class="macro-cell">
+                <span class="m-lbl">Білки</span>
+                <strong class="m-val">{{ parsedMacros.protein }}г</strong>
+              </div>
+              <div class="macro-cell">
+                <span class="m-lbl">Жири</span>
+                <strong class="m-val">{{ parsedMacros.fat }}г</strong>
+              </div>
+              <div class="macro-cell">
+                <span class="m-lbl">Вуглеводи</span>
+                <strong class="m-val">{{ parsedMacros.carbs }}г</strong>
+              </div>
+            </div>
+
+            <div v-if="eatSuccess" class="success-alert">
+              <Check :size="16" />
+              <span>Успішно з'їдено та внесено у щоденник!</span>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn-secondary btn-sm" @click="showEatModal = false">Скасувати</button>
+            <button class="btn-primary btn-sm" :disabled="isEating || selectedPortions <= 0" @click="handleConfirmEat">
+              <Utensils :size="14" />
+              <span>{{ isEating ? 'Записуємо...' : `З'їсти ${selectedPortions} ${product.unit}` }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -250,5 +452,253 @@ const handleDelete = async () => {
 .delete-btn:hover {
   color: var(--status-expired);
   background: var(--status-expired-bg);
+}
+
+/* Eat Portion Modal Styles */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 460px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: var(--radius-xs);
+  transition: var(--transition-fast);
+}
+
+.close-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-base);
+}
+
+.eat-dish-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.eat-dish-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: -6px 0 2px 0;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.portion-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quick-portion-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip-btn {
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  font-size: 0.76rem;
+  font-weight: 500;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.chip-btn:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.chip-btn.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.chip-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.stepper-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.stepper-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.stepper-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.stepper-val {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 40px;
+  text-align: center;
+}
+
+.stepper-val small {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.meal-type-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meal-type-chips {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.meal-chip {
+  padding: 6px 10px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: var(--transition-fast);
+}
+
+.meal-chip:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.meal-chip.active {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.macros-preview-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+  text-align: center;
+}
+
+.m-lbl {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.m-val {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.success-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--status-fresh-bg);
+  border: 1px solid var(--status-fresh-border);
+  color: var(--status-fresh);
+  border-radius: var(--radius-xs);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.modal-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  background: var(--bg-surface);
 }
 </style>
