@@ -4,7 +4,6 @@ import { usePlannerStore } from '@/stores/planner';
 import { useFridgeStore } from '@/stores/fridge';
 import FridgeSelector from '@/components/fridge/FridgeSelector.vue';
 import MealCard from '@/components/planner/MealCard.vue';
-import GapItemsCard from '@/components/planner/GapItemsCard.vue';
 import CreateFridgeModal from '@/components/fridge/CreateFridgeModal.vue';
 import { ChefHat, Sparkles, RefreshCw, Calendar, AlertCircle } from '@lucide/vue';
 
@@ -43,20 +42,6 @@ const mealsByDay = computed(() => {
     map[day] = plannerStore.plan.meals.filter(m => m.day.toLowerCase() === day.toLowerCase());
   }
   return map;
-});
-
-const activeGaps = computed(() => {
-  if (!plannerStore.plan) return [];
-  const activeMealIngredients = plannerStore.plan.meals
-    .flatMap(m => m.ingredients || [])
-    .map(i => i.toLowerCase().trim());
-
-  if (activeMealIngredients.length === 0) return plannerStore.plan.gapItems;
-
-  return plannerStore.plan.gapItems.filter(g => {
-    const gapName = g.name.toLowerCase().trim();
-    return activeMealIngredients.some(ing => ing.includes(gapName) || gapName.includes(ing));
-  });
 });
 
 const handleGeneratePlan = async () => {
@@ -110,8 +95,6 @@ const handleRegenerateDay = async (day: string) => {
     </div>
 
     <div v-else class="planner-content">
-      <GapItemsCard :gaps="activeGaps" />
-
       <div class="days-container">
         <template v-for="day in days" :key="day">
           <div v-if="mealsByDay[day] && mealsByDay[day].length > 0" class="day-section">
