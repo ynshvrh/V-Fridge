@@ -151,57 +151,57 @@ const goToDashboard = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
 }
 
 .invite-card-wrapper {
   width: 100%;
-  max-width: 440px;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .brand-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   color: var(--text-primary);
+  text-decoration: none;
 }
 
 .logo-box {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: var(--accent-orange);
-  color: #ffffff;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--primary-foreground);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px var(--accent-orange-glow);
 }
 
 .brand-text h2 {
-  font-size: 1.5rem;
-  font-weight: 900;
+  font-size: 1.3rem;
+  font-weight: 700;
   margin: 0;
-  color: var(--accent-orange);
+  color: var(--text-primary);
 }
 
 .brand-text p {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   margin: 0;
 }
 
 .card {
-  background: var(--bg-card);
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 28px;
+  border-radius: var(--radius-md);
+  padding: 24px;
   box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
@@ -210,22 +210,24 @@ const goToDashboard = () => {
 }
 
 .icon-wrapper {
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .normal-bg {
-  background: var(--accent-orange-bg);
-  color: var(--accent-orange);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--primary);
 }
 
 .error-bg {
   background: var(--status-expired-bg);
+  border: 1px solid var(--status-expired-border);
   color: var(--status-expired);
 }
 
@@ -233,37 +235,37 @@ const goToDashboard = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
 }
 
 .card-title {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.15rem;
+  font-weight: 700;
   margin: 0;
   color: var(--text-primary);
 }
 
 .card-desc {
-  font-size: 0.88rem;
-  color: var(--text-muted);
+  font-size: 0.84rem;
+  color: var(--text-secondary);
   line-height: 1.4;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
 }
 
 .btn-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
 }
 
 .full-btn {
   width: 100%;
-  padding: 12px;
-  border-radius: var(--radius-md);
-  font-weight: 700;
-  font-size: 0.9rem;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 
 .flex-btn {
@@ -271,16 +273,6 @@ const goToDashboard = () => {
   align-items: center;
   justify-content: center;
   gap: 8px;
-}
-
-.btn-primary {
-  background: var(--accent-orange);
-  color: #ffffff;
-}
-
-.btn-secondary {
-  background: var(--border-subtle);
-  color: var(--text-primary);
 }
 
 .inline-icon {

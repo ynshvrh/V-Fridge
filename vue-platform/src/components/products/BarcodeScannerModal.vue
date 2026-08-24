@@ -209,26 +209,30 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
-  background: rgba(0, 0, 0, 0.5);
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  overflow-y: auto;
 }
 
 .scanner-modal-content {
-  background: var(--bg-primary);
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 440px;
+  max-height: calc(100dvh - 32px);
   padding: 20px;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  margin: auto;
 }
 
 .modal-header {
@@ -239,24 +243,27 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
 }
 
 .header-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--accent-orange-bg);
-  color: var(--accent-orange);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
-  font-size: 1.1rem;
-  font-weight: 800;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .modal-header p {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
   margin: 2px 0 0 0;
 }
@@ -265,14 +272,25 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
   position: absolute;
   top: 0;
   right: 0;
-  color: var(--text-secondary);
+  color: var(--text-muted);
+  padding: 4px;
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.close-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-subtle);
 }
 
 .video-wrapper {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   overflow: hidden;
   background: #000000;
 }
@@ -286,15 +304,15 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
 .video-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   color: #ffffff;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.84rem;
+  font-weight: 500;
 }
 
 .scan-pill {
@@ -305,20 +323,21 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 5px 12px;
   border-radius: 20px;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(4px);
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.74rem;
   font-weight: 600;
 }
 
 .error-banner {
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  border-radius: var(--radius-xs);
   background: var(--status-expired-bg);
   color: var(--status-expired);
+  border: 1px solid var(--status-expired-border);
   font-size: 0.8rem;
   display: flex;
   align-items: flex-start;
@@ -329,30 +348,11 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-}
-
-.btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  background: var(--accent-orange);
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 0.85rem;
-}
-
-.btn-secondary {
-  padding: 8px 16px;
-  border-radius: var(--radius-md);
-  background: var(--border-subtle);
-  color: var(--text-primary);
-  font-weight: 600;
-  font-size: 0.85rem;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .orange-icon {
-  color: var(--accent-orange);
+  color: var(--status-fresh);
 }
 </style>

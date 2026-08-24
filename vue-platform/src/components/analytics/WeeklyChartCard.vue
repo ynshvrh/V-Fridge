@@ -21,24 +21,24 @@ const calculateHeight = (val: number) => {
   <div class="glass-card chart-card fade-in">
     <div class="chart-header">
       <div class="header-title">
-        <BarChart3 :size="20" class="header-icon" />
-        <h3>8-Week Consumption Trends</h3>
+        <BarChart3 :size="18" class="header-icon" />
+        <h3>Динаміка споживання (8 тижнів)</h3>
       </div>
 
       <div class="legend-row">
-        <span class="legend-item consumed"><span class="dot"></span> Consumed</span>
-        <span class="legend-item wasted"><span class="dot"></span> Wasted</span>
-        <span class="legend-item expired"><span class="dot"></span> Expired</span>
+        <span class="legend-item consumed"><span class="dot"></span> Спожито</span>
+        <span class="legend-item wasted"><span class="dot"></span> Списано</span>
+        <span class="legend-item expired"><span class="dot"></span> Прострочено</span>
       </div>
     </div>
 
     <div v-if="trends.length === 0" class="empty-chart">
-      <p>No historical consumption log data available for the last 8 weeks.</p>
+      <p>Немає даних за останні 8 тижнів.</p>
     </div>
 
     <div v-else class="bars-container">
       <div v-for="(t, i) in trends" :key="i" class="week-column">
-        <div class="bars-stack" :title="`Week of ${t.weekStartDate}: ${t.consumedCount} consumed, ${t.wastedCount} wasted, ${t.expiredCount} expired`">
+        <div class="bars-stack" :title="`Тиждень ${t.weekStartDate}: ${t.consumedCount} спожито, ${t.wastedCount} списано, ${t.expiredCount} прострочено`">
           <div class="bar bar-consumed" :style="{ height: `${calculateHeight(t.consumedCount)}px` }"></div>
           <div class="bar bar-wasted" :style="{ height: `${calculateHeight(t.wastedCount)}px` }"></div>
           <div class="bar bar-expired" :style="{ height: `${calculateHeight(t.expiredCount)}px` }"></div>
@@ -51,96 +51,104 @@ const calculateHeight = (val: number) => {
 
 <style scoped>
 .chart-card {
-  padding: 24px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .chart-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.chart-icon {
-  color: var(--accent-orange);
+.header-title h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header-icon {
+  color: var(--primary);
 }
 
 .legend-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  font-size: 0.8rem;
+  gap: 12px;
+  font-size: 0.76rem;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   color: var(--text-secondary);
 }
 
 .legend-item .dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
 }
 
-.legend-item.consumed .dot { background: var(--accent-emerald); }
-.legend-item.wasted .dot { background: var(--accent-amber); }
-.legend-item.expired .dot { background: var(--accent-rose); }
+.legend-item.consumed .dot { background: var(--status-fresh); }
+.legend-item.wasted .dot { background: var(--status-warning); }
+.legend-item.expired .dot { background: var(--status-expired); }
 
 .empty-chart {
-  padding: 40px;
+  padding: 32px;
   text-align: center;
   color: var(--text-muted);
+  font-size: 0.82rem;
 }
 
 .bars-container {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  height: 160px;
-  padding-top: 20px;
+  height: 140px;
+  padding-top: 16px;
   border-bottom: 1px solid var(--border-subtle);
+  gap: 4px;
 }
 
 .week-column {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
 }
 
 .bars-stack {
   display: flex;
   align-items: flex-end;
-  gap: 4px;
-  height: 120px;
+  gap: 3px;
+  height: 110px;
 }
 
 .bar {
-  width: 10px;
-  border-radius: 4px 4px 0 0;
+  width: 8px;
+  border-radius: 3px 3px 0 0;
   transition: height 0.3s ease;
 }
 
-.bar-consumed { background: var(--accent-emerald); }
-.bar-wasted { background: var(--accent-amber); }
-.bar-expired { background: var(--accent-rose); }
+.bar-consumed { background: var(--status-fresh); }
+.bar-wasted { background: var(--status-warning); }
+.bar-expired { background: var(--status-expired); }
 
 .week-label {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
 }
 </style>

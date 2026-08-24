@@ -33,31 +33,31 @@ const navigateHome = () => {
   <div class="auth-page">
     <div class="glass-card auth-card fade-in">
       <div v-if="isVerifying" class="state-container">
-        <Loader2 class="spin-icon" :size="40" />
-        <h2>Verifying your email...</h2>
-        <p class="state-sub">Please wait while we confirm your account token.</p>
+        <Loader2 class="spin-icon" :size="36" />
+        <h2>Підтвердження пошти...</h2>
+        <p class="state-sub">Будь ласка, зачекайте, перевіряємо ваш токен авторизації.</p>
       </div>
 
       <div v-else-if="success" class="state-container">
         <div class="icon-circle success">
-          <CheckCircle2 :size="32" />
+          <CheckCircle2 :size="28" />
         </div>
-        <h2>Email Verified!</h2>
-        <p class="state-sub">Your account has been confirmed. You are now logged in.</p>
+        <h2>Пошту підтверджено!</h2>
+        <p class="state-sub">Ваш акаунт успішно активовано. Ви можете перейти до додатку.</p>
         <button class="btn-primary action-btn" @click="navigateHome">
-          <span>Go to Dashboard</span>
-          <ArrowRight :size="18" />
+          <span>До головної</span>
+          <ArrowRight :size="16" />
         </button>
       </div>
 
       <div v-else class="state-container">
         <div class="icon-circle error">
-          <AlertCircle :size="32" />
+          <AlertCircle :size="28" />
         </div>
-        <h2>Verification Failed</h2>
-        <p class="state-sub">{{ authStore.error || 'The verification link may have expired or already been used.' }}</p>
+        <h2>Помилка підтвердження</h2>
+        <p class="state-sub">{{ authStore.error || 'Посилання недійсне або термін його дії минув.' }}</p>
         <router-link to="/login" class="btn-secondary action-btn">
-          <span>Back to Sign In</span>
+          <span>До сторінки входу</span>
         </router-link>
       </div>
     </div>
@@ -70,13 +70,13 @@ const navigateHome = () => {
   align-items: center;
   justify-content: center;
   min-height: calc(100vh - 120px);
-  padding: 20px;
+  padding: 16px;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 440px;
-  padding: 40px 32px;
+  max-width: 420px;
+  padding: 32px 24px;
 }
 
 .state-container {
@@ -86,10 +86,17 @@ const navigateHome = () => {
   align-items: center;
 }
 
+.state-container h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
 .spin-icon {
-  color: var(--accent-orange);
+  color: var(--primary);
   animation: spin 1s linear infinite;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 @keyframes spin {
@@ -98,35 +105,36 @@ const navigateHome = () => {
 }
 
 .icon-circle {
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .icon-circle.success {
-  background: rgba(16, 185, 129, 0.15);
-  color: var(--accent-emerald);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: var(--status-fresh-bg);
+  color: var(--status-fresh);
+  border: 1px solid var(--status-fresh-border);
 }
 
 .icon-circle.error {
-  background: rgba(244, 63, 94, 0.15);
-  color: var(--accent-rose);
-  border: 1px solid rgba(244, 63, 94, 0.3);
+  background: var(--status-expired-bg);
+  color: var(--status-expired);
+  border: 1px solid var(--status-expired-border);
 }
 
 .state-sub {
   color: var(--text-secondary);
-  font-size: 0.95rem;
-  margin-top: 8px;
-  margin-bottom: 24px;
+  font-size: 0.84rem;
+  margin-top: 6px;
+  margin-bottom: 20px;
 }
 
 .action-btn {
   width: 100%;
+  padding: 10px;
 }
 </style>

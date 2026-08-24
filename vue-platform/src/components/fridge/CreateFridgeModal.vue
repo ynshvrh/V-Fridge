@@ -31,8 +31,8 @@ const handleSubmit = async () => {
     <div class="glass-card modal-card fade-in">
       <div class="modal-header">
         <div class="header-title">
-          <Refrigerator :size="20" class="header-icon" />
-          <h3>Create New Fridge</h3>
+          <Refrigerator :size="18" class="header-icon" />
+          <h3>Створити холодильник</h3>
         </div>
         <button class="close-btn" @click="emit('close')">
           <X :size="18" />
@@ -41,22 +41,22 @@ const handleSubmit = async () => {
 
       <form @submit.prevent="handleSubmit" class="modal-body">
         <div class="form-group">
-          <label class="form-label" for="fridge-name">Fridge Name</label>
+          <label class="form-label" for="fridge-name">Назва холодильника *</label>
           <input
             id="fridge-name"
             v-model="name"
             type="text"
             class="form-input"
-            placeholder="Office Pantry, Summer Cottage, Home..."
+            placeholder="Дім, Дача, Офіс..."
             required
           />
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" @click="emit('close')">Cancel</button>
-          <button type="submit" class="btn-primary" :disabled="isSubmitting">
+          <button type="button" class="btn-ghost" @click="emit('close')">Скасувати</button>
+          <button type="submit" class="btn-primary" :disabled="isSubmitting || !name.trim()">
             <Plus :size="16" />
-            <span>{{ isSubmitting ? 'Creating...' : 'Create' }}</span>
+            <span>{{ isSubmitting ? 'Створення...' : 'Створити' }}</span>
           </button>
         </div>
       </form>
@@ -67,50 +67,78 @@ const handleSubmit = async () => {
 <style scoped>
 .modal-backdrop {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.65);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
+  overflow-y: auto;
 }
+
 .modal-card {
   width: 100%;
   max-width: 420px;
-  padding: 24px;
+  max-height: calc(100dvh - 32px);
+  padding: 20px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
 }
+
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
+
 .header-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
+
+.header-title h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .header-icon {
-  color: var(--accent-orange);
+  color: var(--primary);
 }
+
 .close-btn {
   color: var(--text-muted);
   padding: 4px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
 }
+
+.close-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+}
+
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 12px;
-  padding-top: 16px;
+  gap: 10px;
+  margin-top: 6px;
+  padding-top: 14px;
   border-top: 1px solid var(--border-subtle);
 }
 </style>

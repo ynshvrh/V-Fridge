@@ -36,8 +36,8 @@ const handleSubmit = async () => {
     <div class="glass-card modal-card fade-in">
       <div class="modal-header">
         <div class="header-title">
-          <UserPlus :size="20" class="header-icon" />
-          <h3>Invite Member to "{{ fridgeName }}"</h3>
+          <UserPlus :size="18" class="header-icon" />
+          <h3>Запросити до "{{ fridgeName }}"</h3>
         </div>
         <button class="close-btn" @click="emit('close')">
           <X :size="18" />
@@ -45,18 +45,18 @@ const handleSubmit = async () => {
       </div>
 
       <div v-if="successMessage" class="success-banner">
-        <CheckCircle2 :size="18" />
+        <CheckCircle2 :size="16" />
         <span>{{ successMessage }}</span>
       </div>
 
       <div v-if="fridgeStore.error" class="error-banner">
-        <AlertCircle :size="18" />
+        <AlertCircle :size="16" />
         <span>{{ fridgeStore.error }}</span>
       </div>
 
       <form @submit.prevent="handleSubmit" class="modal-body">
         <div class="form-group">
-          <label class="form-label" for="invite-email">Recipient Email Address</label>
+          <label class="form-label" for="invite-email">Email адреса отримувача *</label>
           <input
             id="invite-email"
             v-model="email"
@@ -68,10 +68,10 @@ const handleSubmit = async () => {
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" @click="emit('close')">Done</button>
-          <button type="submit" class="btn-primary" :disabled="isSubmitting">
-            <Send :size="16" />
-            <span>{{ isSubmitting ? 'Sending...' : 'Send Invite' }}</span>
+          <button type="button" class="btn-ghost" @click="emit('close')">Закрити</button>
+          <button type="submit" class="btn-primary" :disabled="isSubmitting || !email.trim()">
+            <Send :size="15" />
+            <span>{{ isSubmitting ? 'Надсилання...' : 'Надіслати запрошення' }}</span>
           </button>
         </div>
       </form>
@@ -82,74 +82,104 @@ const handleSubmit = async () => {
 <style scoped>
 .modal-backdrop {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.65);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
+  overflow-y: auto;
 }
+
 .modal-card {
   width: 100%;
   max-width: 440px;
-  padding: 24px;
+  max-height: calc(100dvh - 32px);
+  padding: 20px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
 }
+
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
+
 .header-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
+
+.header-title h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .header-icon {
-  color: var(--accent-orange);
+  color: var(--primary);
 }
+
 .close-btn {
   color: var(--text-muted);
   padding: 4px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
 }
+
+.close-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+}
+
 .success-banner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: var(--accent-emerald);
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  margin-bottom: 16px;
+  gap: 8px;
+  background: var(--status-fresh-bg);
+  border: 1px solid var(--status-fresh-border);
+  color: var(--status-fresh);
+  padding: 10px 12px;
+  border-radius: var(--radius-xs);
+  font-size: 0.82rem;
+  margin-bottom: 12px;
 }
+
 .error-banner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(244, 63, 94, 0.12);
-  border: 1px solid rgba(244, 63, 94, 0.3);
-  color: var(--accent-rose);
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
-  margin-bottom: 16px;
+  gap: 8px;
+  background: var(--status-expired-bg);
+  border: 1px solid var(--status-expired-border);
+  color: var(--status-expired);
+  padding: 10px 12px;
+  border-radius: var(--radius-xs);
+  font-size: 0.82rem;
+  margin-bottom: 12px;
 }
+
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 12px;
-  padding-top: 16px;
+  gap: 10px;
+  margin-top: 6px;
+  padding-top: 14px;
   border-top: 1px solid var(--border-subtle);
 }
 </style>

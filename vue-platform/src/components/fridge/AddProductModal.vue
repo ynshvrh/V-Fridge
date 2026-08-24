@@ -167,26 +167,34 @@ const handleSubmit = async () => {
 <style scoped>
 .modal-backdrop {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.65);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
+  overflow-y: auto;
 }
 
 .modal-card {
   width: 100%;
   max-width: 460px;
+  max-height: calc(100dvh - 32px);
   padding: 20px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   margin-bottom: 16px;
 }
 
@@ -196,8 +204,15 @@ const handleSubmit = async () => {
   gap: 8px;
 }
 
+.header-title h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .header-icon {
-  color: var(--accent-orange);
+  color: var(--primary);
+  flex-shrink: 0;
 }
 
 .header-actions {
@@ -207,39 +222,43 @@ const handleSubmit = async () => {
 }
 
 .scan-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--accent-orange-bg);
-  color: var(--accent-orange);
-  font-size: 0.75rem;
-  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-size: 0.76rem;
+  font-weight: 600;
   transition: var(--transition-fast);
 }
 
 .scan-btn:hover {
-  background: var(--accent-orange);
-  color: #ffffff;
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
 }
 
 .close-btn {
   color: var(--text-muted);
   padding: 4px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: var(--transition-fast);
 }
 
 .close-btn:hover {
   color: var(--text-primary);
-  background: var(--border-subtle);
+  background: var(--bg-subtle);
 }
 
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .form-row {
@@ -247,14 +266,21 @@ const handleSubmit = async () => {
   gap: 10px;
 }
 
-.flex-1 { flex: 1; }
-.flex-2 { flex: 2; }
+.flex-1 { flex: 1; min-width: 0; }
+.flex-2 { flex: 2; min-width: 0; }
+
+@media (max-width: 440px) {
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
 
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 6px;
   padding-top: 14px;
   border-top: 1px solid var(--border-subtle);
 }

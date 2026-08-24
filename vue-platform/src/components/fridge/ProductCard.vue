@@ -458,19 +458,22 @@ const handleDelete = async () => {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 300;
-  background: rgba(0, 0, 0, 0.5);
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  overflow-y: auto;
 }
 
 .modal-card {
   width: 100%;
   max-width: 460px;
-  max-height: 85vh;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -478,7 +481,7 @@ const handleDelete = async () => {
 }
 
 .modal-header {
-  padding: 12px 16px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;

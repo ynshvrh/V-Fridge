@@ -99,27 +99,30 @@ const toggleRecipe = async () => {
 }
 
 .type-icon {
-  color: var(--accent-orange);
+  color: var(--primary);
 }
 
 .type-label {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   color: var(--text-secondary);
 }
 
 .icon-btn {
   color: var(--text-muted);
   padding: 4px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   transition: var(--transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .icon-btn:hover {
-  color: var(--accent-orange);
-  background: var(--accent-orange-bg);
+  color: var(--text-primary);
+  background: var(--bg-subtle);
 }
 
 .spin {
@@ -132,7 +135,7 @@ const toggleRecipe = async () => {
 }
 
 .meal-name {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 6px;
@@ -146,12 +149,12 @@ const toggleRecipe = async () => {
 }
 
 .ing-tag {
-  font-size: 0.72rem;
-  background: var(--accent-blue-bg);
-  border: 1px solid rgba(164, 225, 255, 0.3);
-  color: var(--accent-blue);
+  font-size: 0.7rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
   padding: 2px 6px;
-  border-radius: 6px;
+  border-radius: var(--radius-xs);
 }
 
 .macros-row {
@@ -159,18 +162,20 @@ const toggleRecipe = async () => {
   align-items: center;
   gap: 6px;
   margin-top: 4px;
+  flex-wrap: wrap;
 }
 
 .macro-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 0.72rem;
+  gap: 3px;
+  font-size: 0.7rem;
   font-weight: 600;
-  color: var(--status-warning);
-  background: var(--status-warning-bg);
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
 }
 
 .meal-footer {
@@ -183,10 +188,14 @@ const toggleRecipe = async () => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  font-size: 0.85rem;
-  color: var(--accent-orange);
+  font-size: 0.8rem;
+  color: var(--text-primary);
   font-weight: 500;
   transition: var(--transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
 }
 
 .recipe-btn-left {
@@ -196,11 +205,12 @@ const toggleRecipe = async () => {
 }
 
 .recipe-btn:hover {
-  color: var(--accent-orange-hover);
+  color: var(--text-secondary);
 }
 
 .chev {
   transition: transform 0.2s ease;
+  color: var(--text-muted);
 }
 
 .chev.open {
@@ -210,20 +220,27 @@ const toggleRecipe = async () => {
 .recipe-steps {
   margin-top: 6px;
   padding: 10px 12px;
-  background: var(--bg-primary);
-  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-xs);
   border: 1px solid var(--border-subtle);
 }
 
 .meal-desc {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   margin-bottom: 8px;
 }
 
+.recipe-steps h5 {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
 .steps-list {
   padding-left: 18px;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
   display: flex;
   flex-direction: column;

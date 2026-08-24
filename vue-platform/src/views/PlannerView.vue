@@ -137,7 +137,7 @@ const handleRegenerateDay = async (day: string) => {
 }
 
 .loading-state, .empty-state {
-  padding: 56px 20px;
+  padding: 40px 20px;
   text-align: center;
   color: var(--text-secondary);
   display: flex;
@@ -146,20 +146,34 @@ const handleRegenerateDay = async (day: string) => {
 }
 
 .spin-icon {
-  color: var(--accent-orange);
+  color: var(--primary);
   margin-bottom: 12px;
 }
 
 .empty-icon-bg {
-  width: 60px;
-  height: 60px;
-  margin-bottom: 16px;
-  border-radius: 50%;
-  background: var(--accent-orange-bg);
-  color: var(--accent-orange);
+  width: 48px;
+  height: 48px;
+  margin-bottom: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.empty-state h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.empty-state p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  max-width: 320px;
 }
 
 .spin {
@@ -174,26 +188,26 @@ const handleRegenerateDay = async (day: string) => {
 .planner-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .days-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .day-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .day-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -202,28 +216,33 @@ const handleRegenerateDay = async (day: string) => {
   align-items: center;
   gap: 8px;
   color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .icon-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
   padding: 4px 8px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   transition: var(--transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .icon-btn:hover {
-  color: var(--accent-orange);
-  background: var(--accent-orange-bg);
+  color: var(--text-primary);
+  background: var(--bg-subtle);
 }
 
 .meals-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 @media (max-width: 640px) {

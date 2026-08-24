@@ -43,8 +43,8 @@ const handleSubmit = async () => {
     <div class="glass-card modal-card fade-in">
       <div class="modal-header">
         <div class="header-title">
-          <ShoppingCart :size="20" class="header-icon" />
-          <h3>Add to Shopping List</h3>
+          <ShoppingCart :size="18" class="header-icon" />
+          <h3>Додати до списку покупок</h3>
         </div>
         <button class="close-btn" @click="emit('close')">
           <X :size="18" />
@@ -53,20 +53,20 @@ const handleSubmit = async () => {
 
       <form @submit.prevent="handleSubmit" class="modal-body">
         <div class="form-group">
-          <label class="form-label" for="item-name">Item Name *</label>
+          <label class="form-label" for="item-name">Назва товару *</label>
           <input
             id="item-name"
             v-model="name"
             type="text"
             class="form-input"
-            placeholder="Butter, Coffee, Tomatoes..."
+            placeholder="Масло, Кава, Томати..."
             required
           />
         </div>
 
         <div class="form-row">
           <div class="form-group flex-2">
-            <label class="form-label" for="item-qty">Quantity</label>
+            <label class="form-label" for="item-qty">Кількість</label>
             <input
               id="item-qty"
               v-model.number="quantity"
@@ -78,7 +78,7 @@ const handleSubmit = async () => {
           </div>
 
           <div class="form-group flex-1">
-            <label class="form-label" for="item-unit">Unit</label>
+            <label class="form-label" for="item-unit">Одиниця</label>
             <select id="item-unit" v-model="unit" class="form-input">
               <option v-for="u in units" :key="u" :value="u">{{ u }}</option>
             </select>
@@ -86,17 +86,17 @@ const handleSubmit = async () => {
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="item-cat">Category</label>
+          <label class="form-label" for="item-cat">Категорія</label>
           <select id="item-cat" v-model="category" class="form-input">
             <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
           </select>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn-secondary" @click="emit('close')">Cancel</button>
-          <button type="submit" class="btn-primary" :disabled="isSubmitting">
+          <button type="button" class="btn-ghost" @click="emit('close')">Скасувати</button>
+          <button type="submit" class="btn-primary" :disabled="isSubmitting || !name.trim()">
             <Plus :size="16" />
-            <span>{{ isSubmitting ? 'Adding...' : 'Add Item' }}</span>
+            <span>{{ isSubmitting ? 'Додавання...' : 'Додати товар' }}</span>
           </button>
         </div>
       </form>
@@ -107,56 +107,93 @@ const handleSubmit = async () => {
 <style scoped>
 .modal-backdrop {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.65);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
+  overflow-y: auto;
 }
+
 .modal-card {
   width: 100%;
   max-width: 440px;
-  padding: 24px;
+  max-height: calc(100dvh - 32px);
+  padding: 20px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
 }
+
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
+
 .header-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
+
+.header-title h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .header-icon {
-  color: var(--accent-orange);
+  color: var(--primary);
 }
+
 .close-btn {
   color: var(--text-muted);
   padding: 4px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
 }
+
+.close-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-subtle);
+}
+
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
+
 .form-row {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
-.flex-1 { flex: 1; }
-.flex-2 { flex: 2; }
+
+.flex-1 { flex: 1; min-width: 0; }
+.flex-2 { flex: 2; min-width: 0; }
+
+@media (max-width: 440px) {
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
 .modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 12px;
-  padding-top: 16px;
+  gap: 10px;
+  margin-top: 6px;
+  padding-top: 14px;
   border-top: 1px solid var(--border-subtle);
 }
 </style>

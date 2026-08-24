@@ -43,14 +43,14 @@ onUnmounted(() => {
   <div class="fridge-selector" ref="dropdownRef">
     <button class="selector-btn" @click="toggleDropdown">
       <div class="active-badge">
-        <Refrigerator :size="16" />
+        <Refrigerator :size="15" />
       </div>
-      <span class="active-name">{{ fridgeStore.activeFridge?.name || 'Select Fridge' }}</span>
-      <ChevronDown :size="16" class="chevron" :class="{ open: isOpen }" />
+      <span class="active-name">{{ fridgeStore.activeFridge?.name || 'Виберіть холодильник' }}</span>
+      <ChevronDown :size="14" class="chevron" :class="{ open: isOpen }" />
     </button>
 
     <div v-if="isOpen" class="dropdown-menu glass-card fade-in">
-      <div class="dropdown-header">Your Fridges</div>
+      <div class="dropdown-header">Ваші холодильники</div>
       <div class="menu-items">
         <button
           v-for="f in fridgeStore.fridges"
@@ -62,18 +62,18 @@ onUnmounted(() => {
           <div class="item-info">
             <span class="item-name">{{ f.name }}</span>
             <span class="item-meta">
-              <Users :size="12" /> {{ f.memberCount }} member{{ f.memberCount > 1 ? 's' : '' }}
+              <Users :size="11" /> {{ f.memberCount }} учасник{{ f.memberCount > 1 ? 'ів' : '' }}
             </span>
           </div>
-          <Check v-if="f.id === fridgeStore.activeFridgeId" :size="16" class="check-icon" />
+          <Check v-if="f.id === fridgeStore.activeFridgeId" :size="15" class="check-icon" />
         </button>
       </div>
 
       <div class="dropdown-divider"></div>
 
       <button class="menu-item create-item" @click="isOpen = false; emit('open-create-modal')">
-        <Plus :size="16" />
-        <span>Create New Fridge</span>
+        <Plus :size="15" />
+        <span>Створити холодильник</span>
       </button>
     </div>
   </div>
@@ -88,34 +88,35 @@ onUnmounted(() => {
 .selector-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.05);
+  gap: 8px;
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  padding: 6px 14px 6px 8px;
-  border-radius: var(--radius-md);
+  padding: 5px 12px 5px 7px;
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-weight: 500;
   transition: var(--transition-fast);
 }
 
 .selector-btn:hover {
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--bg-hover);
   border-color: var(--border-strong);
 }
 
 .active-badge {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: var(--accent-orange-bg);
-  color: var(--accent-orange);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .active-name {
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   max-width: 140px;
   white-space: nowrap;
   overflow: hidden;
@@ -133,21 +134,24 @@ onUnmounted(() => {
 
 .dropdown-menu {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 6px);
   left: 0;
   min-width: 220px;
-  padding: 8px;
-  z-index: 150;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  padding: 6px;
+  z-index: 250;
+  box-shadow: var(--shadow-lg);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
 }
 
 .dropdown-header {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 6px 10px;
+  letter-spacing: 0.04em;
+  padding: 4px 8px;
 }
 
 .menu-items {
@@ -161,21 +165,25 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  border-radius: var(--radius-xs);
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.82rem;
   transition: var(--transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-hover);
   color: var(--text-primary);
 }
 
 .menu-item.active {
-  background: var(--accent-orange-bg);
-  color: var(--accent-orange);
+  background: var(--primary-subtle);
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .item-info {
@@ -189,7 +197,7 @@ onUnmounted(() => {
 }
 
 .item-meta {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   display: flex;
   align-items: center;
@@ -197,19 +205,19 @@ onUnmounted(() => {
 }
 
 .check-icon {
-  color: var(--accent-orange);
+  color: var(--primary);
 }
 
 .dropdown-divider {
   height: 1px;
   background: var(--border-subtle);
-  margin: 6px 0;
+  margin: 4px 0;
 }
 
 .create-item {
-  color: var(--accent-orange);
+  color: var(--primary);
   justify-content: flex-start;
-  gap: 8px;
+  gap: 6px;
   font-weight: 600;
 }
 </style>

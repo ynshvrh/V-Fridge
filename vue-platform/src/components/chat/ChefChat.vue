@@ -1264,22 +1264,26 @@ const quickPrompts = [
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 250;
-  background: rgba(0, 0, 0, 0.5);
+  z-index: 500;
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  overflow-y: auto;
 }
 
 .modal-card {
   width: 100%;
   max-width: 500px;
-  max-height: 85vh;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: var(--shadow-lg);
 }
 
 .modal-header {
