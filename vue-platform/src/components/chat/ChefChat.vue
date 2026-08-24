@@ -21,6 +21,7 @@ import {
   Utensils,
   Plus,
   Minus,
+  AlertTriangle,
   X
 } from '@lucide/vue';
 
@@ -354,11 +355,11 @@ const clearHistory = async () => {
 };
 
 const quickPrompts = [
-  { icon: '🍲', label: 'Приготувати страву з наявних продуктів' },
-  { icon: '⏱️', label: 'Швидка вечеря за 15 хвилин' },
-  { icon: '⚡', label: 'Високобілковий прийом їжі' },
-  { icon: '🥗', label: 'Легкий та корисний салат' },
-  { icon: '⏳', label: 'Використати продукти, що скоро зіпсуються' }
+  { icon: Utensils, label: 'Приготувати страву з наявних продуктів' },
+  { icon: Clock, label: 'Швидка вечеря за 15 хвилин' },
+  { icon: Flame, label: 'Високобілковий прийом їжі' },
+  { icon: Sparkles, label: 'Легкий та корисний салат' },
+  { icon: AlertTriangle, label: 'Використати продукти, що скоро зіпсуються' }
 ];
 </script>
 
@@ -442,7 +443,7 @@ const quickPrompts = [
             class="preset-prompt-btn"
             @click="sendMessage(p.label)"
           >
-            <span class="prompt-icon">{{ p.icon }}</span>
+            <component :is="p.icon" :size="15" class="prompt-icon" />
             <span class="prompt-text">{{ p.label }}</span>
           </button>
         </div>

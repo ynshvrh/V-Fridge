@@ -31,16 +31,16 @@ const addedToShopping = ref(false);
 const isCooking = ref(false);
 const cookSuccess = ref(false);
 
-const mealTypeLabels: Record<string, { label: string; icon: string }> = {
-  breakfast: { label: 'Сніданок', icon: '🌅' },
-  lunch: { label: 'Обід', icon: '🍲' },
-  dinner: { label: 'Вечеря', icon: '🌙' },
-  snack: { label: 'Перекус', icon: '🥪' }
+const mealTypeLabels: Record<string, { label: string }> = {
+  breakfast: { label: 'Сніданок' },
+  lunch: { label: 'Обід' },
+  dinner: { label: 'Вечеря' },
+  snack: { label: 'Перекус' }
 };
 
 const mealTypeInfo = computed(() => {
   const t = (props.meal.mealType || '').toLowerCase();
-  return mealTypeLabels[t] || { label: props.meal.mealType || 'Страва', icon: '🍽️' };
+  return mealTypeLabels[t] || { label: props.meal.mealType || 'Страва' };
 });
 
 const isIngredientInFridge = (ing: string): boolean => {
@@ -123,7 +123,6 @@ const handleCookMeal = async () => {
     <!-- Card Header -->
     <div class="meal-header">
       <div class="header-type">
-        <span class="type-emoji">{{ mealTypeInfo.icon }}</span>
         <span class="type-label">{{ mealTypeInfo.label }}</span>
       </div>
 

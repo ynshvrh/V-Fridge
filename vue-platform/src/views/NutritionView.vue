@@ -17,6 +17,7 @@ import {
   Trash2, 
   Edit2, 
   Refrigerator, 
+  AlertTriangle,
   X, 
   Loader2 
 } from '@lucide/vue';
@@ -460,7 +461,8 @@ const handleSubmitTargets = async () => {
             </div>
 
             <div v-if="selectedProductId" class="fridge-warning">
-              ⚠️ При збереженні кількість продукту в холодильнику буде автоматично зменшена на {{ quantity }} {{ unit }}.
+              <AlertTriangle :size="14" />
+              <span>При збереженні кількість продукту в холодильнику буде автоматично зменшена на {{ quantity }} {{ unit }}.</span>
             </div>
 
             <div class="macros-inputs-block">

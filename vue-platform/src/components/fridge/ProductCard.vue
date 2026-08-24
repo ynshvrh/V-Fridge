@@ -251,28 +251,28 @@ const handleDelete = async () => {
                   :class="['meal-chip', selectedMealType === 'breakfast' ? 'active' : '']"
                   @click="selectedMealType = 'breakfast'"
                 >
-                  🌅 Сніданок
+                  Сніданок
                 </button>
                 <button
                   type="button"
                   :class="['meal-chip', selectedMealType === 'lunch' ? 'active' : '']"
                   @click="selectedMealType = 'lunch'"
                 >
-                  🍲 Обід
+                  Обід
                 </button>
                 <button
                   type="button"
                   :class="['meal-chip', selectedMealType === 'dinner' ? 'active' : '']"
                   @click="selectedMealType = 'dinner'"
                 >
-                  🌙 Вечеря
+                  Вечеря
                 </button>
                 <button
                   type="button"
                   :class="['meal-chip', selectedMealType === 'snack' ? 'active' : '']"
                   @click="selectedMealType = 'snack'"
                 >
-                  🥪 Перекус
+                  Перекус
                 </button>
               </div>
             </div>
