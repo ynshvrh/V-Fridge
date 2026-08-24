@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useShoppingStore } from '@/stores/shopping';
 import { useFridgeStore } from '@/stores/fridge';
 import ShoppingItemRow from '@/components/shopping/ShoppingItemRow.vue';
@@ -16,6 +16,12 @@ const isAdding = ref(false);
 onMounted(async () => {
   await fridgeStore.fetchFridges();
   await shoppingStore.fetchShoppingItems();
+});
+
+watch(() => fridgeStore.activeFridgeId, async (newId) => {
+  if (newId) {
+    await shoppingStore.fetchShoppingItems();
+  }
 });
 
 const handleQuickAdd = async () => {

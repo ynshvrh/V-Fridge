@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useAnalyticsStore } from '@/stores/analytics';
 import { useFridgeStore } from '@/stores/fridge';
 import FridgeSelector from '@/components/fridge/FridgeSelector.vue';
@@ -15,6 +15,12 @@ const showCreateFridgeModal = ref(false);
 onMounted(async () => {
   await fridgeStore.fetchFridges();
   await analyticsStore.fetchAnalytics();
+});
+
+watch(() => fridgeStore.activeFridgeId, async (newId) => {
+  if (newId) {
+    await analyticsStore.fetchAnalytics();
+  }
 });
 </script>
 

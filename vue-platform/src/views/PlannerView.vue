@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { usePlannerStore } from '@/stores/planner';
 import { useFridgeStore } from '@/stores/fridge';
 import FridgeSelector from '@/components/fridge/FridgeSelector.vue';
@@ -28,6 +28,12 @@ const dayLabels: Record<string, string> = {
 onMounted(async () => {
   await fridgeStore.fetchFridges();
   await plannerStore.fetchPlan();
+});
+
+watch(() => fridgeStore.activeFridgeId, async (newId) => {
+  if (newId) {
+    await plannerStore.fetchPlan();
+  }
 });
 
 const mealsByDay = computed(() => {

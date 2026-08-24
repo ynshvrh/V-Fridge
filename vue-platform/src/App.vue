@@ -1,11 +1,71 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useFridgeStore } from '@/stores/fridge';
+import { useProductStore } from '@/stores/product';
+import { useShoppingStore } from '@/stores/shopping';
+import { usePlannerStore } from '@/stores/planner';
+import { useNutritionStore } from '@/stores/nutrition';
+import { useSavedRecipeStore } from '@/stores/savedRecipes';
+import { useAnalyticsStore } from '@/stores/analytics';
 import AppSidebar from '@/components/layout/AppSidebar.vue';
 import AppHeader from '@/components/layout/AppHeader.vue';
 
 const authStore = useAuthStore();
+const fridgeStore = useFridgeStore();
+const productStore = useProductStore();
+const shoppingStore = useShoppingStore();
+const plannerStore = usePlannerStore();
+const nutritionStore = useNutritionStore();
+const savedRecipesStore = useSavedRecipeStore();
+const analyticsStore = useAnalyticsStore();
+const route = useRoute();
+
 const isMobileSidebarOpen = ref(false);
+let lastFocusCheck = Date.now();
+
+const handleVisibilityOrFocus = async () => {
+  if (!authStore.isAuthenticated) return;
+  const now = Date.now();
+  // Throttle background revalidation to at most once every 12 seconds
+  if (now - lastFocusCheck < 12000) return;
+  lastFocusCheck = now;
+
+  // Background silent sync
+  await fridgeStore.fetchFridges(true);
+
+  if (route.name === 'Dashboard') {
+    await productStore.fetchProducts(true);
+  } else if (route.name === 'Shopping') {
+    await shoppingStore.fetchShoppingItems(true);
+  } else if (route.name === 'Planner') {
+    await plannerStore.fetchPlan(true);
+  } else if (route.name === 'Nutrition') {
+    const today = new Date().toISOString().split('T')[0];
+    await nutritionStore.fetchDailyData(today, true);
+  } else if (route.name === 'SavedRecipes') {
+    await savedRecipesStore.fetchSavedRecipes(true);
+  } else if (route.name === 'Analytics') {
+    await analyticsStore.fetchAnalytics(true);
+  }
+};
+
+const onVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    handleVisibilityOrFocus();
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  window.addEventListener('focus', handleVisibilityOrFocus);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', onVisibilityChange);
+  window.removeEventListener('focus', handleVisibilityOrFocus);
+});
 </script>
 
 <template>

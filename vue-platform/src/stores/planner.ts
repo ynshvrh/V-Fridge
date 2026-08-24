@@ -40,8 +40,8 @@ export const usePlannerStore = defineStore('planner', () => {
   const generating = ref<boolean>(false);
   const error = ref<string | null>(null);
 
-  async function fetchPlan() {
-    loading.value = true;
+  async function fetchPlan(silent = false) {
+    if (!silent) loading.value = true;
     error.value = null;
     try {
       plan.value = await api.fetch<MealPlanResponse>('/meal-plan');
@@ -53,7 +53,7 @@ export const usePlannerStore = defineStore('planner', () => {
         error.value = apiErr.error || 'Failed to load meal plan';
       }
     } finally {
-      loading.value = false;
+      if (!silent) loading.value = false;
     }
   }
 

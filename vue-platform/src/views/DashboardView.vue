@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useFridgeStore } from '@/stores/fridge';
 import { useProductStore } from '@/stores/product';
 import ProductCard from '@/components/fridge/ProductCard.vue';
@@ -41,6 +41,12 @@ const categories = [
 onMounted(async () => {
   await fridgeStore.fetchFridges();
   await productStore.fetchProducts();
+});
+
+watch(() => fridgeStore.activeFridgeId, async (newId) => {
+  if (newId) {
+    await productStore.fetchProducts();
+  }
 });
 
 const filteredProducts = computed(() => {

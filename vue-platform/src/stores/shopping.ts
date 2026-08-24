@@ -36,8 +36,8 @@ export const useShoppingStore = defineStore('shopping', () => {
   const uncheckedItems = computed(() => items.value.filter(i => !i.checked));
   const checkedItems = computed(() => items.value.filter(i => i.checked));
 
-  async function fetchShoppingItems() {
-    loading.value = true;
+  async function fetchShoppingItems(silent = false) {
+    if (!silent) loading.value = true;
     error.value = null;
     try {
       items.value = await api.fetch<ShoppingItem[]>('/shopping');
@@ -45,7 +45,7 @@ export const useShoppingStore = defineStore('shopping', () => {
       const apiErr = err as ApiErrorResponse;
       error.value = apiErr.error || 'Failed to load shopping list';
     } finally {
-      loading.value = false;
+      if (!silent) loading.value = false;
     }
   }
 
@@ -91,7 +91,16 @@ export const useShoppingStore = defineStore('shopping', () => {
   }
 
   async function toggleCheck(id: number, checked: boolean): Promise<boolean> {
-    return await updateItem(id, { checked });
+    const item = items.value.find(i => i.id === id);
+    const oldChecked = item?.checked;
+    if (item) {
+      item.checked = checked; // Optimistic local toggle for instant responsiveness
+    }
+    const success = await updateItem(id, { checked });
+    if (!success && item && oldChecked !== undefined) {
+      item.checked = oldChecked; // Rollback if failed
+    }
+    return success;
   }
 
   async function deleteItem(id: number): Promise<boolean> {
@@ -120,7 +129,7 @@ export const useShoppingStore = defineStore('shopping', () => {
       });
       items.value = items.value.filter(i => i.id !== id);
       const productStore = useProductStore();
-      await productStore.fetchProducts();
+      await productStore.fetchProducts(true);
       return true;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;

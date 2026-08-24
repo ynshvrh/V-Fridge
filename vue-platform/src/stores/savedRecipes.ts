@@ -31,8 +31,8 @@ export const useSavedRecipeStore = defineStore('savedRecipes', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  async function fetchSavedRecipes() {
-    loading.value = true;
+  async function fetchSavedRecipes(silent = false) {
+    if (!silent) loading.value = true;
     error.value = null;
     try {
       const list = await api.fetch<SavedRecipe[]>('/saved-recipes');
@@ -42,7 +42,7 @@ export const useSavedRecipeStore = defineStore('savedRecipes', () => {
       error.value = err.error || err.message || 'Помилка завантаження збережених рецептів';
       throw err;
     } finally {
-      loading.value = false;
+      if (!silent) loading.value = false;
     }
   }
 

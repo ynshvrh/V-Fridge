@@ -29,12 +29,15 @@ export const useFridgeStore = defineStore('fridge', () => {
     return fridges.value.find(f => f.id === activeFridgeId.value) || fridges.value[0] || null;
   });
 
-  async function fetchFridges() {
-    loading.value = true;
+  const lastSyncTime = ref<number>(Date.now());
+
+  async function fetchFridges(silent = false) {
+    if (!silent) loading.value = true;
     error.value = null;
     try {
       const list = await api.fetch<Fridge[]>('/fridges');
       fridges.value = list;
+      lastSyncTime.value = Date.now();
 
       if (list.length > 0) {
         if (!activeFridgeId.value || !list.some(f => f.id === activeFridgeId.value)) {
@@ -47,13 +50,17 @@ export const useFridgeStore = defineStore('fridge', () => {
       const apiErr = err as ApiErrorResponse;
       error.value = apiErr.error || 'Failed to load fridges';
     } finally {
-      loading.value = false;
+      if (!silent) loading.value = false;
     }
   }
 
   function setActiveFridge(id: number) {
+    const changed = activeFridgeId.value !== id;
     activeFridgeId.value = id;
     api.setActiveFridgeId(id);
+    if (changed) {
+      lastSyncTime.value = Date.now();
+    }
   }
 
   async function createFridge(name: string): Promise<boolean> {

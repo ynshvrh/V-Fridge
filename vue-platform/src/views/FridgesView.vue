@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useFridgeStore } from '@/stores/fridge';
 import CreateFridgeModal from '@/components/fridge/CreateFridgeModal.vue';
 import InviteMemberModal from '@/components/fridge/InviteMemberModal.vue';
-import { Plus, UserPlus, Trash2, LogOut, Edit3, Users, Crown, Refrigerator } from '@lucide/vue';
+import { Plus, UserPlus, Trash2, LogOut, Edit3, Users, Crown, Refrigerator, Check } from '@lucide/vue';
 
 const fridgeStore = useFridgeStore();
 
@@ -62,12 +62,23 @@ const handleLeave = async (id: number, name: string) => {
     </div>
 
     <div v-else class="fridges-grid">
-      <div v-for="fridge in fridgeStore.fridges" :key="fridge.id" class="nordic-card fridge-card">
+      <div
+        v-for="fridge in fridgeStore.fridges"
+        :key="fridge.id"
+        class="nordic-card fridge-card"
+        :class="{ 'active-fridge-card': fridge.id === fridgeStore.activeFridgeId }"
+      >
         <div class="card-top">
-          <div class="role-badge" :class="fridge.role">
-            <Crown v-if="fridge.role === 'owner'" :size="12" />
-            <Users v-else :size="12" />
-            <span>{{ fridge.role === 'owner' ? 'Власник' : 'Учасник' }}</span>
+          <div class="top-badges">
+            <div class="role-badge" :class="fridge.role">
+              <Crown v-if="fridge.role === 'owner'" :size="12" />
+              <Users v-else :size="12" />
+              <span>{{ fridge.role === 'owner' ? 'Власник' : 'Учасник' }}</span>
+            </div>
+            <span v-if="fridge.id === fridgeStore.activeFridgeId" class="active-badge-tag">
+              <Check :size="11" />
+              <span>Активний</span>
+            </span>
           </div>
           <span class="created-date">{{ new Date(fridge.createdAt).toLocaleDateString() }}</span>
         </div>
@@ -90,6 +101,14 @@ const handleLeave = async (id: number, name: string) => {
         </div>
 
         <div class="card-actions">
+          <button
+            v-if="fridge.id !== fridgeStore.activeFridgeId"
+            class="btn-ghost action-btn"
+            @click="fridgeStore.setActiveFridge(fridge.id)"
+          >
+            <span>Вибрати</span>
+          </button>
+
           <button
             v-if="fridge.role === 'owner'"
             class="btn-secondary action-btn"
@@ -207,12 +226,37 @@ const handleLeave = async (id: number, name: string) => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  transition: var(--transition-fast);
+}
+
+.active-fridge-card {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
 }
 
 .card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.top-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.active-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: var(--status-fresh-bg);
+  border: 1px solid var(--status-fresh-border);
+  color: var(--status-fresh);
 }
 
 .role-badge {

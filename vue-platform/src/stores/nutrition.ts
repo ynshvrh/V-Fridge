@@ -73,8 +73,8 @@ export const useNutritionStore = defineStore('nutrition', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  async function fetchDailyData(date: string) {
-    loading.value = true;
+  async function fetchDailyData(date: string, silent = false) {
+    if (!silent && !dailyCache.value[date]) loading.value = true;
     error.value = null;
 
     if (dailyCache.value[date]) {
@@ -90,8 +90,12 @@ export const useNutritionStore = defineStore('nutrition', () => {
       error.value = err.error || err.message || 'Помилка завантаження даних щоденника харчування';
       throw err;
     } finally {
-      loading.value = false;
+      if (!silent) loading.value = false;
     }
+  }
+
+  function invalidateCache() {
+    dailyCache.value = {};
   }
 
   async function logFood(payload: LogFoodPayload) {
@@ -100,7 +104,7 @@ export const useNutritionStore = defineStore('nutrition', () => {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      await fetchDailyData(payload.date);
+      await fetchDailyData(payload.date, true);
       return created;
     } catch (err: any) {
       error.value = err.error || err.message || 'Помилка збереження запису харчування';
@@ -114,7 +118,7 @@ export const useNutritionStore = defineStore('nutrition', () => {
         method: 'PUT',
         body: JSON.stringify(payload)
       });
-      await fetchDailyData(date);
+      await fetchDailyData(date, true);
       return updated;
     } catch (err: any) {
       error.value = err.error || err.message || 'Помилка оновлення запису харчування';
@@ -127,20 +131,23 @@ export const useNutritionStore = defineStore('nutrition', () => {
       await api.fetch(`/nutrition/log/${id}`, {
         method: 'DELETE'
       });
-      await fetchDailyData(date);
+      await fetchDailyData(date, true);
     } catch (err: any) {
       error.value = err.error || err.message || 'Помилка вилучення запису харчування';
       throw err;
     }
   }
 
-  async function setTargets(payload: SetTargetsPayload, date: string) {
+  async function setTargets(payload: SetTargetsPayload, _date?: string) {
     try {
       const updatedTargets = await api.fetch<NutritionTargets>('/nutrition/targets', {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      await fetchDailyData(date);
+      if (currentData.value) {
+        currentData.value.targets = updatedTargets;
+      }
+      invalidateCache();
       return updatedTargets;
     } catch (err: any) {
       error.value = err.error || err.message || 'Помилка збереження цілей харчування';
@@ -154,6 +161,7 @@ export const useNutritionStore = defineStore('nutrition', () => {
     loading,
     error,
     fetchDailyData,
+    invalidateCache,
     logFood,
     updateLog,
     deleteLog,

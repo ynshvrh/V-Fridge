@@ -81,8 +81,8 @@ export const useProductStore = defineStore('product', () => {
   const loading = ref<boolean>(false);
   const error = ref<string | null>(null);
 
-  async function fetchProducts() {
-    loading.value = true;
+  async function fetchProducts(silent = false) {
+    if (!silent) loading.value = true;
     error.value = null;
     try {
       products.value = await api.fetch<Product[]>('/products');
@@ -90,7 +90,7 @@ export const useProductStore = defineStore('product', () => {
       const apiErr = err as ApiErrorResponse;
       error.value = apiErr.error || 'Failed to load products';
     } finally {
-      loading.value = false;
+      if (!silent) loading.value = false;
     }
   }
 
@@ -143,7 +143,7 @@ export const useProductStore = defineStore('product', () => {
         method: 'POST',
         body: JSON.stringify(input)
       });
-      await fetchProducts();
+      await fetchProducts(true);
       return result;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;

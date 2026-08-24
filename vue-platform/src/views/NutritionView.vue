@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useNutritionStore, type NutritionLog } from '@/stores/nutrition';
 import { useProductStore } from '@/stores/product';
+import { useFridgeStore } from '@/stores/fridge';
 import { 
   Flame, 
   Plus, 
@@ -22,6 +23,7 @@ import {
 
 const nutritionStore = useNutritionStore();
 const productStore = useProductStore();
+const fridgeStore = useFridgeStore();
 
 const selectedDate = ref(new Date().toISOString().split('T')[0]);
 
@@ -46,12 +48,21 @@ const targetFat = ref('65');
 const targetCarbs = ref('200');
 
 onMounted(async () => {
+  await fridgeStore.fetchFridges();
   await nutritionStore.fetchDailyData(selectedDate.value);
   await productStore.fetchProducts();
 });
 
 watch(selectedDate, async (newDate) => {
   await nutritionStore.fetchDailyData(newDate);
+});
+
+watch(() => fridgeStore.activeFridgeId, async () => {
+  nutritionStore.invalidateCache();
+  await Promise.all([
+    nutritionStore.fetchDailyData(selectedDate.value, true),
+    productStore.fetchProducts(true)
+  ]);
 });
 
 const isToday = computed(() => selectedDate.value === new Date().toISOString().split('T')[0]);

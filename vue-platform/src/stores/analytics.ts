@@ -33,8 +33,8 @@ export const useAnalyticsStore = defineStore('analytics', () => {
   const loading = ref<boolean>(false);
   const error = ref<string | null>(null);
 
-  async function fetchAnalytics() {
-    loading.value = true;
+  async function fetchAnalytics(silent = false) {
+    if (!silent) loading.value = true;
     error.value = null;
     try {
       summary.value = await api.fetch<AnalyticsSummary>('/analytics');
@@ -42,7 +42,7 @@ export const useAnalyticsStore = defineStore('analytics', () => {
       const apiErr = err as ApiErrorResponse;
       error.value = apiErr.error || 'Failed to load analytics';
     } finally {
-      loading.value = false;
+      if (!silent) loading.value = false;
     }
   }
 
