@@ -54,12 +54,17 @@ const handleQuickAdd = async () => {
           v-model="quickName"
           type="text"
           class="quick-input"
-          placeholder="Швидке додавання до списку (напр. Молоко, Хліб, Яйця)..."
+          placeholder="Швидке додавання (введіть назву та натисніть Enter)..."
           :disabled="isAdding"
         />
-        <button type="submit" class="btn-primary btn-sm" :disabled="!quickName.trim() || isAdding">
-          <Plus :size="15" />
-          <span>Додати</span>
+        <button
+          v-if="quickName.trim()"
+          type="submit"
+          class="btn-primary btn-sm quick-add-btn fade-in"
+          :disabled="isAdding"
+        >
+          <Plus :size="14" />
+          <span>{{ isAdding ? 'Додавання...' : 'Додати' }}</span>
         </button>
       </form>
     </div>
