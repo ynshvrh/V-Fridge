@@ -168,44 +168,42 @@ const handleSubmit = async () => {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 200;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 500;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 24px 16px;
   overflow-y: auto;
 }
 
 .modal-card {
   width: 100%;
-  max-width: 460px;
-  max-height: calc(100dvh - 32px);
-  padding: 20px;
+  max-width: 520px;
+  padding: 24px;
   margin: auto;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .header-title h3 {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -225,12 +223,12 @@ const handleSubmit = async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: var(--radius-xs);
   background: var(--bg-subtle);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 600;
   transition: var(--transition-fast);
 }
@@ -242,12 +240,15 @@ const handleSubmit = async () => {
 
 .close-btn {
   color: var(--text-muted);
-  padding: 4px;
+  padding: 5px;
   border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: var(--transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .close-btn:hover {
@@ -258,21 +259,21 @@ const handleSubmit = async () => {
 .modal-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .form-row {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
 .flex-1 { flex: 1; min-width: 0; }
 .flex-2 { flex: 2; min-width: 0; }
 
-@media (max-width: 440px) {
+@media (max-width: 480px) {
   .form-row {
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
   }
 }
 
@@ -280,8 +281,8 @@ const handleSubmit = async () => {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 6px;
-  padding-top: 14px;
+  margin-top: 8px;
+  padding-top: 16px;
   border-top: 1px solid var(--border-subtle);
 }
 </style>

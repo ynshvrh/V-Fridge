@@ -471,17 +471,18 @@ const handleDelete = async () => {
 
 .modal-card {
   width: 100%;
-  max-width: 460px;
-  max-height: calc(100dvh - 32px);
+  max-width: 480px;
   margin: auto;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
 }
 
 .modal-header {
-  padding: 14px 18px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -508,12 +509,11 @@ const handleDelete = async () => {
 }
 
 .modal-body {
-  padding: 16px;
-  overflow-y: auto;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  background: var(--bg-base);
+  gap: 14px;
+  background: var(--bg-surface);
 }
 
 .eat-dish-title {

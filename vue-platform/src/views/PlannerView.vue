@@ -15,6 +15,16 @@ const showCreateFridgeModal = ref(false);
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+const dayLabels: Record<string, string> = {
+  Monday: 'Понеділок',
+  Tuesday: 'Вівторок',
+  Wednesday: 'Середа',
+  Thursday: 'Четвер',
+  Friday: "П'ятниця",
+  Saturday: 'Субота',
+  Sunday: 'Неділя'
+};
+
 onMounted(async () => {
   await fridgeStore.fetchFridges();
   await plannerStore.fetchPlan();
@@ -27,6 +37,20 @@ const mealsByDay = computed(() => {
     map[day] = plannerStore.plan.meals.filter(m => m.day.toLowerCase() === day.toLowerCase());
   }
   return map;
+});
+
+const activeGaps = computed(() => {
+  if (!plannerStore.plan) return [];
+  const activeMealIngredients = plannerStore.plan.meals
+    .flatMap(m => m.ingredients || [])
+    .map(i => i.toLowerCase().trim());
+
+  if (activeMealIngredients.length === 0) return plannerStore.plan.gapItems;
+
+  return plannerStore.plan.gapItems.filter(g => {
+    const gapName = g.name.toLowerCase().trim();
+    return activeMealIngredients.some(ing => ing.includes(gapName) || gapName.includes(ing));
+  });
 });
 
 const handleGeneratePlan = async () => {
@@ -80,7 +104,7 @@ const handleRegenerateDay = async (day: string) => {
     </div>
 
     <div v-else class="planner-content">
-      <GapItemsCard :gaps="plannerStore.plan.gapItems" />
+      <GapItemsCard :gaps="activeGaps" />
 
       <div class="days-container">
         <template v-for="day in days" :key="day">
@@ -88,7 +112,7 @@ const handleRegenerateDay = async (day: string) => {
             <div class="day-header">
               <div class="day-title">
                 <Calendar :size="16" />
-                <h3>{{ day }}</h3>
+                <h3>{{ dayLabels[day] || day }}</h3>
               </div>
               <button class="icon-btn" title="Перегенерувати страви дня" :disabled="plannerStore.generating" @click="handleRegenerateDay(day)">
                 <RefreshCw :size="14" :class="{ spin: plannerStore.generating }" />

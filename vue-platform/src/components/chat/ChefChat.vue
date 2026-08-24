@@ -83,18 +83,24 @@ const parseChefMessage = (content: string): ParsedChefResponse => {
   if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
     try {
       const parsed = JSON.parse(trimmed);
+      const recipeData = parsed.recipe;
+      const ingredients = Array.isArray(recipeData?.ingredients) ? recipeData.ingredients : [];
+      const steps = Array.isArray(recipeData?.steps) ? recipeData.steps : [];
+
+      const hasValidRecipe = recipeData && (ingredients.length > 0 || steps.length > 0);
+
       return {
-        dialogueText: parsed.message || '',
-        recipe: parsed.recipe ? {
-          name: parsed.recipe.name || 'Рецепт від AI Шефа',
-          description: parsed.recipe.description || '',
-          ingredients: Array.isArray(parsed.recipe.ingredients) ? parsed.recipe.ingredients : [],
-          steps: Array.isArray(parsed.recipe.steps) ? parsed.recipe.steps : [],
-          calories: Number(parsed.recipe.calories) || 0,
-          protein: Number(parsed.recipe.protein) || 0,
-          fat: Number(parsed.recipe.fat) || 0,
-          carbs: Number(parsed.recipe.carbs) || 0,
-          portions: Number(parsed.recipe.portions) || 2
+        dialogueText: parsed.message || (hasValidRecipe ? '' : trimmed),
+        recipe: hasValidRecipe ? {
+          name: recipeData.name || recipeData.title || 'Запропонований рецепт',
+          description: recipeData.description || '',
+          ingredients,
+          steps,
+          calories: Number(recipeData.calories) || 0,
+          protein: Number(recipeData.protein) || 0,
+          fat: Number(recipeData.fat) || 0,
+          carbs: Number(recipeData.carbs) || 0,
+          portions: Number(recipeData.portions) || 2
         } : null,
         shoppingItems: Array.isArray(parsed.suggestedShoppingItems) ? parsed.suggestedShoppingItems : []
       };
@@ -113,7 +119,7 @@ const parseChefMessage = (content: string): ParsedChefResponse => {
     const rawRecipe = recipeMatch[1];
     textWithoutBlocks = textWithoutBlocks.replace(recipeMatch[0], '').trim();
 
-    let name = 'Рецепт від AI Шефа';
+    let name = '';
     let description = '';
     let calories = 0, protein = 0, fat = 0, carbs = 0, portions = 2;
     const ingredients: string[] = [];
@@ -159,17 +165,19 @@ const parseChefMessage = (content: string): ParsedChefResponse => {
       }
     }
 
-    parsedRecipe = {
-      name,
-      description,
-      ingredients,
-      steps,
-      calories,
-      protein,
-      fat,
-      carbs,
-      portions
-    };
+    if (ingredients.length > 0 || steps.length > 0) {
+      parsedRecipe = {
+        name: name || 'Запропонований рецепт',
+        description,
+        ingredients,
+        steps,
+        calories,
+        protein,
+        fat,
+        carbs,
+        portions
+      };
+    }
   }
 
   // 2. Extract ```shopping codeblock
@@ -192,6 +200,9 @@ const parseChefMessage = (content: string): ParsedChefResponse => {
       }
     }
   }
+
+  // Clean any residual markdown artifacts
+  textWithoutBlocks = textWithoutBlocks.replace(/```(?:recipe|shopping)?/g, '').replace(/```/g, '').trim();
 
   return {
     dialogueText: textWithoutBlocks,
@@ -1265,33 +1276,35 @@ const quickPrompts = [
   position: fixed;
   inset: 0;
   z-index: 500;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 24px 16px;
   overflow-y: auto;
 }
 
 .modal-card {
   width: 100%;
-  max-width: 500px;
-  max-height: calc(100dvh - 32px);
+  max-width: 520px;
   margin: auto;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
 }
 
 .modal-header {
-  padding: 12px 16px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
 }
 
 .close-btn {
@@ -1302,14 +1315,21 @@ const quickPrompts = [
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 4px;
+  border-radius: var(--radius-xs);
+  transition: var(--transition-fast);
+}
+
+.close-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .modal-body {
-  padding: 16px;
-  overflow-y: auto;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .cook-dish-title {

@@ -68,22 +68,21 @@ const handleSubmit = async () => {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 200;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 500;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 24px 16px;
   overflow-y: auto;
 }
 
 .modal-card {
   width: 100%;
-  max-width: 420px;
-  max-height: calc(100dvh - 32px);
-  padding: 20px;
+  max-width: 460px;
+  padding: 24px;
   margin: auto;
   display: flex;
   flex-direction: column;
@@ -93,17 +92,17 @@ const handleSubmit = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .header-title h3 {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -114,12 +113,15 @@ const handleSubmit = async () => {
 
 .close-btn {
   color: var(--text-muted);
-  padding: 4px;
+  padding: 5px;
   border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: var(--transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .close-btn:hover {
@@ -137,8 +139,8 @@ const handleSubmit = async () => {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 6px;
-  padding-top: 14px;
+  margin-top: 8px;
+  padding-top: 16px;
   border-top: 1px solid var(--border-subtle);
 }
 </style>

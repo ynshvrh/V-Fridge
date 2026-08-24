@@ -18,17 +18,17 @@ const handleImportGaps = async () => {
   const res = await plannerStore.importGaps(props.gaps);
   isImporting.value = false;
   if (res) {
-    importMessage.value = `Added ${res.created} missing item(s) to shopping list (${res.skipped} already in list/fridge).`;
+    importMessage.value = `Додано ${res.created} позицій у список покупок (${res.skipped} вже є у списку чи холодильнику).`;
   }
 };
 </script>
 
 <template>
-  <div class="glass-card gap-card fade-in">
+  <div class="nordic-card gap-card fade-in">
     <div class="gap-header">
       <div class="header-title">
-        <ShoppingCart :size="20" class="header-icon" />
-        <h3>Missing Ingredients ({{ gaps.length }})</h3>
+        <ShoppingCart :size="18" class="header-icon" />
+        <h3>Бракуючі інгредієнти ({{ gaps.length }})</h3>
       </div>
       <button
         v-if="gaps.length > 0"
@@ -36,18 +36,18 @@ const handleImportGaps = async () => {
         :disabled="isImporting"
         @click="handleImportGaps"
       >
-        <Plus :size="16" />
-        <span>{{ isImporting ? 'Adding...' : 'Add All to Shopping List' }}</span>
+        <Plus :size="15" />
+        <span>{{ isImporting ? 'Додаємо...' : 'Додати всі в покупки' }}</span>
       </button>
     </div>
 
     <div v-if="importMessage" class="success-banner">
-      <CheckCircle2 :size="16" />
+      <CheckCircle2 :size="15" />
       <span>{{ importMessage }}</span>
     </div>
 
     <div v-if="gaps.length === 0" class="empty-gaps">
-      <span>You have all necessary ingredients in your fridge!</span>
+      <span>Всі необхідні інгредієнти є у вашому холодильнику!</span>
     </div>
 
     <div v-else class="gaps-grid">
@@ -61,10 +61,10 @@ const handleImportGaps = async () => {
 
 <style scoped>
 .gap-card {
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .gap-header {
@@ -72,55 +72,63 @@ const handleImportGaps = async () => {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+}
+
+.header-title h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .header-icon {
-  color: var(--accent-amber);
+  color: var(--primary);
 }
 
 .btn-sm {
   padding: 6px 12px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .success-banner {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: var(--accent-emerald);
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
-  font-size: 0.85rem;
+  background: var(--status-fresh-bg);
+  border: 1px solid var(--status-fresh-border);
+  color: var(--status-fresh);
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  font-size: 0.82rem;
 }
 
 .empty-gaps {
-  color: var(--accent-emerald);
-  font-size: 0.9rem;
+  color: var(--status-fresh);
+  font-size: 0.86rem;
+  font-weight: 500;
 }
 
 .gaps-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .gap-item-chip {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.25);
+  gap: 5px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
   padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 0.85rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.8rem;
 }
 
 .gap-name {
@@ -129,7 +137,8 @@ const handleImportGaps = async () => {
 }
 
 .gap-qty {
-  color: var(--accent-amber);
-  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  font-weight: 600;
 }
 </style>

@@ -906,13 +906,13 @@ const handleSubmitTargets = async () => {
   position: fixed;
   inset: 0;
   z-index: 500;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 24px 16px;
   overflow-y: auto;
 }
 
@@ -921,25 +921,23 @@ const handleSubmitTargets = async () => {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   width: 100%;
-  max-width: 460px;
-  max-height: calc(100dvh - 32px);
-  padding: 20px;
+  max-width: 520px;
+  padding: 24px;
   box-shadow: var(--shadow-lg);
   margin: auto;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .modal-header h3 {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
@@ -947,12 +945,15 @@ const handleSubmitTargets = async () => {
 
 .close-modal-btn {
   color: var(--text-muted);
-  padding: 4px;
+  padding: 5px;
   border-radius: var(--radius-xs);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: var(--transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .close-modal-btn:hover {

@@ -210,13 +210,13 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
   position: fixed;
   inset: 0;
   z-index: 500;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 24px 16px;
   overflow-y: auto;
 }
 
@@ -225,13 +225,12 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   width: 100%;
-  max-width: 440px;
-  max-height: calc(100dvh - 32px);
-  padding: 20px;
+  max-width: 480px;
+  padding: 24px;
   box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   margin: auto;
 }
 
