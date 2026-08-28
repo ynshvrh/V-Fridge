@@ -4,6 +4,7 @@ import { usePlannerStore } from '@/stores/planner';
 import { useFridgeStore } from '@/stores/fridge';
 import FridgeSelector from '@/components/fridge/FridgeSelector.vue';
 import MealCard from '@/components/planner/MealCard.vue';
+import GapItemsCard from '@/components/planner/GapItemsCard.vue';
 import CreateFridgeModal from '@/components/fridge/CreateFridgeModal.vue';
 import { ChefHat, Sparkles, RefreshCw, Calendar, AlertCircle } from '@lucide/vue';
 
@@ -95,6 +96,11 @@ const handleRegenerateDay = async (day: string) => {
     </div>
 
     <div v-else class="planner-content">
+      <GapItemsCard
+        v-if="plannerStore.plan?.gapItems && plannerStore.plan.gapItems.length > 0"
+        :gaps="plannerStore.plan.gapItems"
+      />
+
       <div class="days-container">
         <template v-for="day in days" :key="day">
           <div v-if="mealsByDay[day] && mealsByDay[day].length > 0" class="day-section">
