@@ -98,11 +98,11 @@ export const useProductStore = defineStore('product', () => {
     loading.value = true;
     error.value = null;
     try {
-      const created = await api.fetch<Product>('/products', {
+      await api.fetch<Product>('/products', {
         method: 'POST',
         body: JSON.stringify(input)
       });
-      products.value.push(created);
+      await fetchProducts(true);
       return true;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;
