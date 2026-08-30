@@ -169,7 +169,9 @@ const handleCook = async () => {
 
 .modal-card {
   width: 100%;
-  max-width: 440px;
+  max-width: min(560px, 95vw);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
   padding: 20px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);

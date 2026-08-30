@@ -381,8 +381,9 @@ input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
+  padding: 20px 16px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .modal-card, .modal-content {
@@ -391,7 +392,9 @@ input, select, textarea {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   width: 100%;
-  max-width: 520px;
+  max-width: min(580px, 95vw);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   margin: auto;

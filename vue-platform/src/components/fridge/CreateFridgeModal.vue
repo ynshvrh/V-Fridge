@@ -81,7 +81,9 @@ const handleSubmit = async () => {
 
 .modal-card {
   width: 100%;
-  max-width: 460px;
+  max-width: min(520px, 95vw);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
   padding: 24px;
   margin: auto;
   display: flex;

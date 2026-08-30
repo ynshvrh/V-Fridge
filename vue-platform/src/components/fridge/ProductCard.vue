@@ -471,7 +471,9 @@ const handleDelete = async () => {
 
 .modal-card {
   width: 100%;
-  max-width: 480px;
+  max-width: min(540px, 95vw);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
   margin: auto;
   display: flex;
   flex-direction: column;

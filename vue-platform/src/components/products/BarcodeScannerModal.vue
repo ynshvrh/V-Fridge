@@ -225,7 +225,9 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   width: 100%;
-  max-width: 480px;
+  max-width: min(560px, 95vw);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
   padding: 24px;
   box-shadow: var(--shadow-lg);
   display: flex;

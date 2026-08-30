@@ -186,7 +186,9 @@ const handleSubmit = () => {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   width: 100%;
-  max-width: 440px;
+  max-width: min(560px, 95vw);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
   padding: 20px;
   box-shadow: var(--shadow-modal);
 }
