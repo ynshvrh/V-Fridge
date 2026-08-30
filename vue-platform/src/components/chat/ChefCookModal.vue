@@ -36,7 +36,8 @@ const handleCook = async () => {
       proteinPerPortion: props.recipe.protein,
       fatPerPortion: props.recipe.fat,
       carbsPerPortion: props.recipe.carbs,
-      expiryDays: expiryDays.value
+      expiryDays: expiryDays.value,
+      ignoreOptionalMissing: true
     });
 
     if (res) {

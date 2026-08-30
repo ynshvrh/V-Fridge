@@ -120,7 +120,8 @@ const handleCookSavedRecipe = async (recipe: SavedRecipe) => {
       fatPerPortion: Number(recipe.fat) || 0,
       carbsPerPortion: Number(recipe.carbs) || 0,
       expiryDays: 3,
-      savedRecipeId: recipe.id
+      savedRecipeId: recipe.id,
+      ignoreOptionalMissing: true
     });
     if (res) {
       alert(`Страва "${recipe.name}" приготована! Інгредієнти списано з холодильника, а контейнер додано на полицю.`);

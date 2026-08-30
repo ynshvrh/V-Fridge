@@ -43,6 +43,7 @@ export interface CookRecipeInput {
   carbsPerPortion?: number;
   expiryDays?: number;
   savedRecipeId?: number;
+  ignoreOptionalMissing?: boolean;
 }
 
 export interface DeductedIngredientSummary {
