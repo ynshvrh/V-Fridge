@@ -32,10 +32,17 @@ export interface UpdateProductInput {
   category?: string;
 }
 
+export interface CookIngredientItem {
+  name: string;
+  quantity?: number;
+  unit?: string;
+}
+
 export interface CookRecipeInput {
   name: string;
   description?: string | null;
   portions?: number;
+  structuredIngredients?: CookIngredientItem[];
   ingredients?: string[];
   caloriesPerPortion?: number;
   proteinPerPortion?: number;

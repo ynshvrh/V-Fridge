@@ -1,7 +1,14 @@
+export interface ParsedRecipeIngredient {
+  name: string;
+  quantity?: number;
+  unit?: string;
+}
+
 export interface ParsedRecipe {
   name: string;
   description: string;
   ingredients: string[];
+  structuredIngredients?: ParsedRecipeIngredient[];
   steps: string[];
   calories: number;
   protein: number;
@@ -32,8 +39,24 @@ export function useRecipeParser() {
       try {
         const parsed = JSON.parse(trimmed);
         const recipeData = parsed.recipe;
-        const ingredients = Array.isArray(recipeData?.ingredients) ? recipeData.ingredients : [];
+        const rawIngredients = Array.isArray(recipeData?.ingredients) ? recipeData.ingredients : [];
         const steps = Array.isArray(recipeData?.steps) ? recipeData.steps : [];
+
+        const structuredIngredients: ParsedRecipeIngredient[] = [];
+        const ingredients: string[] = [];
+
+        for (const item of rawIngredients) {
+          if (typeof item === 'string') {
+            ingredients.push(item);
+          } else if (item && typeof item === 'object') {
+            const name = item.name || '';
+            const qty = item.quantity !== undefined && item.quantity !== null ? Number(item.quantity) : undefined;
+            const unit = item.unit || '';
+            structuredIngredients.push({ name, quantity: qty, unit });
+            const prefix = [qty, unit].filter(Boolean).join(' ');
+            ingredients.push(prefix ? `${prefix} ${name}`.trim() : name);
+          }
+        }
 
         const hasValidRecipe = recipeData && (ingredients.length > 0 || steps.length > 0);
 
@@ -43,6 +66,7 @@ export function useRecipeParser() {
             name: recipeData.name || recipeData.title || 'Запропонований рецепт',
             description: recipeData.description || '',
             ingredients,
+            structuredIngredients: structuredIngredients.length > 0 ? structuredIngredients : undefined,
             steps,
             calories: Number(recipeData.calories) || 0,
             protein: Number(recipeData.protein) || 0,

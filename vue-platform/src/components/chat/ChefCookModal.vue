@@ -31,6 +31,7 @@ const handleCook = async () => {
       name: props.recipe.name,
       description: props.recipe.description,
       portions: portions.value,
+      structuredIngredients: props.recipe.structuredIngredients,
       ingredients: props.recipe.ingredients,
       caloriesPerPortion: props.recipe.calories,
       proteinPerPortion: props.recipe.protein,
