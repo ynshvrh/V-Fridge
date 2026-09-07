@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { type MealPlanGapItem, usePlannerStore } from '@/stores/planner';
+import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
+import { formatUnit } from '@/utils/unitStandards';
 import { ShoppingCart, Plus, CheckCircle2 } from '@lucide/vue';
 
 const props = defineProps<{
@@ -8,8 +10,10 @@ const props = defineProps<{
 }>();
 
 const plannerStore = usePlannerStore();
+const { currentLanguage } = useCurrentLanguage();
 const isImporting = ref(false);
 const importMessage = ref<string | null>(null);
+
 
 const handleImportGaps = async () => {
   if (props.gaps.length === 0) return;
@@ -53,7 +57,7 @@ const handleImportGaps = async () => {
     <div v-else class="gaps-grid">
       <div v-for="(item, idx) in gaps" :key="idx" class="gap-item-chip">
         <span class="gap-name">{{ item.name }}</span>
-        <span v-if="item.quantity" class="gap-qty">{{ item.quantity }} {{ item.unit || '' }}</span>
+        <span v-if="item.quantity" class="gap-qty">{{ item.quantity }} {{ formatUnit(item.unit, currentLanguage) }}</span>
       </div>
     </div>
   </div>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { NutritionLog } from '@/stores/nutrition';
+import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
+import { formatUnit } from '@/utils/unitStandards';
 import { Coffee, Soup, Salad, Cookie, Edit2, Trash2 } from '@lucide/vue';
 
 defineProps<{
@@ -12,6 +14,8 @@ const emit = defineEmits<{
   (e: 'delete', id: number): void;
 }>();
 
+const { currentLanguage } = useCurrentLanguage();
+
 const getMealLabel = (type: string) => {
   switch (type) {
     case 'breakfast': return 'Сніданок';
@@ -22,6 +26,7 @@ const getMealLabel = (type: string) => {
   }
 };
 </script>
+
 
 <template>
   <div class="meal-group">
@@ -47,7 +52,7 @@ const getMealLabel = (type: string) => {
         <div class="log-info">
           <div class="log-name">{{ log.foodName }}</div>
           <div class="log-details">
-            {{ log.quantity }} {{ log.unit ?? 'порція' }} · Б: {{ Math.round(log.protein) }}г · Ж: {{ Math.round(log.fat) }}г · В: {{ Math.round(log.carbs) }}г
+            {{ log.quantity }} {{ formatUnit(log.unit, currentLanguage) }} · Б: {{ Math.round(log.protein) }}г · Ж: {{ Math.round(log.fat) }}г · В: {{ Math.round(log.carbs) }}г
           </div>
         </div>
 

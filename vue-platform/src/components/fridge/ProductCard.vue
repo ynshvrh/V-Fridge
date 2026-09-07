@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { type Product, useProductStore } from '@/stores/product';
+import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
+import { formatUnit } from '@/utils/unitStandards';
 import { Plus, Minus, Trash2, Clock, AlertTriangle, Utensils, X, Check } from '@lucide/vue';
 
 const props = defineProps<{
@@ -8,6 +10,8 @@ const props = defineProps<{
 }>();
 
 const productStore = useProductStore();
+const { currentLanguage } = useCurrentLanguage();
+
 
 const status = computed(() => {
   if (!props.product.expiryDate) return { label: 'Свіжий', badgeClass: 'badge-fresh', isAlert: false };
@@ -146,7 +150,7 @@ const handleDelete = async () => {
         <button class="qty-btn" title="Зменшити / Спожити" @click="decreaseQuantity">
           <Minus :size="13" />
         </button>
-        <span class="qty-val">{{ product.quantity }} <small>{{ product.unit }}</small></span>
+        <span class="qty-val">{{ product.quantity }} <small>{{ formatUnit(product.unit, currentLanguage) }}</small></span>
         <button class="qty-btn" title="Збільшити" @click="increaseQuantity">
           <Plus :size="13" />
         </button>
@@ -231,7 +235,7 @@ const handleDelete = async () => {
                 >
                   <Minus :size="14" />
                 </button>
-                <span class="stepper-val">{{ selectedPortions }} <small>{{ product.unit }}</small></span>
+                <span class="stepper-val">{{ selectedPortions }} <small>{{ formatUnit(product.unit, currentLanguage) }}</small></span>
                 <button
                   class="stepper-btn"
                   :disabled="selectedPortions >= product.quantity"

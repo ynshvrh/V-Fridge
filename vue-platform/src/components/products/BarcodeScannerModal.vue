@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue';
 import { BrowserMultiFormatReader, type Result } from '@zxing/library';
+import { normalizeUnit } from '@/utils/unitStandards';
 import { Camera, Loader2, RefreshCw, ScanBarcode, X } from '@lucide/vue';
 
 export type ScannedProduct = {
@@ -120,24 +121,16 @@ const mapCategoryTagsToSlug = (tags: string[]): string => {
 };
 
 const parseQuantity = (raw: string | undefined): { quantity: number; unit: string } => {
-  if (!raw) return { quantity: 1, unit: 'шт' };
-  const m = raw.match(/(\d+(?:[.,]\d+)?)\s*(kg|g|l|ml|cl)\b/i);
-  if (!m) return { quantity: 1, unit: 'шт' };
+  if (!raw) return { quantity: 1, unit: 'pcs' };
+  const m = raw.match(/(\d+(?:[.,]\d+)?)\s*(kg|g|l|ml|cl|pcs)\b/i);
+  if (!m) return { quantity: 1, unit: 'pcs' };
   let qtyNum = parseFloat(m[1].replace(',', '.'));
   let unitStr = m[2].toLowerCase();
   if (unitStr === 'cl') {
     qtyNum = qtyNum * 10;
-    unitStr = 'мл';
-  } else if (unitStr === 'g') {
-    unitStr = 'г';
-  } else if (unitStr === 'kg') {
-    unitStr = 'кг';
-  } else if (unitStr === 'l') {
-    unitStr = 'л';
-  } else if (unitStr === 'ml') {
-    unitStr = 'мл';
+    unitStr = 'ml';
   }
-  return { quantity: qtyNum, unit: unitStr };
+  return { quantity: qtyNum, unit: normalizeUnit(unitStr) };
 };
 
 async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | null> {

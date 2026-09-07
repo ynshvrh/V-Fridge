@@ -392,15 +392,25 @@ input, select, textarea {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   width: 100%;
-  max-width: min(580px, 95vw);
-  max-height: calc(100dvh - 40px);
+  max-width: min(640px, 95vw);
+  max-height: calc(100dvh - 32px);
   overflow-y: auto;
+  scrollbar-width: thin;
   display: flex;
   flex-direction: column;
   margin: auto;
   color: var(--text-primary);
   position: relative;
 }
+
+.modal-card.modal-lg, .modal-content.modal-lg {
+  max-width: min(760px, 95vw);
+}
+
+.modal-card.modal-sm, .modal-content.modal-sm {
+  max-width: min(460px, 95vw);
+}
+
 
 .modal-header {
   padding: 18px 22px;

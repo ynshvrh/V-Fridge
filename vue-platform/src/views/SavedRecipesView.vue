@@ -78,7 +78,7 @@ const handleLogToTracker = async (recipe: SavedRecipe) => {
       mealType: 'lunch',
       foodName: recipe.name,
       quantity: 1,
-      unit: 'порція',
+      unit: 'servings',
       calories: recipe.calories || 0,
       protein: Number(recipe.protein) || 0,
       fat: Number(recipe.fat) || 0,
@@ -523,7 +523,10 @@ const handleCookSavedRecipe = async (recipe: SavedRecipe) => {
 
 .modal-card {
   width: 100%;
-  max-width: 640px;
+  max-width: min(740px, 95vw);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  scrollbar-width: thin;
   margin: auto;
   display: flex;
   flex-direction: column;

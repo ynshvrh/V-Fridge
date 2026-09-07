@@ -65,6 +65,7 @@ const handleUpdateProfile = async () => {
     });
     if (updated) {
       authStore.user = updated;
+      localStorage.setItem('vfridge_language', preferredLanguage.value);
       profileMessage.value = 'Налаштування AI Шефа збережено!';
       setTimeout(() => {
         profileMessage.value = null;

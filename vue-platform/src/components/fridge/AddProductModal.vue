@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useProductStore } from '@/stores/product';
 import BarcodeScannerModal, { type ScannedProduct } from '@/components/products/BarcodeScannerModal.vue';
+import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
+import { getUnitOptions, normalizeUnit } from '@/utils/unitStandards';
 import { Plus, X, Package, ScanBarcode } from '@lucide/vue';
 
 const emit = defineEmits<{
@@ -9,6 +11,7 @@ const emit = defineEmits<{
 }>();
 
 const productStore = useProductStore();
+const { currentLanguage } = useCurrentLanguage();
 
 const name = ref('');
 const description = ref('');
@@ -36,18 +39,19 @@ const categories = [
   { id: 'other', label: 'Інше' }
 ];
 
-const units = ['шт', 'г', 'кг', 'мл', 'л', 'упак'];
+const unitOptions = computed(() => getUnitOptions(currentLanguage.value, true));
 
 const handleBarcodeResolved = (scanned: ScannedProduct) => {
   name.value = scanned.name;
   quantity.value = scanned.quantity;
-  if (units.includes(scanned.unit)) {
-    unit.value = scanned.unit;
+  if (scanned.unit) {
+    unit.value = normalizeUnit(scanned.unit);
   }
   if (categories.some(c => c.id === scanned.category)) {
     category.value = scanned.category;
   }
 };
+
 
 const handleSubmit = async () => {
   if (!name.value || quantity.value <= 0) return;
@@ -122,7 +126,7 @@ const handleSubmit = async () => {
           <div class="form-group flex-1">
             <label class="form-label" for="prod-unit">Одиниця</label>
             <select id="prod-unit" v-model="unit" class="form-input">
-              <option v-for="u in units" :key="u" :value="u">{{ u }}</option>
+              <option v-for="u in unitOptions" :key="u.value" :value="u.value">{{ u.label }}</option>
             </select>
           </div>
         </div>

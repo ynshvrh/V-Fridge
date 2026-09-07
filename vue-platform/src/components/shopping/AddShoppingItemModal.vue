@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useShoppingStore } from '@/stores/shopping';
+import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
+import { getUnitOptions, normalizeUnit } from '@/utils/unitStandards';
 import { ShoppingCart, X, Plus } from '@lucide/vue';
 
 const emit = defineEmits<{
@@ -8,6 +10,7 @@ const emit = defineEmits<{
 }>();
 
 const shoppingStore = useShoppingStore();
+const { currentLanguage } = useCurrentLanguage();
 
 const name = ref('');
 const quantity = ref(1);
@@ -20,7 +23,7 @@ const categories = [
   'seafood', 'bakery', 'beverages', 'condiments', 'other'
 ];
 
-const units = ['pcs', 'kg', 'g', 'l', 'ml', 'pack'];
+const unitOptions = computed(() => getUnitOptions(currentLanguage.value, true));
 
 const handleSubmit = async () => {
   if (!name.value.trim()) return;
@@ -28,7 +31,7 @@ const handleSubmit = async () => {
   const success = await shoppingStore.addItem({
     name: name.value.trim(),
     quantity: quantity.value,
-    unit: unit.value,
+    unit: normalizeUnit(unit.value),
     category: category.value
   });
   isSubmitting.value = false;
@@ -36,6 +39,7 @@ const handleSubmit = async () => {
     emit('close');
   }
 };
+
 </script>
 
 <template>
@@ -80,7 +84,7 @@ const handleSubmit = async () => {
           <div class="form-group flex-1">
             <label class="form-label" for="item-unit">Одиниця</label>
             <select id="item-unit" v-model="unit" class="form-input">
-              <option v-for="u in units" :key="u" :value="u">{{ u }}</option>
+              <option v-for="u in unitOptions" :key="u.value" :value="u.value">{{ u.label }}</option>
             </select>
           </div>
         </div>

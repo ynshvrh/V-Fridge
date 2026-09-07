@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { type ShoppingItem, useShoppingStore } from '@/stores/shopping';
+import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
+import { formatUnit } from '@/utils/unitStandards';
 import { CheckSquare, Square, ShoppingBag, Trash2, Plus, Minus } from '@lucide/vue';
 
 const props = defineProps<{
@@ -8,7 +10,9 @@ const props = defineProps<{
 }>();
 
 const shoppingStore = useShoppingStore();
+const { currentLanguage } = useCurrentLanguage();
 const isPurchasing = ref(false);
+
 
 const toggleCheck = async () => {
   await shoppingStore.toggleCheck(props.item.id, !props.item.checked);
@@ -59,7 +63,7 @@ const handleDelete = async () => {
         <button class="qty-btn" title="Зменшити" @click.stop="decreaseQuantity">
           <Minus :size="12" />
         </button>
-        <span class="qty-text">{{ item.quantity || 1 }} <small>{{ item.unit || 'шт' }}</small></span>
+        <span class="qty-text">{{ item.quantity || 1 }} <small>{{ formatUnit(item.unit, currentLanguage) }}</small></span>
         <button class="qty-btn" title="Збільшити" @click.stop="increaseQuantity">
           <Plus :size="12" />
         </button>

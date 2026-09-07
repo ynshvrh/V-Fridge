@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import type { NutritionLog } from '@/stores/nutrition';
 import { useProductStore } from '@/stores/product';
+import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
+import { getUnitOptions, normalizeUnit, formatUnit } from '@/utils/unitStandards';
 import { X, Refrigerator, AlertTriangle, Loader2 } from '@lucide/vue';
 
 const props = defineProps<{
@@ -24,17 +26,20 @@ const emit = defineEmits<{
 }>();
 
 const productStore = useProductStore();
+const { currentLanguage } = useCurrentLanguage();
 
 const selectedProductId = ref<number | null>(null);
 const foodName = ref(props.editingLog?.foodName ?? '');
 const mealType = ref(props.editingLog?.mealType ?? 'breakfast');
 const quantity = ref(props.editingLog?.quantity?.toString() ?? '100');
-const unit = ref(props.editingLog?.unit ?? 'g');
+const unit = ref(props.editingLog?.unit ? normalizeUnit(props.editingLog.unit) : 'g');
 const calories = ref(props.editingLog?.calories?.toString() ?? '0');
 const protein = ref(props.editingLog?.protein?.toString() ?? '0');
 const fat = ref(props.editingLog?.fat?.toString() ?? '0');
 const carbs = ref(props.editingLog?.carbs?.toString() ?? '0');
 const submitting = ref(false);
+
+const unitOptions = computed(() => getUnitOptions(currentLanguage.value, false));
 
 onMounted(async () => {
   if (productStore.products.length === 0) {
@@ -54,10 +59,11 @@ const handleSelectFridgeProduct = (event: Event) => {
   const prod = productStore.products.find((p) => p.id === pid);
   if (prod) {
     foodName.value = prod.name;
-    unit.value = prod.unit || 'г';
+    unit.value = normalizeUnit(prod.unit || 'g');
     quantity.value = prod.quantity?.toString() ?? '100';
   }
 };
+
 
 const handleSubmit = () => {
   if (!foodName.value.trim()) return;
@@ -66,7 +72,7 @@ const handleSubmit = () => {
     mealType: mealType.value,
     foodName: foodName.value.trim(),
     quantity: quantity.value ? Number(quantity.value) : null,
-    unit: unit.value.trim() || null,
+    unit: unit.value ? normalizeUnit(unit.value) : null,
     calories: Number(calories.value) || 0,
     protein: Number(protein.value) || 0,
     fat: Number(fat.value) || 0,
@@ -124,14 +130,16 @@ const handleSubmit = () => {
             </div>
             <div class="form-group">
               <label class="form-label">Од.</label>
-              <input v-model="unit" type="text" class="form-input" />
+              <select v-model="unit" class="form-input">
+                <option v-for="u in unitOptions" :key="u.value" :value="u.value">{{ u.label }}</option>
+              </select>
             </div>
           </div>
         </div>
 
         <div v-if="selectedProductId" class="fridge-warning">
           <AlertTriangle :size="14" />
-          <span>При збереженні кількість продукту в холодильнику буде автоматично зменшена на {{ quantity }} {{ unit }}.</span>
+          <span>При збереженні кількість продукту в холодильнику буде автоматично зменшена на {{ quantity }} {{ formatUnit(unit, currentLanguage) }}.</span>
         </div>
 
         <div class="macros-inputs-block">
