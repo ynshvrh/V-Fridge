@@ -25,6 +25,7 @@ let startX = 0;
 let startY = 0;
 let hasDecidedDirection = false;
 let preventClick = false;
+let activePointerId: number | null = null;
 
 const TRIGGER_THRESHOLD = 60;
 
@@ -60,28 +61,40 @@ const handleDelete = async () => {
   await shoppingStore.deleteItem(props.item.id);
 };
 
-// Touch gestures
-const handleTouchStart = (e: TouchEvent) => {
-  if (!isSwipeEnabled.value || e.touches.length !== 1) return;
-  startX = e.touches[0].clientX;
-  startY = e.touches[0].clientY;
+// Pointer Events (Touch & Mouse unified)
+const handlePointerDown = (e: PointerEvent) => {
+  if (!isSwipeEnabled.value) return;
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  const target = e.target as HTMLElement;
+  if (target.closest('button') || target.closest('.qty-controls')) return;
+
+  activePointerId = e.pointerId;
+  startX = e.clientX;
+  startY = e.clientY;
   hasDecidedDirection = false;
   isSwipingHorizontal.value = false;
   isDragging.value = false;
   preventClick = false;
+
+  const rowEl = e.currentTarget as HTMLElement;
+  if (rowEl && typeof rowEl.setPointerCapture === 'function') {
+    try {
+      rowEl.setPointerCapture(e.pointerId);
+    } catch (_) {}
+  }
 };
 
-const handleTouchMove = (e: TouchEvent) => {
-  if (!isSwipeEnabled.value || e.touches.length !== 1) return;
-  const dx = e.touches[0].clientX - startX;
-  const dy = e.touches[0].clientY - startY;
+const handlePointerMove = (e: PointerEvent) => {
+  if (!isSwipeEnabled.value || activePointerId !== e.pointerId) return;
+  const dx = e.clientX - startX;
+  const dy = e.clientY - startY;
 
   if (!hasDecidedDirection) {
-    if (Math.abs(dy) > 8 && Math.abs(dy) >= Math.abs(dx)) {
+    if (Math.abs(dy) > 7 && Math.abs(dy) >= Math.abs(dx)) {
       hasDecidedDirection = true;
       isSwipingHorizontal.value = false;
       return;
-    } else if (Math.abs(dx) > 8) {
+    } else if (Math.abs(dx) > 7) {
       hasDecidedDirection = true;
       isSwipingHorizontal.value = true;
       isDragging.value = true;
@@ -90,81 +103,27 @@ const handleTouchMove = (e: TouchEvent) => {
   }
 
   if (isSwipingHorizontal.value) {
-    if (e.cancelable) e.preventDefault();
     const max = 110;
     swipeOffset.value = Math.sign(dx) * Math.min(max, Math.abs(dx) * 0.85);
   }
 };
 
-const handleTouchEnd = async () => {
-  if (!isSwipeEnabled.value || !isSwipingHorizontal.value) {
-    isDragging.value = false;
-    swipeOffset.value = 0;
-    setTimeout(() => { preventClick = false; }, 50);
-    return;
+const handlePointerUp = async (e: PointerEvent) => {
+  if (activePointerId !== e.pointerId) return;
+  activePointerId = null;
+
+  const rowEl = e.currentTarget as HTMLElement;
+  if (rowEl && typeof rowEl.releasePointerCapture === 'function') {
+    try {
+      rowEl.releasePointerCapture(e.pointerId);
+    } catch (_) {}
   }
-
-  const offset = swipeOffset.value;
-  isDragging.value = false;
-  swipeOffset.value = 0;
-  isSwipingHorizontal.value = false;
-  hasDecidedDirection = false;
-
-  if (offset >= TRIGGER_THRESHOLD) {
-    if (!props.item.checked) {
-      await toggleCheck();
-    } else {
-      await handlePurchase();
-    }
-  } else if (offset <= -TRIGGER_THRESHOLD) {
-    await handleDelete();
-  }
-
-  setTimeout(() => { preventClick = false; }, 100);
-};
-
-// Mouse drag support for desktop testing
-let mouseStartX = 0;
-let mouseStartY = 0;
-let isMouseDown = false;
-
-const handleMouseDown = (e: MouseEvent) => {
-  if (!isSwipeEnabled.value || e.button !== 0) return;
-  const target = e.target as HTMLElement;
-  if (target.closest('button') || target.closest('.qty-controls')) return;
-
-  isMouseDown = true;
-  mouseStartX = e.clientX;
-  mouseStartY = e.clientY;
-  preventClick = false;
-
-  window.addEventListener('mousemove', onMouseMove);
-  window.addEventListener('mouseup', onMouseUp);
-};
-
-const onMouseMove = (e: MouseEvent) => {
-  if (!isMouseDown) return;
-  const dx = e.clientX - mouseStartX;
-  const dy = e.clientY - mouseStartY;
-
-  if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy)) {
-    isDragging.value = true;
-    preventClick = true;
-    const max = 110;
-    swipeOffset.value = Math.sign(dx) * Math.min(max, Math.abs(dx) * 0.85);
-  }
-};
-
-const onMouseUp = async () => {
-  if (!isMouseDown) return;
-  isMouseDown = false;
-  window.removeEventListener('mousemove', onMouseMove);
-  window.removeEventListener('mouseup', onMouseUp);
 
   if (isDragging.value) {
     const offset = swipeOffset.value;
     isDragging.value = false;
     swipeOffset.value = 0;
+    isSwipingHorizontal.value = false;
 
     if (offset >= TRIGGER_THRESHOLD) {
       if (!props.item.checked) {
@@ -176,8 +135,21 @@ const onMouseUp = async () => {
       await handleDelete();
     }
 
-    setTimeout(() => { preventClick = false; }, 100);
+    setTimeout(() => { preventClick = false; }, 120);
+  } else {
+    swipeOffset.value = 0;
+    isSwipingHorizontal.value = false;
+    setTimeout(() => { preventClick = false; }, 50);
   }
+};
+
+const handlePointerCancel = (e: PointerEvent) => {
+  if (activePointerId !== e.pointerId) return;
+  activePointerId = null;
+  isDragging.value = false;
+  swipeOffset.value = 0;
+  isSwipingHorizontal.value = false;
+  setTimeout(() => { preventClick = false; }, 50);
 };
 
 const rowStyle = computed(() => {
@@ -195,7 +167,7 @@ const rowStyle = computed(() => {
 </script>
 
 <template>
-  <div class="swipe-item-container" :class="{ 'swipe-enabled': isSwipeEnabled }">
+  <div class="swipe-item-container fade-in" :class="{ 'swipe-enabled': isSwipeEnabled }">
     <!-- Swipe background actions -->
     <div v-if="isSwipeEnabled" class="swipe-backgrounds">
       <div
@@ -225,14 +197,13 @@ const rowStyle = computed(() => {
 
     <!-- Main item card -->
     <div
-      class="nordic-card shopping-row fade-in"
+      class="nordic-card shopping-row"
       :class="{ checked: item.checked, swiping: isDragging }"
       :style="rowStyle"
-      @touchstart="handleTouchStart"
-      @touchmove="handleTouchMove"
-      @touchend="handleTouchEnd"
-      @touchcancel="handleTouchEnd"
-      @mousedown="handleMouseDown"
+      @pointerdown="handlePointerDown"
+      @pointermove="handlePointerMove"
+      @pointerup="handlePointerUp"
+      @pointercancel="handlePointerCancel"
     >
       <div class="item-details" @click="toggleCheck">
         <span class="item-name" :class="{ strikethrough: item.checked }">{{ item.name }}</span>
@@ -253,7 +224,6 @@ const rowStyle = computed(() => {
         </div>
 
         <button
-          v-if="!isSwipeEnabled || item.checked"
           class="purchase-btn"
           title="Перемістити в холодильник (Куплено)"
           :disabled="isPurchasing"
@@ -340,6 +310,12 @@ const rowStyle = computed(() => {
   transform: scale(1.2);
 }
 
+.swipe-enabled .shopping-row {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 .shopping-row {
   position: relative;
   z-index: 2;
@@ -359,6 +335,7 @@ const rowStyle = computed(() => {
 .shopping-row.swiping {
   cursor: grabbing;
   user-select: none;
+  -webkit-user-select: none;
 }
 
 .item-details {

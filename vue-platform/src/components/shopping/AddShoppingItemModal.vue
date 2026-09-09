@@ -55,8 +55,9 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="modal-backdrop" @click.self="emit('close')">
-    <div class="glass-card modal-card fade-in">
+  <Teleport to="body">
+    <div class="modal-backdrop" @click.self="emit('close')">
+      <div class="glass-card modal-card fade-in">
       <div class="modal-header">
         <div class="header-title">
           <ShoppingCart :size="18" class="header-icon" />
@@ -118,6 +119,7 @@ const handleSubmit = async () => {
       </form>
     </div>
   </div>
+</Teleport>
 </template>
 
 <style scoped>
