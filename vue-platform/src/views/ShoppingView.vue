@@ -2,12 +2,14 @@
 import { ref, onMounted, watch } from 'vue';
 import { useShoppingStore } from '@/stores/shopping';
 import { useFridgeStore } from '@/stores/fridge';
+import { useThemeStore } from '@/stores/theme';
 import ShoppingItemRow from '@/components/shopping/ShoppingItemRow.vue';
 import AddShoppingItemModal from '@/components/shopping/AddShoppingItemModal.vue';
 import { ShoppingCart, Plus, CheckCheck, Package } from '@lucide/vue';
 
 const shoppingStore = useShoppingStore();
 const fridgeStore = useFridgeStore();
+const themeStore = useThemeStore();
 
 const quickName = ref('');
 const showAddModal = ref(false);
@@ -41,6 +43,9 @@ const handleQuickAdd = async () => {
         <h2 class="section-heading">Список покупок</h2>
         <p class="section-subheading">
           Залишилось купити: <strong>{{ shoppingStore.uncheckedItems.length }}</strong> шт.
+          <span v-if="themeStore.shoppingMode === 'swipe'" class="swipe-mode-hint">
+            · Свайп вправо: куплено, вліво: видалити
+          </span>
         </p>
       </div>
 
@@ -142,6 +147,12 @@ const handleQuickAdd = async () => {
   font-size: 0.82rem;
   color: var(--text-secondary);
   margin-top: 2px;
+}
+
+.swipe-mode-hint {
+  color: var(--primary);
+  font-weight: 500;
+  margin-left: 4px;
 }
 
 .btn-sm {
