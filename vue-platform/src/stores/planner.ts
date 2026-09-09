@@ -3,11 +3,20 @@ import { ref } from 'vue';
 import { api, type ApiErrorResponse } from '@/api/client';
 import { useShoppingStore } from './shopping';
 
+export interface RecipeIngredientDto {
+  name: string;
+  quantity?: number;
+  unit?: string;
+  category?: string;
+  inFridge?: boolean;
+}
+
 export interface MealPlanMeal {
   day: string;
   mealType: string; // 'breakfast' | 'lunch' | 'dinner'
   name: string;
   ingredients: string[];
+  structuredIngredients?: RecipeIngredientDto[];
   description?: string;
   steps?: string[];
   calories?: number;

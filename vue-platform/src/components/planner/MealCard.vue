@@ -3,6 +3,9 @@ import { ref, computed } from 'vue';
 import { type MealPlanMeal, usePlannerStore } from '@/stores/planner';
 import { useProductStore } from '@/stores/product';
 import { useShoppingStore } from '@/stores/shopping';
+import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
+import { normalizeUnit, formatUnit } from '@/utils/unitStandards';
+import { inferCategory } from '@/utils/categoryInferrer';
 import { 
   RefreshCw, 
   BookOpen, 
@@ -43,17 +46,88 @@ const mealTypeInfo = computed(() => {
   return mealTypeLabels[t] || { label: props.meal.mealType || 'Страва' };
 });
 
-const isIngredientInFridge = (ing: string): boolean => {
-  const clean = ing.toLowerCase().trim();
+const { currentLanguage } = useCurrentLanguage();
+
+interface NormalizedMealIngredient {
+  name: string;
+  quantity?: number;
+  unit?: string;
+  category: string;
+  inFridge: boolean;
+}
+
+const parseRawIngredient = (raw: string): { name: string; quantity: number; unit: string; category: string } => {
+  const trimmed = raw.trim();
+  const m = trimmed.match(/^(\d+(?:[.,]\d+)?)\s*([a-zA-Zа-яА-ЯіїєІЇЄ\.]+)?(?:\s+(.+))?$/);
+  if (m) {
+    const qty = parseFloat(m[1].replace(',', '.'));
+    const potUnit = (m[2] || '').trim();
+    const rem = (m[3] || '').trim();
+    if (rem) {
+      return {
+        quantity: qty,
+        unit: normalizeUnit(potUnit) as string,
+        name: rem,
+        category: inferCategory(rem)
+      };
+    } else {
+      return {
+        quantity: qty,
+        unit: 'pcs',
+        name: potUnit,
+        category: inferCategory(potUnit)
+      };
+    }
+  }
+  return {
+    quantity: 1,
+    unit: 'pcs',
+    name: trimmed,
+    category: inferCategory(trimmed)
+  };
+};
+
+const isIngredientInFridge = (name: string): boolean => {
+  const clean = name.toLowerCase().trim();
   return productStore.products.some(p => {
     const pName = p.name.toLowerCase().trim();
     return clean.includes(pName) || pName.includes(clean);
   });
 };
 
-const missingIngredients = computed(() => {
+const normalizedIngredients = computed<NormalizedMealIngredient[]>(() => {
+  if (props.meal.structuredIngredients && props.meal.structuredIngredients.length > 0) {
+    return props.meal.structuredIngredients.map(i => {
+      const inFridge = i.inFridge !== undefined
+        ? i.inFridge
+        : isIngredientInFridge(i.name);
+      return {
+        name: i.name,
+        quantity: i.quantity,
+        unit: i.unit,
+        category: i.category || inferCategory(i.name),
+        inFridge
+      };
+    });
+  }
+
   if (!props.meal.ingredients || props.meal.ingredients.length === 0) return [];
-  return props.meal.ingredients.filter(ing => !isIngredientInFridge(ing));
+
+  return props.meal.ingredients.map(raw => {
+    const parsed = parseRawIngredient(raw);
+    const inFridge = isIngredientInFridge(parsed.name);
+    return {
+      name: parsed.name,
+      quantity: parsed.quantity,
+      unit: parsed.unit,
+      category: parsed.category,
+      inFridge
+    };
+  });
+});
+
+const missingIngredients = computed(() => {
+  return normalizedIngredients.value.filter(i => !i.inFridge);
 });
 
 const toggleRecipe = async () => {
@@ -76,7 +150,12 @@ const handleAddMissingToShopping = async () => {
   isAddingToShopping.value = true;
   try {
     for (const ing of missingIngredients.value) {
-      await shoppingStore.addItem({ name: ing, category: 'other' });
+      await shoppingStore.addItem({
+        name: ing.name,
+        quantity: ing.quantity || 1,
+        unit: ing.unit || 'pcs',
+        category: ing.category || 'other'
+      });
     }
     await shoppingStore.fetchShoppingItems(true);
     addedToShopping.value = true;
@@ -97,6 +176,7 @@ const handleCookMeal = async () => {
       name: props.meal.name,
       description: props.meal.description,
       portions: 2,
+      structuredIngredients: normalizedIngredients.value,
       ingredients: props.meal.ingredients,
       caloriesPerPortion: props.meal.calories,
       proteinPerPortion: props.meal.protein,
@@ -162,7 +242,7 @@ const handleCookMeal = async () => {
       <!-- Ingredients Section -->
       <div class="details-section">
         <div class="section-heading-row">
-          <h5>Інгредієнти ({{ meal.ingredients?.length || 0 }}):</h5>
+          <h5>Інгредієнти ({{ normalizedIngredients.length }}):</h5>
           <span v-if="missingIngredients.length === 0" class="status-tag-all-fresh">
             <Check :size="12" /> Всі є в наявності
           </span>
@@ -173,14 +253,17 @@ const handleCookMeal = async () => {
 
         <div class="ingredients-list-grid">
           <div
-            v-for="(ing, idx) in meal.ingredients"
+            v-for="(ing, idx) in normalizedIngredients"
             :key="idx"
             class="ing-item-pill"
-            :class="{ 'in-fridge': isIngredientInFridge(ing), 'is-missing': !isIngredientInFridge(ing) }"
+            :class="{ 'in-fridge': ing.inFridge, 'is-missing': !ing.inFridge }"
           >
-            <Check v-if="isIngredientInFridge(ing)" :size="12" class="ing-status-icon fresh" />
+            <Check v-if="ing.inFridge" :size="12" class="ing-status-icon fresh" />
             <ShoppingBag v-else :size="12" class="ing-status-icon warn" />
-            <span>{{ ing }}</span>
+            <span>
+              <template v-if="ing.quantity">{{ ing.quantity }} {{ formatUnit(ing.unit, currentLanguage) }} </template>
+              {{ ing.name }}
+            </span>
           </div>
         </div>
 
