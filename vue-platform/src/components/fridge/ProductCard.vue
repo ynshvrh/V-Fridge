@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { type Product, useProductStore } from '@/stores/product';
 import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
 import { formatUnit } from '@/utils/unitStandards';
-import { Plus, Minus, Trash2, Clock, AlertTriangle, Utensils, X, Check } from '@lucide/vue';
+import { Plus, Minus, Trash2, Clock, AlertTriangle, Utensils, X, Check, Flame } from '@lucide/vue';
 
 const props = defineProps<{
   product: Product;
@@ -26,13 +26,14 @@ const status = computed(() => {
 });
 
 const increaseQuantity = async () => {
-  await productStore.updateProduct(props.product.id, {
-    quantity: Number((props.product.quantity + 1).toFixed(2))
-  });
+  const step = props.product.quantity < 1 ? 0.1 : 1;
+  const newQty = parseFloat((props.product.quantity + step).toFixed(3));
+  await productStore.updateProduct(props.product.id, { quantity: newQty });
 };
 
 const decreaseQuantity = async () => {
-  const newQty = Number((props.product.quantity - 1).toFixed(2));
+  const step = props.product.quantity <= 1 ? 0.1 : 1;
+  const newQty = parseFloat((props.product.quantity - step).toFixed(3));
   if (newQty <= 0) {
     await productStore.deleteProduct(props.product.id);
   } else {
@@ -43,7 +44,8 @@ const decreaseQuantity = async () => {
 const isPreparedMeal = computed(() => {
   return props.product.category === 'prepared-meals' ||
     props.product.unit.toLowerCase().includes('порц') ||
-    (props.product.description && props.product.description.includes('КБЖВ'));
+    (props.product.description && props.product.description.includes('КБЖВ')) ||
+    (props.product.calories !== null && props.product.calories !== undefined && props.product.calories > 0);
 });
 
 // Eat Portion Modal State
@@ -67,18 +69,24 @@ const openEatModal = () => {
   showEatModal.value = true;
 };
 
-// Parse single portion macros from description
+// Parse single portion macros from direct properties or description
 const parsedMacros = computed(() => {
-  const desc = props.product.description || '';
-  let calories = 0, protein = 0, fat = 0, carbs = 0;
-  const calMatch = desc.match(/(\d+)\s*(?:кКал|kcal)/i);
-  if (calMatch) calories = parseInt(calMatch[1], 10);
-  const protMatch = desc.match(/Б:\s*([\d\.,]+)/i);
-  if (protMatch) protein = parseFloat(protMatch[1].replace(',', '.'));
-  const fatMatch = desc.match(/Ж:\s*([\d\.,]+)/i);
-  if (fatMatch) fat = parseFloat(fatMatch[1].replace(',', '.'));
-  const carbsMatch = desc.match(/В:\s*([\d\.,]+)/i);
-  if (carbsMatch) carbs = parseFloat(carbsMatch[1].replace(',', '.'));
+  let calories = props.product.calories ?? 0;
+  let protein = props.product.protein ?? 0;
+  let fat = props.product.fat ?? 0;
+  let carbs = props.product.carbs ?? 0;
+
+  if (!calories && !protein) {
+    const desc = props.product.description || '';
+    const calMatch = desc.match(/(\d+)\s*(?:кКал|kcal)/i);
+    if (calMatch) calories = parseInt(calMatch[1], 10);
+    const protMatch = desc.match(/Б:\s*([\d\.,]+)/i);
+    if (protMatch) protein = parseFloat(protMatch[1].replace(',', '.'));
+    const fatMatch = desc.match(/Ж:\s*([\d\.,]+)/i);
+    if (fatMatch) fat = parseFloat(fatMatch[1].replace(',', '.'));
+    const carbsMatch = desc.match(/В:\s*([\d\.,]+)/i);
+    if (carbsMatch) carbs = parseFloat(carbsMatch[1].replace(',', '.'));
+  }
 
   return {
     calories: Math.round(calories * selectedPortions.value),
@@ -94,7 +102,11 @@ const handleConfirmEat = async () => {
   try {
     const res = await productStore.consumeProduct(props.product.id, {
       portions: selectedPortions.value,
-      mealType: selectedMealType.value
+      mealType: selectedMealType.value,
+      calories: parsedMacros.value.calories,
+      protein: parsedMacros.value.protein,
+      fat: parsedMacros.value.fat,
+      carbs: parsedMacros.value.carbs
     });
     if (res) {
       eatSuccess.value = true;
@@ -117,7 +129,13 @@ const handleDelete = async () => {
   <div class="nordic-card product-card fade-in">
     <!-- Single line header with Category & Status Badge -->
     <div class="card-header">
-      <span class="category-chip">{{ product.category }}</span>
+      <div class="header-chips">
+        <span class="category-chip">{{ product.category }}</span>
+        <span v-if="product.calories" class="nutrition-chip" :title="`КБЖВ: ${product.calories} ккал | Б: ${product.protein ?? 0}г | Ж: ${product.fat ?? 0}г | В: ${product.carbs ?? 0}г`">
+          <Flame :size="10" />
+          <span>{{ product.calories }} ккал</span>
+        </span>
+      </div>
       <div class="badge" :class="status.badgeClass">
         <AlertTriangle v-if="status.isAlert" :size="11" />
         <Clock v-else :size="11" />
@@ -361,6 +379,28 @@ const handleDelete = async () => {
   align-items: center;
   justify-content: space-between;
   gap: 6px;
+}
+
+.header-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.nutrition-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: rgba(224, 90, 71, 0.08);
+  color: #e05a47;
+  border: 1px solid rgba(224, 90, 71, 0.15);
+  white-space: nowrap;
 }
 
 .category-chip {

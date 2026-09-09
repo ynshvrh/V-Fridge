@@ -4,7 +4,7 @@ import { useProductStore } from '@/stores/product';
 import BarcodeScannerModal, { type ScannedProduct } from '@/components/products/BarcodeScannerModal.vue';
 import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
 import { getUnitOptions, normalizeUnit } from '@/utils/unitStandards';
-import { Plus, X, Package, ScanBarcode } from '@lucide/vue';
+import { Plus, X, Package, ScanBarcode, Flame, ChevronDown, ChevronUp } from '@lucide/vue';
 
 const emit = defineEmits<{
   (e: 'close'): void;
@@ -21,6 +21,12 @@ const expiryDate = ref('');
 const category = ref('other');
 const isSubmitting = ref(false);
 const showScannerModal = ref(false);
+
+const calories = ref<number | undefined>(undefined);
+const protein = ref<number | undefined>(undefined);
+const fat = ref<number | undefined>(undefined);
+const carbs = ref<number | undefined>(undefined);
+const showNutritionFields = ref(false);
 
 const categories = [
   { id: 'dairy', label: 'Молочне' },
@@ -62,7 +68,11 @@ const handleSubmit = async () => {
     quantity: quantity.value,
     unit: unit.value,
     expiryDate: expiryDate.value || undefined,
-    category: category.value
+    category: category.value,
+    calories: calories.value !== undefined && !isNaN(calories.value) ? calories.value : undefined,
+    protein: protein.value !== undefined && !isNaN(protein.value) ? protein.value : undefined,
+    fat: fat.value !== undefined && !isNaN(fat.value) ? fat.value : undefined,
+    carbs: carbs.value !== undefined && !isNaN(carbs.value) ? carbs.value : undefined
   });
   isSubmitting.value = false;
   if (success) {
@@ -116,8 +126,8 @@ const handleSubmit = async () => {
               id="prod-qty"
               v-model.number="quantity"
               type="number"
-              step="0.1"
-              min="0.1"
+              step="0.001"
+              min="0.001"
               class="form-input"
               required
             />
@@ -159,6 +169,69 @@ const handleSubmit = async () => {
             class="form-input"
             placeholder="Органічне, 2.5%..."
           />
+        </div>
+
+        <!-- Optional Nutrition Section -->
+        <div class="nutrition-accordion">
+          <button
+            type="button"
+            class="nutrition-toggle-btn"
+            @click="showNutritionFields = !showNutritionFields"
+          >
+            <div class="nutrition-toggle-label">
+              <Flame :size="15" class="flame-icon" />
+              <span>Поживна цінність (КБЖВ - необов'язково)</span>
+            </div>
+            <ChevronUp v-if="showNutritionFields" :size="15" />
+            <ChevronDown v-else :size="15" />
+          </button>
+
+          <div v-if="showNutritionFields" class="nutrition-inputs-grid fade-in">
+            <div class="form-group">
+              <label class="form-sublabel">Калорії (ккал)</label>
+              <input
+                v-model.number="calories"
+                type="number"
+                min="0"
+                step="1"
+                class="form-input form-input-sm"
+                placeholder="0"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-sublabel">Білки (г)</label>
+              <input
+                v-model.number="protein"
+                type="number"
+                min="0"
+                step="0.1"
+                class="form-input form-input-sm"
+                placeholder="0.0"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-sublabel">Жири (г)</label>
+              <input
+                v-model.number="fat"
+                type="number"
+                min="0"
+                step="0.1"
+                class="form-input form-input-sm"
+                placeholder="0.0"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-sublabel">Вуглеводи (г)</label>
+              <input
+                v-model.number="carbs"
+                type="number"
+                min="0"
+                step="0.1"
+                class="form-input form-input-sm"
+                placeholder="0.0"
+              />
+            </div>
+          </div>
         </div>
 
         <div class="modal-footer">
@@ -293,6 +366,71 @@ const handleSubmit = async () => {
     flex-direction: column;
     gap: 14px;
   }
+}
+
+.nutrition-accordion {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+  background: var(--bg-subtle);
+}
+
+.nutrition-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: var(--transition-fast);
+}
+
+.nutrition-toggle-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.nutrition-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flame-icon {
+  color: #e05a47;
+}
+
+.nutrition-inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+@media (max-width: 480px) {
+  .nutrition-inputs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.form-sublabel {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 3px;
+  display: block;
+}
+
+.form-input-sm {
+  padding: 5px 8px;
+  font-size: 0.82rem;
 }
 
 .modal-footer {

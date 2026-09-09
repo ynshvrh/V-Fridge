@@ -12,6 +12,10 @@ export interface Product {
   category: string;
   ownerId: number;
   createdAt: string;
+  calories?: number | null;
+  protein?: number | null;
+  fat?: number | null;
+  carbs?: number | null;
 }
 
 export interface CreateProductInput {
@@ -21,6 +25,10 @@ export interface CreateProductInput {
   unit: string;
   expiryDate?: string;
   category?: string;
+  calories?: number;
+  protein?: number;
+  fat?: number;
+  carbs?: number;
 }
 
 export interface UpdateProductInput {
@@ -30,12 +38,17 @@ export interface UpdateProductInput {
   unit?: string;
   expiryDate?: string | null;
   category?: string;
+  calories?: number | null;
+  protein?: number | null;
+  fat?: number | null;
+  carbs?: number | null;
 }
 
 export interface CookIngredientItem {
   name: string;
   quantity?: number;
   unit?: string;
+  category?: string;
 }
 
 export interface CookRecipeInput {

@@ -2,6 +2,8 @@ export interface ParsedRecipeIngredient {
   name: string;
   quantity?: number;
   unit?: string;
+  category?: string;
+  inFridge?: boolean;
 }
 
 export interface ParsedRecipe {
@@ -40,10 +42,24 @@ export function useRecipeParser() {
         const parsed = JSON.parse(trimmed);
         const recipeData = parsed.recipe;
         const rawIngredients = Array.isArray(recipeData?.ingredients) ? recipeData.ingredients : [];
+        const rawStructured = Array.isArray(recipeData?.structuredIngredients) ? recipeData.structuredIngredients : [];
         const steps = Array.isArray(recipeData?.steps) ? recipeData.steps : [];
 
         const structuredIngredients: ParsedRecipeIngredient[] = [];
         const ingredients: string[] = [];
+
+        if (rawStructured.length > 0) {
+          for (const item of rawStructured) {
+            if (item && typeof item === 'object') {
+              const name = item.name || '';
+              const qty = item.quantity !== undefined && item.quantity !== null ? Number(item.quantity) : undefined;
+              const unit = item.unit || '';
+              const category = item.category || undefined;
+              const inFridge = Boolean(item.inFridge);
+              structuredIngredients.push({ name, quantity: qty, unit, category, inFridge });
+            }
+          }
+        }
 
         for (const item of rawIngredients) {
           if (typeof item === 'string') {
@@ -52,7 +68,11 @@ export function useRecipeParser() {
             const name = item.name || '';
             const qty = item.quantity !== undefined && item.quantity !== null ? Number(item.quantity) : undefined;
             const unit = item.unit || '';
-            structuredIngredients.push({ name, quantity: qty, unit });
+            const category = item.category || undefined;
+            const inFridge = Boolean(item.inFridge);
+            if (rawStructured.length === 0) {
+              structuredIngredients.push({ name, quantity: qty, unit, category, inFridge });
+            }
             const prefix = [qty, unit].filter(Boolean).join(' ');
             ingredients.push(prefix ? `${prefix} ${name}`.trim() : name);
           }

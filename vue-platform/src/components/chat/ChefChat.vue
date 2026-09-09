@@ -53,6 +53,7 @@ const handleSaveRecipe = async (recipe: ParsedRecipe) => {
     name: recipe.name,
     description: recipe.description,
     ingredients: recipe.ingredients,
+    structuredIngredients: recipe.structuredIngredients,
     steps: recipe.steps,
     calories: recipe.calories,
     protein: recipe.protein,

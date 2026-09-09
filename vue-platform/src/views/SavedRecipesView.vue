@@ -96,8 +96,19 @@ const handleImportIngredients = async (recipe: SavedRecipe) => {
   if (!recipe.ingredients || recipe.ingredients.length === 0) return;
   importingId.value = recipe.id;
   try {
-    for (const ing of recipe.ingredients) {
-      await shoppingStore.addItem({ name: ing, category: 'other' });
+    if (recipe.structuredIngredients && recipe.structuredIngredients.length > 0) {
+      for (const ing of recipe.structuredIngredients) {
+        await shoppingStore.addItem({
+          name: ing.name,
+          quantity: ing.quantity,
+          unit: ing.unit,
+          category: ing.category || 'other'
+        });
+      }
+    } else {
+      for (const ing of recipe.ingredients) {
+        await shoppingStore.addItem({ name: ing, category: 'other' });
+      }
     }
     alert(`Інгредієнти рецепта "${recipe.name}" додано до списку покупок!`);
   } catch (err: any) {
@@ -114,6 +125,7 @@ const handleCookSavedRecipe = async (recipe: SavedRecipe) => {
       name: recipe.name,
       description: recipe.description,
       portions: 2,
+      structuredIngredients: recipe.structuredIngredients,
       ingredients: recipe.ingredients,
       caloriesPerPortion: recipe.calories,
       proteinPerPortion: Number(recipe.protein) || 0,

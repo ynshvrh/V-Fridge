@@ -2,11 +2,20 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { api } from '@/api/client';
 
+export interface RecipeIngredientItem {
+  name: string;
+  quantity?: number;
+  unit?: string;
+  category?: string;
+  inFridge?: boolean;
+}
+
 export interface SavedRecipe {
   id: number;
   name: string;
   description: string | null;
   ingredients: string[];
+  structuredIngredients?: RecipeIngredientItem[];
   steps: string[];
   calories: number;
   protein: number;
@@ -19,6 +28,7 @@ export interface SaveRecipePayload {
   name: string;
   description?: string | null;
   ingredients?: string[];
+  structuredIngredients?: RecipeIngredientItem[];
   steps?: string[];
   calories?: number;
   protein?: number;

@@ -19,8 +19,20 @@ const category = ref('other');
 const isSubmitting = ref(false);
 
 const categories = [
-  'dairy', 'fruits', 'vegetables', 'meat', 'poultry', 
-  'seafood', 'bakery', 'beverages', 'condiments', 'other'
+  { id: 'dairy', label: 'Молочне' },
+  { id: 'meat-fish', label: 'М\'ясо та риба' },
+  { id: 'vegetables', label: 'Овочі та зелень' },
+  { id: 'fruits', label: 'Фрукти та ягоди' },
+  { id: 'bakery', label: 'Випічка' },
+  { id: 'pantry', label: 'Бакалія' },
+  { id: 'sauces', label: 'Соуси та спеції' },
+  { id: 'drinks', label: 'Напої' },
+  { id: 'frozen', label: 'Заморозка' },
+  { id: 'canned-prepared', label: 'Консерви' },
+  { id: 'prepared-meals', label: 'Готові страви' },
+  { id: 'snacks', label: 'Снеки' },
+  { id: 'alcohol', label: 'Алкоголь' },
+  { id: 'other', label: 'Інше' }
 ];
 
 const unitOptions = computed(() => getUnitOptions(currentLanguage.value, true));
@@ -75,8 +87,8 @@ const handleSubmit = async () => {
               id="item-qty"
               v-model.number="quantity"
               type="number"
-              step="0.1"
-              min="0.1"
+              step="0.001"
+              min="0.001"
               class="form-input"
             />
           </div>
@@ -92,7 +104,7 @@ const handleSubmit = async () => {
         <div class="form-group">
           <label class="form-label" for="item-cat">Категорія</label>
           <select id="item-cat" v-model="category" class="form-input">
-            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+            <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.label }}</option>
           </select>
         </div>
 

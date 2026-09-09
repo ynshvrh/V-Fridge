@@ -26,12 +26,14 @@ const handlePurchase = async () => {
 
 const increaseQuantity = async () => {
   const current = props.item.quantity || 1;
-  await shoppingStore.updateItem(props.item.id, { quantity: Number((current + 1).toFixed(2)) });
+  const step = current < 1 ? 0.1 : 1;
+  await shoppingStore.updateItem(props.item.id, { quantity: parseFloat((current + step).toFixed(3)) });
 };
 
 const decreaseQuantity = async () => {
   const current = props.item.quantity || 1;
-  const newQty = Number((current - 1).toFixed(2));
+  const step = current <= 1 ? 0.1 : 1;
+  const newQty = parseFloat((current - step).toFixed(3));
   if (newQty <= 0) {
     await shoppingStore.deleteItem(props.item.id);
   } else {
