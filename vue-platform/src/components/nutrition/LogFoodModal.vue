@@ -61,6 +61,21 @@ const handleSelectFridgeProduct = (event: Event) => {
     foodName.value = prod.name;
     unit.value = normalizeUnit(prod.unit || 'g');
     quantity.value = prod.quantity?.toString() ?? '100';
+    if (prod.calories !== null && prod.calories !== undefined) {
+      calories.value = prod.calories.toString();
+      protein.value = (prod.protein ?? 0).toString();
+      fat.value = (prod.fat ?? 0).toString();
+      carbs.value = (prod.carbs ?? 0).toString();
+    } else if (prod.description) {
+      const calMatch = prod.description.match(/(\d+)\s*(?:кКал|kcal)/i);
+      if (calMatch) calories.value = calMatch[1];
+      const protMatch = prod.description.match(/Б:\s*([\d\.,]+)/i);
+      if (protMatch) protein.value = protMatch[1].replace(',', '.');
+      const fatMatch = prod.description.match(/Ж:\s*([\d\.,]+)/i);
+      if (fatMatch) fat.value = fatMatch[1].replace(',', '.');
+      const carbsMatch = prod.description.match(/В:\s*([\d\.,]+)/i);
+      if (carbsMatch) carbs.value = carbsMatch[1].replace(',', '.');
+    }
   }
 };
 
@@ -126,7 +141,7 @@ const handleSubmit = () => {
           <div class="form-row-inner">
             <div class="form-group">
               <label class="form-label">Кількість</label>
-              <input v-model="quantity" type="number" step="0.1" min="0" class="form-input" />
+              <input v-model="quantity" type="number" step="0.001" min="0" class="form-input" />
             </div>
             <div class="form-group">
               <label class="form-label">Од.</label>
