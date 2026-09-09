@@ -190,6 +190,8 @@ const handleCookMeal = async () => {
       setTimeout(() => {
         cookSuccess.value = false;
       }, 2500);
+    } else if (productStore.error) {
+      alert(productStore.error);
     }
   } catch (err: any) {
     alert(err.error || 'Не вдалося приготувати страву.');
