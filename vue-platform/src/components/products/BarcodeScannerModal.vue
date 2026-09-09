@@ -151,51 +151,52 @@ async function lookupOpenFoodFacts(barcode: string): Promise<ScannedProduct | nu
 </script>
 
 <template>
-  <transition name="fade">
-    <div v-if="open" class="modal-overlay" @click.self="emit('close')">
-      <div class="scanner-modal-content">
-        <div class="modal-header">
-          <div class="header-icon">
-            <ScanBarcode :size="20" />
-          </div>
-          <div>
-            <h3>Сканер штрих-кодів</h3>
-            <p>Наведіть камеру на штрих-код товару</p>
-          </div>
-          <button class="close-btn" @click="emit('close')">
-            <X :size="18" />
-          </button>
-        </div>
-
-        <div class="video-wrapper">
-          <video ref="videoRef" class="video-element" autoplay muted playsinline />
-
-          <div v-if="status === 'lookup'" class="video-overlay">
-            <Loader2 :size="32" class="animate-spin orange-icon" />
-            <span>Пошук у базі OpenFoodFacts...</span>
+  <Teleport to="body">
+    <transition name="fade">
+      <div v-if="open" class="modal-overlay" @click.self="emit('close')">
+        <div class="scanner-modal-content">
+          <div class="modal-header">
+            <div class="header-icon">
+              <ScanBarcode :size="20" />
+            </div>
+            <div>
+              <h3>Сканер штрих-кодів</h3>
+              <p>Наведіть камеру на штрих-код товару</p>
+            </div>
+            <button class="close-btn" @click="emit('close')">
+              <X :size="18" />
+            </button>
           </div>
 
-          <div v-if="status === 'scanning'" class="scan-pill">
-            <Camera :size="14" />
-            <span>Сканування...</span>
+          <div class="video-wrapper">
+            <video ref="videoRef" class="video-element" autoplay muted playsinline />
+
+            <div v-if="status === 'lookup'" class="video-overlay">
+              <Loader2 :size="32" class="animate-spin orange-icon" />
+              <span>Пошук у базі OpenFoodFacts...</span>
+            </div>
+
+            <div v-if="status === 'scanning'" class="scan-pill">
+              <Camera :size="14" />
+              <span>Сканування...</span>
+            </div>
+
+            <div v-if="status === 'error'" class="error-box">
+              <p>{{ errorMessage }}</p>
+            </div>
           </div>
-        </div>
 
-        <div v-if="errorMessage" class="error-banner">
-          <X :size="16" class="shrink-0" />
-          <span>{{ errorMessage }}</span>
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn-secondary" @click="emit('close')">Скасувати</button>
-          <button v-if="status === 'error'" type="button" class="btn-primary" @click="retry">
-            <RefreshCw :size="16" />
-            <span>Спробувати знову</span>
-          </button>
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" @click="emit('close')">Скасувати</button>
+            <button v-if="status === 'error'" type="button" class="btn-primary" @click="retry">
+              <RefreshCw :size="16" />
+              <span>Спробувати знову</span>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  </transition>
+    </transition>
+  </Teleport>
 </template>
 
 <style scoped>

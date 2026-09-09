@@ -27,41 +27,43 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="modal-backdrop" @click.self="emit('close')">
-    <div class="glass-card modal-card fade-in">
-      <div class="modal-header">
-        <div class="header-title">
-          <Refrigerator :size="18" class="header-icon" />
-          <h3>Створити холодильник</h3>
-        </div>
-        <button class="close-btn" @click="emit('close')">
-          <X :size="18" />
-        </button>
-      </div>
-
-      <form @submit.prevent="handleSubmit" class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="fridge-name">Назва холодильника *</label>
-          <input
-            id="fridge-name"
-            v-model="name"
-            type="text"
-            class="form-input"
-            placeholder="Дім, Дача, Офіс..."
-            required
-          />
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn-ghost" @click="emit('close')">Скасувати</button>
-          <button type="submit" class="btn-primary" :disabled="isSubmitting || !name.trim()">
-            <Plus :size="16" />
-            <span>{{ isSubmitting ? 'Створення...' : 'Створити' }}</span>
+  <Teleport to="body">
+    <div class="modal-backdrop" @click.self="emit('close')">
+      <div class="glass-card modal-card fade-in">
+        <div class="modal-header">
+          <div class="header-title">
+            <Refrigerator :size="18" class="header-icon" />
+            <h3>Створити холодильник</h3>
+          </div>
+          <button class="close-btn" @click="emit('close')">
+            <X :size="18" />
           </button>
         </div>
-      </form>
+
+        <form @submit.prevent="handleSubmit" class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="fridge-name">Назва холодильника *</label>
+            <input
+              id="fridge-name"
+              v-model="name"
+              type="text"
+              class="form-input"
+              placeholder="Дім, Дача, Офіс..."
+              required
+            />
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-ghost" @click="emit('close')">Скасувати</button>
+            <button type="submit" class="btn-primary" :disabled="isSubmitting || !name.trim()">
+              <Plus :size="16" />
+              <span>{{ isSubmitting ? 'Створення...' : 'Створити' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <style scoped>

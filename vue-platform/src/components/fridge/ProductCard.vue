@@ -180,161 +180,163 @@ const handleDelete = async () => {
     </div>
 
     <!-- Eat Portion Modal -->
-    <transition name="fade">
-      <div v-if="showEatModal" class="modal-overlay" @click.self="showEatModal = false">
-        <div class="modal-card nordic-card">
-          <div class="modal-header">
-            <div class="badge badge-ai">
-              <Utensils :size="12" />
-              <span>З'їсти порцію</span>
-            </div>
-            <button class="close-btn" @click="showEatModal = false">
-              <X :size="18" />
-            </button>
-          </div>
-
-          <div class="modal-body">
-            <h3 class="eat-dish-title">{{ product.name }}</h3>
-            <p class="eat-dish-subtitle">
-              Доступно в холодильнику: <strong>{{ product.quantity }} {{ product.unit }}</strong>
-            </p>
-
-            <!-- Portion Selector -->
-            <div class="portion-select-group">
-              <span class="field-label">Скільки порцій з'їсти?</span>
-              <div class="quick-portion-chips">
-                <button
-                  type="button"
-                  :class="['chip-btn', selectedPortions === 0.5 ? 'active' : '']"
-                  :disabled="product.quantity < 0.5"
-                  @click="selectedPortions = 0.5"
-                >
-                  0.5
-                </button>
-                <button
-                  type="button"
-                  :class="['chip-btn', selectedPortions === 1 ? 'active' : '']"
-                  :disabled="product.quantity < 1"
-                  @click="selectedPortions = 1"
-                >
-                  1 порція
-                </button>
-                <button
-                  type="button"
-                  :class="['chip-btn', selectedPortions === 1.5 ? 'active' : '']"
-                  :disabled="product.quantity < 1.5"
-                  @click="selectedPortions = 1.5"
-                >
-                  1.5
-                </button>
-                <button
-                  type="button"
-                  :class="['chip-btn', selectedPortions === 2 ? 'active' : '']"
-                  :disabled="product.quantity < 2"
-                  @click="selectedPortions = 2"
-                >
-                  2 порції
-                </button>
-                <button
-                  type="button"
-                  :class="['chip-btn', selectedPortions === product.quantity ? 'active' : '']"
-                  @click="selectedPortions = product.quantity"
-                >
-                  Всі ({{ product.quantity }})
-                </button>
+    <Teleport to="body">
+      <transition name="fade">
+        <div v-if="showEatModal" class="modal-overlay" @click.self="showEatModal = false">
+          <div class="modal-card nordic-card">
+            <div class="modal-header">
+              <div class="badge badge-ai">
+                <Utensils :size="12" />
+                <span>З'їсти порцію</span>
               </div>
-
-              <!-- Stepper -->
-              <div class="stepper-row">
-                <button
-                  class="stepper-btn"
-                  :disabled="selectedPortions <= 0.5"
-                  @click="selectedPortions = Math.max(0.5, Number((selectedPortions - 0.5).toFixed(1)))"
-                >
-                  <Minus :size="14" />
-                </button>
-                <span class="stepper-val">{{ selectedPortions }} <small>{{ formatUnit(product.unit, currentLanguage) }}</small></span>
-                <button
-                  class="stepper-btn"
-                  :disabled="selectedPortions >= product.quantity"
-                  @click="selectedPortions = Math.min(product.quantity, Number((selectedPortions + 0.5).toFixed(1)))"
-                >
-                  <Plus :size="14" />
-                </button>
-              </div>
+              <button class="close-btn" @click="showEatModal = false">
+                <X :size="18" />
+              </button>
             </div>
 
-            <!-- Meal Type Selector -->
-            <div class="meal-type-group">
-              <span class="field-label">Прийом їжі для щоденника:</span>
-              <div class="meal-type-chips">
-                <button
-                  type="button"
-                  :class="['meal-chip', selectedMealType === 'breakfast' ? 'active' : '']"
-                  @click="selectedMealType = 'breakfast'"
-                >
-                  Сніданок
-                </button>
-                <button
-                  type="button"
-                  :class="['meal-chip', selectedMealType === 'lunch' ? 'active' : '']"
-                  @click="selectedMealType = 'lunch'"
-                >
-                  Обід
-                </button>
-                <button
-                  type="button"
-                  :class="['meal-chip', selectedMealType === 'dinner' ? 'active' : '']"
-                  @click="selectedMealType = 'dinner'"
-                >
-                  Вечеря
-                </button>
-                <button
-                  type="button"
-                  :class="['meal-chip', selectedMealType === 'snack' ? 'active' : '']"
-                  @click="selectedMealType = 'snack'"
-                >
-                  Перекус
-                </button>
+            <div class="modal-body">
+              <h3 class="eat-dish-title">{{ product.name }}</h3>
+              <p class="eat-dish-subtitle">
+                Доступно в холодильнику: <strong>{{ product.quantity }} {{ product.unit }}</strong>
+              </p>
+
+              <!-- Portion Selector -->
+              <div class="portion-select-group">
+                <span class="field-label">Скільки порцій з'їсти?</span>
+                <div class="quick-portion-chips">
+                  <button
+                    type="button"
+                    :class="['chip-btn', selectedPortions === 0.5 ? 'active' : '']"
+                    :disabled="product.quantity < 0.5"
+                    @click="selectedPortions = 0.5"
+                  >
+                    0.5
+                  </button>
+                  <button
+                    type="button"
+                    :class="['chip-btn', selectedPortions === 1 ? 'active' : '']"
+                    :disabled="product.quantity < 1"
+                    @click="selectedPortions = 1"
+                  >
+                    1 порція
+                  </button>
+                  <button
+                    type="button"
+                    :class="['chip-btn', selectedPortions === 1.5 ? 'active' : '']"
+                    :disabled="product.quantity < 1.5"
+                    @click="selectedPortions = 1.5"
+                  >
+                    1.5
+                  </button>
+                  <button
+                    type="button"
+                    :class="['chip-btn', selectedPortions === 2 ? 'active' : '']"
+                    :disabled="product.quantity < 2"
+                    @click="selectedPortions = 2"
+                  >
+                    2 порції
+                  </button>
+                  <button
+                    type="button"
+                    :class="['chip-btn', selectedPortions === product.quantity ? 'active' : '']"
+                    @click="selectedPortions = product.quantity"
+                  >
+                    Всі ({{ product.quantity }})
+                  </button>
+                </div>
+
+                <!-- Stepper -->
+                <div class="stepper-row">
+                  <button
+                    class="stepper-btn"
+                    :disabled="selectedPortions <= 0.5"
+                    @click="selectedPortions = Math.max(0.5, Number((selectedPortions - 0.5).toFixed(1)))"
+                  >
+                    <Minus :size="14" />
+                  </button>
+                  <span class="stepper-val">{{ selectedPortions }} <small>{{ formatUnit(product.unit, currentLanguage) }}</small></span>
+                  <button
+                    class="stepper-btn"
+                    :disabled="selectedPortions >= product.quantity"
+                    @click="selectedPortions = Math.min(product.quantity, Number((selectedPortions + 0.5).toFixed(1)))"
+                  >
+                    <Plus :size="14" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Meal Type Selector -->
+              <div class="meal-type-group">
+                <span class="field-label">Прийом їжі для щоденника:</span>
+                <div class="meal-type-chips">
+                  <button
+                    type="button"
+                    :class="['meal-chip', selectedMealType === 'breakfast' ? 'active' : '']"
+                    @click="selectedMealType = 'breakfast'"
+                  >
+                    Сніданок
+                  </button>
+                  <button
+                    type="button"
+                    :class="['meal-chip', selectedMealType === 'lunch' ? 'active' : '']"
+                    @click="selectedMealType = 'lunch'"
+                  >
+                    Обід
+                  </button>
+                  <button
+                    type="button"
+                    :class="['meal-chip', selectedMealType === 'dinner' ? 'active' : '']"
+                    @click="selectedMealType = 'dinner'"
+                  >
+                    Вечеря
+                  </button>
+                  <button
+                    type="button"
+                    :class="['meal-chip', selectedMealType === 'snack' ? 'active' : '']"
+                    @click="selectedMealType = 'snack'"
+                  >
+                    Перекус
+                  </button>
+                </div>
+              </div>
+
+              <!-- Calculated Macros Preview -->
+              <div v-if="parsedMacros.hasMacros" class="macros-preview-strip">
+                <div class="macro-cell">
+                  <span class="m-lbl">Калорії</span>
+                  <strong class="m-val">{{ parsedMacros.calories }} кКал</strong>
+                </div>
+                <div class="macro-cell">
+                  <span class="m-lbl">Білки</span>
+                  <strong class="m-val">{{ parsedMacros.protein }}г</strong>
+                </div>
+                <div class="macro-cell">
+                  <span class="m-lbl">Жири</span>
+                  <strong class="m-val">{{ parsedMacros.fat }}г</strong>
+                </div>
+                <div class="macro-cell">
+                  <span class="m-lbl">Вуглеводи</span>
+                  <strong class="m-val">{{ parsedMacros.carbs }}г</strong>
+                </div>
+              </div>
+
+              <div v-if="eatSuccess" class="success-alert">
+                <Check :size="16" />
+                <span>Успішно з'їдено та внесено у щоденник!</span>
               </div>
             </div>
 
-            <!-- Calculated Macros Preview -->
-            <div v-if="parsedMacros.hasMacros" class="macros-preview-strip">
-              <div class="macro-cell">
-                <span class="m-lbl">Калорії</span>
-                <strong class="m-val">{{ parsedMacros.calories }} кКал</strong>
-              </div>
-              <div class="macro-cell">
-                <span class="m-lbl">Білки</span>
-                <strong class="m-val">{{ parsedMacros.protein }}г</strong>
-              </div>
-              <div class="macro-cell">
-                <span class="m-lbl">Жири</span>
-                <strong class="m-val">{{ parsedMacros.fat }}г</strong>
-              </div>
-              <div class="macro-cell">
-                <span class="m-lbl">Вуглеводи</span>
-                <strong class="m-val">{{ parsedMacros.carbs }}г</strong>
-              </div>
+            <div class="modal-footer">
+              <button class="btn-secondary btn-sm" @click="showEatModal = false">Скасувати</button>
+              <button class="btn-primary btn-sm" :disabled="isEating || selectedPortions <= 0" @click="handleConfirmEat">
+                <Utensils :size="14" />
+                <span>{{ isEating ? 'Записуємо...' : `З'їсти ${selectedPortions} ${product.unit}` }}</span>
+              </button>
             </div>
-
-            <div v-if="eatSuccess" class="success-alert">
-              <Check :size="16" />
-              <span>Успішно з'їдено та внесено у щоденник!</span>
-            </div>
-          </div>
-
-          <div class="modal-footer">
-            <button class="btn-secondary btn-sm" @click="showEatModal = false">Скасувати</button>
-            <button class="btn-primary btn-sm" :disabled="isEating || selectedPortions <= 0" @click="handleConfirmEat">
-              <Utensils :size="14" />
-              <span>{{ isEating ? 'Записуємо...' : `З'їсти ${selectedPortions} ${product.unit}` }}</span>
-            </button>
           </div>
         </div>
-      </div>
-    </transition>
+      </transition>
+    </Teleport>
   </div>
 </template>
 

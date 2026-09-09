@@ -82,8 +82,9 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="modal-backdrop" @click.self="emit('close')">
-    <div class="glass-card modal-card fade-in">
+  <Teleport to="body">
+    <div class="modal-backdrop" @click.self="emit('close')">
+      <div class="glass-card modal-card fade-in">
       <div class="modal-header">
         <div class="header-title">
           <Package :size="20" class="header-icon" />
@@ -250,7 +251,8 @@ const handleSubmit = async () => {
       @close="showScannerModal = false"
       @resolved="handleBarcodeResolved"
     />
-  </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>

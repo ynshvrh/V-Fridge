@@ -32,51 +32,53 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="modal-backdrop" @click.self="emit('close')">
-    <div class="glass-card modal-card fade-in">
-      <div class="modal-header">
-        <div class="header-title">
-          <UserPlus :size="18" class="header-icon" />
-          <h3>Запросити до "{{ fridgeName }}"</h3>
-        </div>
-        <button class="close-btn" @click="emit('close')">
-          <X :size="18" />
-        </button>
-      </div>
-
-      <div v-if="successMessage" class="success-banner">
-        <CheckCircle2 :size="16" />
-        <span>{{ successMessage }}</span>
-      </div>
-
-      <div v-if="fridgeStore.error" class="error-banner">
-        <AlertCircle :size="16" />
-        <span>{{ fridgeStore.error }}</span>
-      </div>
-
-      <form @submit.prevent="handleSubmit" class="modal-body">
-        <div class="form-group">
-          <label class="form-label" for="invite-email">Email адреса отримувача *</label>
-          <input
-            id="invite-email"
-            v-model="email"
-            type="email"
-            class="form-input"
-            placeholder="member@example.com"
-            required
-          />
-        </div>
-
-        <div class="modal-footer">
-          <button type="button" class="btn-ghost" @click="emit('close')">Закрити</button>
-          <button type="submit" class="btn-primary" :disabled="isSubmitting || !email.trim()">
-            <Send :size="15" />
-            <span>{{ isSubmitting ? 'Надсилання...' : 'Надіслати запрошення' }}</span>
+  <Teleport to="body">
+    <div class="modal-backdrop" @click.self="emit('close')">
+      <div class="glass-card modal-card fade-in">
+        <div class="modal-header">
+          <div class="header-title">
+            <UserPlus :size="18" class="header-icon" />
+            <h3>Запросити до "{{ fridgeName }}"</h3>
+          </div>
+          <button class="close-btn" @click="emit('close')">
+            <X :size="18" />
           </button>
         </div>
-      </form>
+
+        <div v-if="successMessage" class="success-banner">
+          <CheckCircle2 :size="16" />
+          <span>{{ successMessage }}</span>
+        </div>
+
+        <div v-if="fridgeStore.error" class="error-banner">
+          <AlertCircle :size="16" />
+          <span>{{ fridgeStore.error }}</span>
+        </div>
+
+        <form @submit.prevent="handleSubmit" class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="invite-email">Email адреса отримувача *</label>
+            <input
+              id="invite-email"
+              v-model="email"
+              type="email"
+              class="form-input"
+              placeholder="member@example.com"
+              required
+            />
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-ghost" @click="emit('close')">Закрити</button>
+            <button type="submit" class="btn-primary" :disabled="isSubmitting || !email.trim()">
+              <Send :size="15" />
+              <span>{{ isSubmitting ? 'Надсилання...' : 'Надіслати запрошення' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <style scoped>

@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useFridgeStore } from '@/stores/fridge';
 import { useProductStore } from '@/stores/product';
 import ProductCard from '@/components/fridge/ProductCard.vue';
+import FridgeSelector from '@/components/fridge/FridgeSelector.vue';
 import AddProductModal from '@/components/fridge/AddProductModal.vue';
 import CreateFridgeModal from '@/components/fridge/CreateFridgeModal.vue';
 import { 
@@ -70,7 +71,10 @@ const handleEmptyFridge = async () => {
     <!-- Header Controls -->
     <header class="inventory-header">
       <div class="header-titles">
-        <h2 class="section-heading">Інвентар продуктів</h2>
+        <div class="header-top-row">
+          <h2 class="section-heading">Інвентар продуктів</h2>
+          <FridgeSelector @open-create-modal="showCreateFridgeModal = true" />
+        </div>
         <p class="section-subheading">
           У холодильнику: <strong class="text-strong">{{ productStore.products.length }}</strong> шт.
         </p>
@@ -177,6 +181,13 @@ const handleEmptyFridge = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header-top-row {
+  display: flex;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
 }

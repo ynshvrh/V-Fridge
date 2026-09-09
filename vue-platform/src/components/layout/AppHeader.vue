@@ -63,11 +63,16 @@ const pageTitle = computed(() => {
       </div>
 
       <div class="header-right">
-        <div v-if="authStore.isAuthenticated && fridgeStore.activeFridge" class="active-fridge-pill">
+        <router-link
+          v-if="authStore.isAuthenticated && fridgeStore.activeFridge"
+          to="/fridges"
+          class="active-fridge-pill"
+          title="Спільні холодильники та налаштування"
+        >
           <Refrigerator :size="14" class="pill-icon" />
           <span class="pill-name">{{ fridgeStore.activeFridge.name }}</span>
           <span v-if="fridgeStore.activeFridge.role" class="pill-role">{{ fridgeStore.activeFridge.role }}</span>
-        </div>
+        </router-link>
       </div>
     </div>
   </header>
@@ -167,6 +172,14 @@ const pageTitle = computed(() => {
   border-radius: var(--radius-sm);
   font-size: 0.78rem;
   color: var(--text-secondary);
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.active-fridge-pill:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
 }
 
 .pill-icon {
