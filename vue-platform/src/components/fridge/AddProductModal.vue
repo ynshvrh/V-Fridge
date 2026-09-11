@@ -1,16 +1,29 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useProductStore } from '@/stores/product';
+import { useNutritionStore } from '@/stores/nutrition';
 import BarcodeScannerModal, { type ScannedProduct } from '@/components/products/BarcodeScannerModal.vue';
 import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
 import { getUnitOptions, normalizeUnit } from '@/utils/unitStandards';
-import { Plus, X, Package, ScanBarcode, Flame, ChevronDown, ChevronUp } from '@lucide/vue';
+import { 
+  Plus, 
+  Minus, 
+  X, 
+  Package, 
+  ScanBarcode, 
+  Flame, 
+  Sparkles, 
+  Loader2, 
+  ChevronDown, 
+  ChevronUp 
+} from '@lucide/vue';
 
 const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
 const productStore = useProductStore();
+const nutritionStore = useNutritionStore();
 const { currentLanguage } = useCurrentLanguage();
 
 const name = ref('');
@@ -27,6 +40,8 @@ const protein = ref<number | undefined>(undefined);
 const fat = ref<number | undefined>(undefined);
 const carbs = ref<number | undefined>(undefined);
 const showNutritionFields = ref(false);
+const isEstimating = ref(false);
+const estimateNotice = ref<string | null>(null);
 
 const categories = [
   { id: 'dairy', label: 'Молочне' },
@@ -47,6 +62,44 @@ const categories = [
 
 const unitOptions = computed(() => getUnitOptions(currentLanguage.value, true));
 
+const setExpiryDays = (days: number) => {
+  const target = new Date();
+  target.setDate(target.getDate() + days);
+  expiryDate.value = target.toISOString().split('T')[0];
+};
+
+const adjustQuantity = (delta: number) => {
+  const current = quantity.value;
+  const step = current < 1 ? 0.1 : 1;
+  const next = Math.max(0.01, parseFloat((current + delta * step).toFixed(2)));
+  quantity.value = next;
+};
+
+const handleEstimateNutrition = async () => {
+  if (!name.value.trim()) return;
+  isEstimating.value = true;
+  estimateNotice.value = null;
+  try {
+    const res = await nutritionStore.estimateNutrition({
+      dishName: name.value,
+      quantity: quantity.value,
+      unit: unit.value
+    });
+    if (res) {
+      calories.value = Math.round(res.calories);
+      protein.value = Math.round(res.protein * 10) / 10;
+      fat.value = Math.round(res.fat * 10) / 10;
+      carbs.value = Math.round(res.carbs * 10) / 10;
+      showNutritionFields.value = true;
+      estimateNotice.value = `ШІ розрахував КБЖВ: ${calories.value} ккал (Б: ${protein.value}г, Ж: ${fat.value}г, В: ${carbs.value}г)`;
+    }
+  } catch (err) {
+    console.error('Estimate nutrition error:', err);
+  } finally {
+    isEstimating.value = false;
+  }
+};
+
 const handleBarcodeResolved = (scanned: ScannedProduct) => {
   name.value = scanned.name;
   quantity.value = scanned.quantity;
@@ -57,7 +110,6 @@ const handleBarcodeResolved = (scanned: ScannedProduct) => {
     category.value = scanned.category;
   }
 };
-
 
 const handleSubmit = async () => {
   if (!name.value || quantity.value <= 0) return;
@@ -123,15 +175,23 @@ const handleSubmit = async () => {
         <div class="form-row">
           <div class="form-group flex-2">
             <label class="form-label" for="prod-qty">Кількість *</label>
-            <input
-              id="prod-qty"
-              v-model.number="quantity"
-              type="number"
-              step="0.001"
-              min="0.001"
-              class="form-input"
-              required
-            />
+            <div class="qty-stepper-wrap">
+              <button type="button" class="stepper-btn" title="Зменшити" @click="adjustQuantity(-1)">
+                <Minus :size="14" />
+              </button>
+              <input
+                id="prod-qty"
+                v-model.number="quantity"
+                type="number"
+                step="0.001"
+                min="0.001"
+                class="form-input qty-input"
+                required
+              />
+              <button type="button" class="stepper-btn" title="Збільшити" @click="adjustQuantity(1)">
+                <Plus :size="14" />
+              </button>
+            </div>
           </div>
 
           <div class="form-group flex-1">
@@ -158,6 +218,12 @@ const handleSubmit = async () => {
               type="date"
               class="form-input"
             />
+            <div class="quick-expiry-row">
+              <button type="button" class="quick-exp-btn" @click="setExpiryDays(3)">+3 дні</button>
+              <button type="button" class="quick-exp-btn" @click="setExpiryDays(7)">+7 днів</button>
+              <button type="button" class="quick-exp-btn" @click="setExpiryDays(14)">+14 днів</button>
+              <button type="button" class="quick-exp-btn" @click="setExpiryDays(30)">+30 днів</button>
+            </div>
           </div>
         </div>
 
@@ -231,6 +297,23 @@ const handleSubmit = async () => {
                 class="form-input form-input-sm"
                 placeholder="0.0"
               />
+            </div>
+
+            <!-- AI Estimation Button & Notice -->
+            <div class="estimate-nutrition-row">
+              <button
+                type="button"
+                class="estimate-ai-btn"
+                :disabled="isEstimating || !name.trim()"
+                @click="handleEstimateNutrition"
+              >
+                <Loader2 v-if="isEstimating" :size="14" class="spin" />
+                <Sparkles v-else :size="14" />
+                <span>{{ isEstimating ? 'Оцінка ШІ...' : 'Розрахувати КБЖВ за допомогою ШІ' }}</span>
+              </button>
+              <span v-if="estimateNotice" class="estimate-notice fade-in">
+                {{ estimateNotice }}
+              </span>
             </div>
           </div>
         </div>
@@ -433,6 +516,115 @@ const handleSubmit = async () => {
 .form-input-sm {
   padding: 5px 8px;
   font-size: 0.82rem;
+}
+
+/* Stepper styles */
+.qty-stepper-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qty-input {
+  text-align: center;
+}
+
+.stepper-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition-fast);
+}
+
+.stepper-btn:hover {
+  background: var(--bg-subtle);
+  border-color: var(--border-strong);
+}
+
+/* Quick Expiry Shortcuts */
+.quick-expiry-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.quick-exp-btn {
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.quick-exp-btn:hover {
+  background: var(--primary-subtle);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* AI Nutrition Estimation */
+.estimate-nutrition-row {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-subtle);
+}
+
+.estimate-ai-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-xs);
+  background: var(--light-iris-bg);
+  border: 1px solid var(--light-iris-border);
+  color: var(--light-iris-dark);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.estimate-ai-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.estimate-ai-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.estimate-notice {
+  font-size: 0.72rem;
+  color: var(--light-iris-dark);
+  font-weight: 500;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .modal-footer {
