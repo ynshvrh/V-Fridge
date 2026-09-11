@@ -88,30 +88,33 @@ const parsed = computed(() => {
 }
 
 .msg-avatar {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.2s ease;
 }
 
 .msg-avatar.user {
-  background: var(--bg-subtle);
-  color: var(--text-primary);
-  border: 1px solid var(--border-subtle);
+  background: var(--aqua-mist-light);
+  color: var(--aqua-mist-dark);
+  border: 1px solid var(--aqua-mist);
 }
 
 .msg-avatar.assistant,
 .msg-avatar.model {
-  background: var(--primary);
-  color: white;
+  background: var(--light-iris-light);
+  color: var(--light-iris-dark);
+  border: 1px solid var(--light-iris);
 }
 
 .content-col {
   display: flex;
   flex-direction: column;
-  max-width: 80%;
+  max-width: 82%;
+  gap: 8px;
 }
 
 .chat-message-row.user .content-col {
@@ -119,17 +122,19 @@ const parsed = computed(() => {
 }
 
 .msg-bubble {
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 0.88rem;
-  line-height: 1.45;
+  padding: 11px 16px;
+  font-size: 0.9rem;
+  line-height: 1.5;
   word-break: break-word;
 }
 
 .msg-bubble.user {
-  background: var(--primary);
-  color: white;
-  border-bottom-right-radius: 2px;
+  background: var(--june-bud-light);
+  color: #2c3809;
+  border: 1px solid var(--june-bud);
+  border-radius: var(--radius-md);
+  border-bottom-right-radius: 4px;
+  font-weight: 500;
 }
 
 .msg-bubble.assistant,
@@ -137,7 +142,9 @@ const parsed = computed(() => {
   background: var(--bg-surface);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
-  border-bottom-left-radius: 2px;
+  border-radius: var(--radius-md);
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--shadow-sm);
 }
 
 .bubble-text {

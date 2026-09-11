@@ -137,14 +137,18 @@ const handleClear = async () => {
           @add-all-shopping="handleAddAllShopping"
         />
 
-        <!-- Typing Loader -->
+        <!-- Playful Bouncy Typing Indicator -->
         <div v-if="loading" class="typing-indicator fade-in">
           <div class="msg-avatar assistant">
             <ChefHat :size="16" />
           </div>
           <div class="typing-bubble">
-            <Loader2 :size="16" class="spin" />
-            <span>Шеф підбирає ідеальний рецепт...</span>
+            <div class="bouncy-dots">
+              <span class="dot dot-1"></span>
+              <span class="dot dot-2"></span>
+              <span class="dot dot-3"></span>
+            </div>
+            <span class="typing-label">Шеф готує смачну відповідь...</span>
           </div>
         </div>
       </div>
@@ -299,12 +303,64 @@ const handleClear = async () => {
 .typing-bubble {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border-bottom-left-radius: 4px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   font-size: 0.84rem;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.typing-indicator .msg-avatar.assistant {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--light-iris-light);
+  color: var(--light-iris-dark);
+  border: 1px solid var(--light-iris);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bouncy-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bouncy-dots .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--light-iris-dark);
+  animation: bounceDot 1.4s infinite ease-in-out both;
+}
+
+.bouncy-dots .dot-1 {
+  animation-delay: -0.32s;
+}
+
+.bouncy-dots .dot-2 {
+  animation-delay: -0.16s;
+}
+
+@keyframes bounceDot {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+.typing-label {
+  font-size: 0.82rem;
   color: var(--text-secondary);
 }
 
@@ -315,7 +371,7 @@ const handleClear = async () => {
   background: var(--bg-surface);
   padding: 12px 16px;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
 }
 
 .input-row {
@@ -354,5 +410,11 @@ const handleClear = async () => {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@media (max-width: 767px) {
+  .chef-chat-container {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
 }
 </style>
