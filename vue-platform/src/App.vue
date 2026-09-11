@@ -8,7 +8,6 @@ import { useShoppingStore } from '@/stores/shopping';
 import { usePlannerStore } from '@/stores/planner';
 import { useNutritionStore } from '@/stores/nutrition';
 import { useSavedRecipeStore } from '@/stores/savedRecipes';
-import { useAnalyticsStore } from '@/stores/analytics';
 import AppSidebar from '@/components/layout/AppSidebar.vue';
 import AppHeader from '@/components/layout/AppHeader.vue';
 
@@ -19,7 +18,6 @@ const shoppingStore = useShoppingStore();
 const plannerStore = usePlannerStore();
 const nutritionStore = useNutritionStore();
 const savedRecipesStore = useSavedRecipeStore();
-const analyticsStore = useAnalyticsStore();
 const route = useRoute();
 
 const isMobileSidebarOpen = ref(false);
@@ -46,8 +44,6 @@ const handleVisibilityOrFocus = async () => {
     await nutritionStore.fetchDailyData(today, true);
   } else if (route.name === 'SavedRecipes') {
     await savedRecipesStore.fetchSavedRecipes(true);
-  } else if (route.name === 'Analytics') {
-    await analyticsStore.fetchAnalytics(true);
   }
 };
 

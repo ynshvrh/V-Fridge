@@ -27,8 +27,6 @@ const pageTitle = computed(() => {
       return 'Збережені рецепти';
     case 'Nutrition':
       return 'Калорії та БЖУ';
-    case 'Analytics':
-      return 'Аналітика продуктів';
     case 'Fridges':
       return 'Спільні холодильники';
     case 'Settings':

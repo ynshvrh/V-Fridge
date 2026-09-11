@@ -2,7 +2,7 @@
 
 **V-Fridge** is an AI-powered smart fridge tracker, meal planner, and calorie management application. Track your inventory, monitor expiration dates, scan product barcodes, plan weekly meals, log calories, and chat with an AI Chef to create delicious recipes from available ingredients.
 
-> 🚀 **Primary Client:** The application frontend has been fully migrated to **Vue 3 + Vite (`vue-platform`)**, featuring a consolidated Hub-based navigation, mobile-first responsive design, camera barcode scanner, and clean Light/Dark theme switching. The legacy Next.js client (`web-platform`) is archived.
+> 🚀 **Primary Client:** The application frontend is built with **Vue 3 + Vite (`vue-platform`)**, featuring a consolidated Hub-based navigation, mobile-first responsive design, camera barcode scanner, and clean Light/Dark theme switching.
 
 The backend service lives in [`v-fridge-api`](https://github.com/ynshvrh/v-fridge-api) (ASP.NET Core 10 Minimal API + PostgreSQL).
 
@@ -93,5 +93,4 @@ V-Fridge/
 │   │   └── views/           # Consolidated Hub views (Dashboard, Recipe, Nutrition, Settings, Invite)
 │   ├── package.json
 │   └── vite.config.ts
-└── web-platform/            # Legacy Next.js client (Archived)
 ```
