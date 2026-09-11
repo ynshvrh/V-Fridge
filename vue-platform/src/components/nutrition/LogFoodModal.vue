@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import type { NutritionLog } from '@/stores/nutrition';
+import { useNutritionStore, type NutritionLog } from '@/stores/nutrition';
 import { useProductStore } from '@/stores/product';
 import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
 import { getUnitOptions, normalizeUnit, formatUnit } from '@/utils/unitStandards';
-import { X, Refrigerator, AlertTriangle, Loader2 } from '@lucide/vue';
+import { X, Refrigerator, AlertTriangle, Loader2, Sparkles } from '@lucide/vue';
 
 const props = defineProps<{
   editingLog?: NutritionLog | null;
@@ -26,6 +26,7 @@ const emit = defineEmits<{
 }>();
 
 const productStore = useProductStore();
+const nutritionStore = useNutritionStore();
 const { currentLanguage } = useCurrentLanguage();
 
 const selectedProductId = ref<number | null>(null);
@@ -38,6 +39,41 @@ const protein = ref(props.editingLog?.protein?.toString() ?? '0');
 const fat = ref(props.editingLog?.fat?.toString() ?? '0');
 const carbs = ref(props.editingLog?.carbs?.toString() ?? '0');
 const submitting = ref(false);
+const estimating = ref(false);
+const estimateHint = ref<string | null>(null);
+
+const handleAiEstimate = async () => {
+  if (!foodName.value.trim()) return;
+  estimating.value = true;
+  estimateHint.value = null;
+  try {
+    const res = await nutritionStore.estimateNutrition({
+      dishName: foodName.value.trim(),
+      quantity: quantity.value ? Number(quantity.value) : null,
+      unit: unit.value || null
+    });
+    if (res) {
+      if (res.foodName) {
+        foodName.value = res.foodName;
+      }
+      if (res.quantity > 0) {
+        quantity.value = res.quantity.toString();
+      }
+      if (res.unit) {
+        unit.value = normalizeUnit(res.unit);
+      }
+      calories.value = res.calories.toString();
+      protein.value = res.protein.toString();
+      fat.value = res.fat.toString();
+      carbs.value = res.carbs.toString();
+      estimateHint.value = res.notes || (res.confidence === 'ai' ? 'Розраховано за допомогою ШІ' : 'Оцінено базовим алгоритмом');
+    }
+  } catch (err: any) {
+    estimateHint.value = 'Не вдалося оцінити автоматично. Введіть значення вручну.';
+  } finally {
+    estimating.value = false;
+  }
+};
 
 const unitOptions = computed(() => getUnitOptions(currentLanguage.value, false));
 
@@ -123,8 +159,24 @@ const handleSubmit = () => {
         </div>
 
         <div class="form-group">
-          <label class="form-label">Назва страви / продукту</label>
-          <input v-model="foodName" type="text" class="form-input" placeholder="Наприклад: Овсянка з яблуком" required />
+          <div class="label-with-action">
+            <label class="form-label">Назва страви / продукту</label>
+            <button
+              type="button"
+              class="ai-estimate-btn"
+              :disabled="!foodName.trim() || estimating"
+              @click="handleAiEstimate"
+            >
+              <Loader2 v-if="estimating" :size="12" class="animate-spin" />
+              <Sparkles v-else :size="12" />
+              <span>{{ estimating ? 'Оцінюємо...' : '✨ Оцінити КБЖВ (ШІ)' }}</span>
+            </button>
+          </div>
+          <input v-model="foodName" type="text" class="form-input" placeholder="Наприклад: 2 смажені котлети з пюре" required />
+          <div v-if="estimateHint" class="estimate-hint">
+            <Sparkles :size="12" class="hint-icon" />
+            <span>{{ estimateHint }}</span>
+          </div>
         </div>
 
         <div class="form-row">
@@ -254,6 +306,53 @@ const handleSubmit = () => {
   font-size: 0.76rem;
   font-weight: 500;
   color: var(--text-secondary);
+}
+
+.label-with-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ai-estimate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(235, 94, 40, 0.12);
+  border: 1px solid rgba(235, 94, 40, 0.3);
+  color: var(--primary);
+  border-radius: var(--radius-xs);
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ai-estimate-btn:hover:not(:disabled) {
+  background: rgba(235, 94, 40, 0.2);
+  border-color: var(--primary);
+}
+
+.ai-estimate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.estimate-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--primary);
+  background: rgba(235, 94, 40, 0.08);
+  border-radius: var(--radius-xs);
+  padding: 4px 8px;
+  margin-top: 4px;
+}
+
+.hint-icon {
+  flex-shrink: 0;
 }
 
 .font-icon-label {

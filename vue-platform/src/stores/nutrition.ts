@@ -67,6 +67,26 @@ export interface SetTargetsPayload {
   carbs?: number | null;
 }
 
+export interface EstimateNutritionPayload {
+  dishName: string;
+  quantity?: number | null;
+  unit?: string | null;
+  notes?: string | null;
+}
+
+export interface EstimateNutritionResponse {
+  foodName: string;
+  quantity: number;
+  unit: string;
+  calories: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  estimatedWeightG: number;
+  confidence: string;
+  notes?: string | null;
+}
+
 export const useNutritionStore = defineStore('nutrition', () => {
   const dailyCache = ref<Record<string, DailyNutritionResponse>>({});
   const currentData = ref<DailyNutritionResponse | null>(null);
@@ -155,6 +175,13 @@ export const useNutritionStore = defineStore('nutrition', () => {
     }
   }
 
+  async function estimateNutrition(payload: EstimateNutritionPayload): Promise<EstimateNutritionResponse> {
+    return await api.fetch<EstimateNutritionResponse>('/nutrition/estimate', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
   return {
     dailyCache,
     currentData,
@@ -165,6 +192,8 @@ export const useNutritionStore = defineStore('nutrition', () => {
     logFood,
     updateLog,
     deleteLog,
-    setTargets
+    setTargets,
+    estimateNutrition
   };
 });
+

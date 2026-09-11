@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { type Product, useProductStore } from '@/stores/product';
+import { useNutritionStore } from '@/stores/nutrition';
 import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
 import { formatUnit } from '@/utils/unitStandards';
-import { Plus, Minus, Trash2, Clock, AlertTriangle, Utensils, X, Check, Flame } from '@lucide/vue';
+import { Plus, Minus, Trash2, Clock, AlertTriangle, Utensils, X, Check, Flame, Sparkles, Loader2, Edit3 } from '@lucide/vue';
 
 const props = defineProps<{
   product: Product;
 }>();
 
 const productStore = useProductStore();
+const nutritionStore = useNutritionStore();
 const { currentLanguage } = useCurrentLanguage();
 
 
@@ -51,11 +53,18 @@ const isPreparedMeal = computed(() => {
 // Eat Portion Modal State
 const showEatModal = ref(false);
 const selectedPortions = ref(1);
-const selectedMealType = ref<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
+const selectedMealType = ref('lunch');
 const isEating = ref(false);
 const eatSuccess = ref(false);
 
-const getInitialMealType = (): 'breakfast' | 'lunch' | 'dinner' | 'snack' => {
+const customCalories = ref<number | null>(null);
+const customProtein = ref<number | null>(null);
+const customFat = ref<number | null>(null);
+const customCarbs = ref<number | null>(null);
+const isEstimating = ref(false);
+const showCustomMacros = ref(false);
+
+const getInitialMealType = (): string => {
   const hour = new Date().getHours();
   if (hour >= 5 && hour < 11) return 'breakfast';
   if (hour >= 11 && hour < 16) return 'lunch';
@@ -66,6 +75,11 @@ const getInitialMealType = (): 'breakfast' | 'lunch' | 'dinner' | 'snack' => {
 const openEatModal = () => {
   selectedPortions.value = Math.min(1, props.product.quantity);
   selectedMealType.value = getInitialMealType();
+  customCalories.value = null;
+  customProtein.value = null;
+  customFat.value = null;
+  customCarbs.value = null;
+  showCustomMacros.value = false;
   showEatModal.value = true;
 };
 
@@ -97,16 +111,49 @@ const parsedMacros = computed(() => {
   };
 });
 
+const effectiveMacros = computed(() => {
+  const pm = parsedMacros.value;
+  return {
+    calories: customCalories.value !== null ? customCalories.value : pm.calories,
+    protein: customProtein.value !== null ? customProtein.value : pm.protein,
+    fat: customFat.value !== null ? customFat.value : pm.fat,
+    carbs: customCarbs.value !== null ? customCarbs.value : pm.carbs,
+    hasMacros: (customCalories.value !== null ? customCalories.value > 0 : pm.hasMacros)
+  };
+});
+
+const handleAiEstimateEat = async () => {
+  isEstimating.value = true;
+  try {
+    const res = await nutritionStore.estimateNutrition({
+      dishName: props.product.name,
+      quantity: selectedPortions.value,
+      unit: props.product.unit || 'порцій'
+    });
+    if (res) {
+      customCalories.value = res.calories;
+      customProtein.value = res.protein;
+      customFat.value = res.fat;
+      customCarbs.value = res.carbs;
+      showCustomMacros.value = true;
+    }
+  } catch (err) {
+    showCustomMacros.value = true;
+  } finally {
+    isEstimating.value = false;
+  }
+};
+
 const handleConfirmEat = async () => {
   isEating.value = true;
   try {
     const res = await productStore.consumeProduct(props.product.id, {
       portions: selectedPortions.value,
       mealType: selectedMealType.value,
-      calories: parsedMacros.value.calories,
-      protein: parsedMacros.value.protein,
-      fat: parsedMacros.value.fat,
-      carbs: parsedMacros.value.carbs
+      calories: effectiveMacros.value.calories,
+      protein: effectiveMacros.value.protein,
+      fat: effectiveMacros.value.fat,
+      carbs: effectiveMacros.value.carbs
     });
     if (res) {
       eatSuccess.value = true;
@@ -300,23 +347,79 @@ const handleDelete = async () => {
                 </div>
               </div>
 
-              <!-- Calculated Macros Preview -->
-              <div v-if="parsedMacros.hasMacros" class="macros-preview-strip">
-                <div class="macro-cell">
-                  <span class="m-lbl">Калорії</span>
-                  <strong class="m-val">{{ parsedMacros.calories }} кКал</strong>
+              <!-- Calculated Macros Preview & Adjustment -->
+              <div v-if="effectiveMacros.hasMacros" class="macros-section">
+                <div class="macros-preview-strip">
+                  <div class="macro-cell">
+                    <span class="m-lbl">Калорії</span>
+                    <strong class="m-val">{{ effectiveMacros.calories }} кКал</strong>
+                  </div>
+                  <div class="macro-cell">
+                    <span class="m-lbl">Білки</span>
+                    <strong class="m-val">{{ effectiveMacros.protein }}г</strong>
+                  </div>
+                  <div class="macro-cell">
+                    <span class="m-lbl">Жири</span>
+                    <strong class="m-val">{{ effectiveMacros.fat }}г</strong>
+                  </div>
+                  <div class="macro-cell">
+                    <span class="m-lbl">Вуглеводи</span>
+                    <strong class="m-val">{{ effectiveMacros.carbs }}г</strong>
+                  </div>
                 </div>
-                <div class="macro-cell">
-                  <span class="m-lbl">Білки</span>
-                  <strong class="m-val">{{ parsedMacros.protein }}г</strong>
+
+                <div class="macros-toolbar">
+                  <button type="button" class="text-link-btn" @click="showCustomMacros = !showCustomMacros">
+                    <Edit3 :size="12" />
+                    <span>{{ showCustomMacros ? 'Сховати редагування' : 'Змінити КБЖВ' }}</span>
+                  </button>
+                  <button type="button" class="text-link-btn ai-text" :disabled="isEstimating" @click="handleAiEstimateEat">
+                    <Loader2 v-if="isEstimating" :size="12" class="animate-spin" />
+                    <Sparkles v-else :size="12" />
+                    <span>{{ isEstimating ? 'ШІ рахує...' : 'Перерахувати (ШІ)' }}</span>
+                  </button>
                 </div>
-                <div class="macro-cell">
-                  <span class="m-lbl">Жири</span>
-                  <strong class="m-val">{{ parsedMacros.fat }}г</strong>
+              </div>
+
+              <!-- No Macros Alert & AI Estimate Option -->
+              <div v-else class="no-macros-box">
+                <div class="no-macros-info">
+                  <Flame :size="14" class="no-macros-icon" />
+                  <span>КБЖВ для цієї страви не визначено</span>
                 </div>
-                <div class="macro-cell">
-                  <span class="m-lbl">Вуглеводи</span>
-                  <strong class="m-val">{{ parsedMacros.carbs }}г</strong>
+                <div class="no-macros-actions">
+                  <button type="button" class="ai-eat-btn" :disabled="isEstimating" @click="handleAiEstimateEat">
+                    <Loader2 v-if="isEstimating" :size="13" class="animate-spin" />
+                    <Sparkles v-else :size="13" />
+                    <span>{{ isEstimating ? 'ШІ аналізує...' : '✨ Оцінити КБЖВ через ШІ' }}</span>
+                  </button>
+                  <button type="button" class="manual-eat-btn" @click="showCustomMacros = true">
+                    <Edit3 :size="13" />
+                    <span>Вказати вручну</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Inline Macros Editor -->
+              <div v-if="showCustomMacros" class="custom-macros-form">
+                <div class="cm-title">Ручне коригування КБЖВ на {{ selectedPortions }} {{ product.unit }}:</div>
+                <div class="cm-inputs-grid">
+                  <div class="cm-input-group">
+                    <label>Ккал</label>
+                    <input v-model.number="customCalories" type="number" min="0" placeholder="кКал" class="cm-input" />
+                  </div>
+                  <div class="cm-input-group">
+                    <label>Білки (г)</label>
+                    <input v-model.number="customProtein" type="number" step="0.1" min="0" placeholder="г" class="cm-input" />
+                  </div>
+                  <div class="cm-input-group">
+                    <label>Жири (г)</label>
+                    <input v-model.number="customFat" type="number" step="0.1" min="0" placeholder="г" class="cm-input" />
+                  </div>
+                  <div class="cm-input-group">
+                    <label>Вугл (г)</label>
+                    <input v-model.number="customCarbs" type="number" step="0.1" min="0" placeholder="г" class="cm-input" />
+                  </div>
                 </div>
               </div>
 
@@ -706,6 +809,12 @@ const handleDelete = async () => {
   border-color: var(--primary);
 }
 
+.macros-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .macros-preview-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -715,6 +824,159 @@ const handleDelete = async () => {
   border-radius: var(--radius-xs);
   border: 1px solid var(--border-subtle);
   text-align: center;
+}
+
+.macros-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.text-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--radius-xs);
+  transition: all 0.2s ease;
+}
+
+.text-link-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+
+.text-link-btn.ai-text {
+  color: var(--primary);
+}
+
+.text-link-btn.ai-text:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.no-macros-box {
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.no-macros-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.no-macros-icon {
+  color: #f59e0b;
+}
+
+.no-macros-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-eat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(235, 94, 40, 0.12);
+  border: 1px solid rgba(235, 94, 40, 0.3);
+  color: var(--primary);
+  border-radius: var(--radius-xs);
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ai-eat-btn:hover:not(:disabled) {
+  background: rgba(235, 94, 40, 0.2);
+  border-color: var(--primary);
+}
+
+.ai-eat-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.manual-eat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xs);
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.manual-eat-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.custom-macros-form {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cm-title {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.cm-inputs-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.cm-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cm-input-group label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.cm-input {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  padding: 5px;
+  font-size: 0.8rem;
+  text-align: center;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.cm-input:focus {
+  border-color: var(--primary);
+  outline: none;
 }
 
 .m-lbl {
