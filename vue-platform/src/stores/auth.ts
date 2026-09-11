@@ -24,12 +24,16 @@ export interface TokenPair {
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<UserSummary | null>(null);
   const loading = ref<boolean>(false);
+  const isInitializing = ref<boolean>(!!api.getToken());
   const error = ref<string | null>(null);
 
   const isAuthenticated = computed(() => !!user.value && !!api.getToken());
 
   async function fetchCurrentUser() {
-    if (!api.getToken()) return;
+    if (!api.getToken()) {
+      isInitializing.value = false;
+      return;
+    }
     loading.value = true;
     error.value = null;
     try {
@@ -41,6 +45,7 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null;
     } finally {
       loading.value = false;
+      isInitializing.value = false;
     }
   }
 
@@ -144,6 +149,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user,
     loading,
+    isInitializing,
     error,
     isAuthenticated,
     fetchCurrentUser,

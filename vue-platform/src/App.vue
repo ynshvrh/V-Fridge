@@ -8,8 +8,11 @@ import { useShoppingStore } from '@/stores/shopping';
 import { usePlannerStore } from '@/stores/planner';
 import { useNutritionStore } from '@/stores/nutrition';
 import { useSavedRecipeStore } from '@/stores/savedRecipes';
+import { eventBus } from '@/utils/eventBus';
 import AppSidebar from '@/components/layout/AppSidebar.vue';
 import AppHeader from '@/components/layout/AppHeader.vue';
+import MobileNavBar from '@/components/layout/MobileNavBar.vue';
+import AppSplashLoader from '@/components/layout/AppSplashLoader.vue';
 
 const authStore = useAuthStore();
 const fridgeStore = useFridgeStore();
@@ -22,6 +25,7 @@ const route = useRoute();
 
 const isMobileSidebarOpen = ref(false);
 let lastFocusCheck = Date.now();
+const unsubs: Array<() => void> = [];
 
 const handleVisibilityOrFocus = async () => {
   if (!authStore.isAuthenticated) return;
@@ -56,16 +60,46 @@ const onVisibilityChange = () => {
 onMounted(() => {
   document.addEventListener('visibilitychange', onVisibilityChange);
   window.addEventListener('focus', handleVisibilityOrFocus);
+
+  unsubs.push(
+    eventBus.on('fridge:changed', async () => {
+      await fridgeStore.fetchFridges(true);
+      if (route.name === 'Dashboard') {
+        await productStore.fetchProducts(true);
+      }
+    }),
+    eventBus.on('shopping:changed', async () => {
+      await shoppingStore.fetchShoppingItems(true);
+      await fridgeStore.fetchFridges(true);
+      if (route.name === 'Dashboard') {
+        await productStore.fetchProducts(true);
+      }
+    }),
+    eventBus.on('nutrition:changed', async () => {
+      if (route.name === 'Nutrition') {
+        const today = new Date().toISOString().split('T')[0];
+        await nutritionStore.fetchDailyData(today, true);
+      }
+    }),
+    eventBus.on('planner:changed', async () => {
+      if (route.name === 'Planner') {
+        await plannerStore.fetchPlan(true);
+      }
+    })
+  );
 });
 
 onUnmounted(() => {
   document.removeEventListener('visibilitychange', onVisibilityChange);
   window.removeEventListener('focus', handleVisibilityOrFocus);
+  unsubs.forEach((u) => u());
 });
 </script>
 
 <template>
-  <div v-if="authStore.isAuthenticated" class="app-layout">
+  <AppSplashLoader v-if="authStore.isInitializing" />
+
+  <div v-else-if="authStore.isAuthenticated" class="app-layout">
     <AppSidebar
       :is-mobile-open="isMobileSidebarOpen"
       @close-mobile="isMobileSidebarOpen = false"
@@ -77,6 +111,7 @@ onUnmounted(() => {
           <router-view />
         </div>
       </main>
+      <MobileNavBar />
     </div>
   </div>
 
@@ -99,6 +134,7 @@ onUnmounted(() => {
   min-width: 0;
   height: 100vh;
   overflow: hidden;
+  position: relative;
 }
 
 .app-content-inset {
@@ -109,7 +145,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .app-content-inset {
-    padding: 16px 12px 24px;
+    padding: 14px 12px calc(76px + env(safe-area-inset-bottom, 0px));
   }
 }
 
