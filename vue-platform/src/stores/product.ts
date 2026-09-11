@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { api, type ApiErrorResponse } from '@/api/client';
+import { eventBus } from '@/utils/eventBus';
 
 export interface Product {
   id: number;
@@ -51,12 +52,20 @@ export interface CookIngredientItem {
   category?: string;
 }
 
+export interface ProductDeductionItem {
+  productId?: number;
+  name?: string;
+  quantity: number;
+  unit?: string;
+}
+
 export interface CookRecipeInput {
   name: string;
   description?: string | null;
   portions?: number;
   structuredIngredients?: CookIngredientItem[];
   ingredients?: string[];
+  itemsToDeduct?: ProductDeductionItem[];
   caloriesPerPortion?: number;
   proteinPerPortion?: number;
   fatPerPortion?: number;
@@ -124,6 +133,7 @@ export const useProductStore = defineStore('product', () => {
         body: JSON.stringify(input)
       });
       await fetchProducts(true);
+      eventBus.emit('fridge:changed');
       return true;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;
@@ -146,6 +156,7 @@ export const useProductStore = defineStore('product', () => {
       if (index !== -1) {
         products.value[index] = updated;
       }
+      eventBus.emit('fridge:changed');
       return true;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;
@@ -165,6 +176,8 @@ export const useProductStore = defineStore('product', () => {
         body: JSON.stringify(input)
       });
       await fetchProducts(true);
+      eventBus.emit('fridge:changed');
+      eventBus.emit('nutrition:changed');
       return result;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;
@@ -191,6 +204,8 @@ export const useProductStore = defineStore('product', () => {
           products.value[index].quantity = result.remainingQuantity;
         }
       }
+      eventBus.emit('fridge:changed');
+      eventBus.emit('nutrition:changed');
       return result;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;
@@ -207,6 +222,7 @@ export const useProductStore = defineStore('product', () => {
     try {
       await api.fetch(`/products/${id}`, { method: 'DELETE' });
       products.value = products.value.filter(p => p.id !== id);
+      eventBus.emit('fridge:changed');
       return true;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;
@@ -223,6 +239,7 @@ export const useProductStore = defineStore('product', () => {
     try {
       await api.fetch('/products', { method: 'DELETE' });
       products.value = [];
+      eventBus.emit('fridge:changed');
       return true;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;

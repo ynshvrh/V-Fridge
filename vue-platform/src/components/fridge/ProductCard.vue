@@ -167,13 +167,58 @@ const handleConfirmEat = async () => {
   }
 };
 
+import EditProductModal from './EditProductModal.vue';
+
+const showEditModal = ref(false);
+
+// Mobile swipe handling
+const touchStartX = ref(0);
+const touchStartY = ref(0);
+const swipeOffset = ref(0);
+const isSwiping = ref(false);
+
+const handleTouchStart = (e: TouchEvent) => {
+  touchStartX.value = e.touches[0].clientX;
+  touchStartY.value = e.touches[0].clientY;
+  isSwiping.value = true;
+};
+
+const handleTouchMove = (e: TouchEvent) => {
+  if (!isSwiping.value) return;
+  const currentX = e.touches[0].clientX;
+  const currentY = e.touches[0].clientY;
+  const diffX = currentX - touchStartX.value;
+  const diffY = currentY - touchStartY.value;
+
+  if (Math.abs(diffX) > Math.abs(diffY)) {
+    swipeOffset.value = Math.max(-80, Math.min(80, diffX));
+  }
+};
+
+const handleTouchEnd = () => {
+  if (!isSwiping.value) return;
+  isSwiping.value = false;
+  if (swipeOffset.value > 50) {
+    decreaseQuantity();
+  } else if (swipeOffset.value < -50) {
+    showEditModal.value = true;
+  }
+  swipeOffset.value = 0;
+};
+
 const handleDelete = async () => {
   await productStore.deleteProduct(props.product.id);
 };
 </script>
 
 <template>
-  <div class="nordic-card product-card fade-in">
+  <div
+    class="nordic-card product-card fade-in"
+    :style="{ transform: swipeOffset ? `translateX(${swipeOffset}px)` : undefined }"
+    @touchstart.passive="handleTouchStart"
+    @touchmove="handleTouchMove"
+    @touchend="handleTouchEnd"
+  >
     <!-- Single line header with Category & Status Badge -->
     <div class="card-header">
       <div class="header-chips">
@@ -190,8 +235,8 @@ const handleDelete = async () => {
       </div>
     </div>
 
-    <!-- Product details -->
-    <div class="card-body">
+    <!-- Product details (clickable to open edit modal) -->
+    <div class="card-body clickable-body" title="Натисніть для редагування" @click="showEditModal = true">
       <h3 class="product-name">{{ product.name }}</h3>
       <p v-if="product.description" class="product-desc">{{ product.description }}</p>
       <p v-if="product.expiryDate" class="expiry-date">Термін: {{ product.expiryDate }}</p>
@@ -212,19 +257,31 @@ const handleDelete = async () => {
     <!-- Quantity & Action controls -->
     <div class="card-footer">
       <div class="quantity-controls">
-        <button class="qty-btn" title="Зменшити / Спожити" @click="decreaseQuantity">
+        <button class="qty-btn" title="Зменшити / Спожити" @click.stop="decreaseQuantity">
           <Minus :size="13" />
         </button>
         <span class="qty-val">{{ product.quantity }} <small>{{ formatUnit(product.unit, currentLanguage) }}</small></span>
-        <button class="qty-btn" title="Збільшити" @click="increaseQuantity">
+        <button class="qty-btn" title="Збільшити" @click.stop="increaseQuantity">
           <Plus :size="13" />
         </button>
       </div>
 
-      <button class="delete-btn" title="Видалити продукт" @click="handleDelete">
-        <Trash2 :size="15" />
-      </button>
+      <div class="footer-actions">
+        <button class="action-icon-btn edit-btn" title="Редагувати продукт" @click.stop="showEditModal = true">
+          <Edit3 :size="14" />
+        </button>
+        <button class="action-icon-btn delete-btn" title="Видалити продукт" @click.stop="handleDelete">
+          <Trash2 :size="14" />
+        </button>
+      </div>
     </div>
+
+    <!-- Edit Product Modal -->
+    <EditProductModal
+      v-if="showEditModal"
+      :product="product"
+      @close="showEditModal = false"
+    />
 
     <!-- Eat Portion Modal -->
     <Teleport to="body">
@@ -591,14 +648,43 @@ const handleDelete = async () => {
   font-size: 0.72rem;
 }
 
-.delete-btn {
-  color: var(--text-muted);
-  padding: 4px;
+.clickable-body {
+  cursor: pointer;
   border-radius: var(--radius-xs);
+  padding: 4px 6px;
+  margin: -4px -6px;
+  transition: background-color 0.15s ease;
+}
+
+.clickable-body:hover {
+  background: var(--bg-hover);
+}
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.action-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 5px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: var(--transition-fast);
 }
 
-.delete-btn:hover {
+.action-icon-btn.edit-btn:hover {
+  color: var(--primary);
+  background: var(--primary-subtle);
+}
+
+.action-icon-btn.delete-btn:hover {
   color: var(--status-expired);
   background: var(--status-expired-bg);
 }

@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useFridgeStore } from '@/stores/fridge';
 import { useProductStore } from '@/stores/product';
+import { eventBus } from '@/utils/eventBus';
 import ProductCard from '@/components/fridge/ProductCard.vue';
 import FridgeSelector from '@/components/fridge/FridgeSelector.vue';
 import AddProductModal from '@/components/fridge/AddProductModal.vue';
 import CreateFridgeModal from '@/components/fridge/CreateFridgeModal.vue';
+import CookRecipeModal from '@/components/fridge/CookRecipeModal.vue';
 import { 
   Plus, 
   Search, 
   Trash2, 
   Package,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Utensils
 } from '@lucide/vue';
 
 const fridgeStore = useFridgeStore();
@@ -21,6 +24,7 @@ const searchQuery = ref('');
 const selectedCategory = ref('all');
 const showAddModal = ref(false);
 const showCreateFridgeModal = ref(false);
+const showCookModal = ref(false);
 
 const categories = [
   { id: 'all', label: 'Всі товари' },
@@ -39,9 +43,21 @@ const categories = [
   { id: 'other', label: 'Інше' }
 ];
 
+let unsubscribeFridge: (() => void) | null = null;
+
 onMounted(async () => {
   await fridgeStore.fetchFridges();
   await productStore.fetchProducts();
+
+  unsubscribeFridge = eventBus.on('fridge:changed', () => {
+    productStore.fetchProducts(true);
+  });
+});
+
+onUnmounted(() => {
+  if (unsubscribeFridge) {
+    unsubscribeFridge();
+  }
 });
 
 watch(() => fridgeStore.activeFridgeId, async (newId) => {
@@ -81,6 +97,16 @@ const handleEmptyFridge = async () => {
       </div>
 
       <div class="header-actions">
+        <button
+          v-if="productStore.products.length > 0"
+          class="btn-ghost btn-sm btn-cook"
+          title="Приготувати страву з наявних продуктів"
+          @click="showCookModal = true"
+        >
+          <Utensils :size="15" />
+          <span>Приготувати</span>
+        </button>
+
         <button
           v-if="productStore.products.length > 0"
           class="btn-destructive btn-sm"
@@ -167,6 +193,15 @@ const handleEmptyFridge = async () => {
     <!-- Modals -->
     <AddProductModal v-if="showAddModal" @close="showAddModal = false" />
     <CreateFridgeModal v-if="showCreateFridgeModal" @close="showCreateFridgeModal = false" />
+    <CookRecipeModal
+      v-if="showCookModal"
+      :recipe="{
+        name: 'Довільна страва з холодильника',
+        portions: 2,
+        expiryDays: 3
+      }"
+      @close="showCookModal = false"
+    />
   </div>
 </template>
 
@@ -219,6 +254,19 @@ const handleEmptyFridge = async () => {
 .btn-sm {
   padding: 7px 12px;
   font-size: 0.82rem;
+}
+
+.btn-cook {
+  background: var(--june-bud-light);
+  color: var(--june-bud-dark);
+  border: 1px solid var(--june-bud);
+  font-weight: 600;
+  transition: var(--transition-fast);
+}
+
+.btn-cook:hover {
+  background: var(--june-bud);
+  color: #2c3809;
 }
 
 .controls-panel {
