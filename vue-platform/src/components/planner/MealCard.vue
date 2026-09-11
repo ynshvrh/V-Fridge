@@ -14,9 +14,10 @@ import {
   Plus, 
   Check, 
   ShoppingBag, 
-  Utensils, 
-  Loader2 
+  Utensils 
 } from '@lucide/vue';
+
+import CookRecipeModal from '@/components/fridge/CookRecipeModal.vue';
 
 const props = defineProps<{
   meal: MealPlanMeal;
@@ -31,8 +32,8 @@ const isRegenerating = ref(false);
 const isFetchingRecipe = ref(false);
 const isAddingToShopping = ref(false);
 const addedToShopping = ref(false);
-const isCooking = ref(false);
 const cookSuccess = ref(false);
+const showCookModal = ref(false);
 
 const mealTypeLabels: Record<string, { label: string }> = {
   breakfast: { label: 'Сніданок' },
@@ -169,35 +170,8 @@ const handleAddMissingToShopping = async () => {
   }
 };
 
-const handleCookMeal = async () => {
-  isCooking.value = true;
-  try {
-    const res = await productStore.cookRecipe({
-      name: props.meal.name,
-      description: props.meal.description,
-      portions: 2,
-      structuredIngredients: normalizedIngredients.value,
-      ingredients: props.meal.ingredients,
-      caloriesPerPortion: props.meal.calories,
-      proteinPerPortion: props.meal.protein,
-      fatPerPortion: props.meal.fat,
-      carbsPerPortion: props.meal.carbs,
-      expiryDays: 3,
-      ignoreOptionalMissing: true
-    });
-    if (res) {
-      cookSuccess.value = true;
-      setTimeout(() => {
-        cookSuccess.value = false;
-      }, 2500);
-    } else if (productStore.error) {
-      alert(productStore.error);
-    }
-  } catch (err: any) {
-    alert(err.error || 'Не вдалося приготувати страву.');
-  } finally {
-    isCooking.value = false;
-  }
+const handleCookMeal = () => {
+  showCookModal.value = true;
 };
 </script>
 
@@ -284,13 +258,10 @@ const handleCookMeal = async () => {
 
           <button
             class="btn-primary btn-sm"
-            :disabled="isCooking || cookSuccess"
             @click="handleCookMeal"
           >
-            <Loader2 v-if="isCooking" :size="13" class="spin" />
-            <Check v-else-if="cookSuccess" :size="13" />
-            <Utensils v-else :size="13" />
-            <span>{{ cookSuccess ? 'Приготовано!' : 'Приготувати страву' }}</span>
+            <Utensils :size="13" />
+            <span>Приготувати страву</span>
           </button>
         </div>
       </div>
@@ -306,6 +277,25 @@ const handleCookMeal = async () => {
         </ol>
       </div>
     </div>
+
+    <!-- Interactive Cook Recipe Modal -->
+    <CookRecipeModal
+      v-if="showCookModal"
+      :recipe="{
+        name: meal.name,
+        description: meal.description,
+        portions: 2,
+        structuredIngredients: normalizedIngredients,
+        ingredients: meal.ingredients,
+        calories: meal.calories,
+        protein: meal.protein,
+        fat: meal.fat,
+        carbs: meal.carbs,
+        expiryDays: 3
+      }"
+      @close="showCookModal = false"
+      @cooked="cookSuccess = true"
+    />
   </div>
 </template>
 

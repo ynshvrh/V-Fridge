@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { usePlannerStore } from '@/stores/planner';
 import { useFridgeStore } from '@/stores/fridge';
+import { eventBus } from '@/utils/eventBus';
 import FridgeSelector from '@/components/fridge/FridgeSelector.vue';
 import MealCard from '@/components/planner/MealCard.vue';
+import GapItemsCard from '@/components/planner/GapItemsCard.vue';
 import CreateFridgeModal from '@/components/fridge/CreateFridgeModal.vue';
-import { ChefHat, Sparkles, RefreshCw, Calendar, AlertCircle } from '@lucide/vue';
+import { ChefHat, Sparkles, RefreshCw, Calendar, AlertCircle, Utensils } from '@lucide/vue';
 
 const plannerStore = usePlannerStore();
 const fridgeStore = useFridgeStore();
@@ -24,9 +26,39 @@ const dayLabels: Record<string, string> = {
   Sunday: 'Неділя'
 };
 
+const getTodayDayName = () => {
+  const dayIndex = new Date().getDay();
+  const map = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  return map[dayIndex];
+};
+
+const todayName = getTodayDayName();
+const selectedDay = ref<string>(todayName);
+
+let unsubscribePlanner: (() => void) | null = null;
+
 onMounted(async () => {
   await fridgeStore.fetchFridges();
   await plannerStore.fetchPlan();
+
+  if (plannerStore.plan?.meals && plannerStore.plan.meals.length > 0) {
+    const hasToday = plannerStore.plan.meals.some(
+      m => m.day.toLowerCase() === selectedDay.value.toLowerCase()
+    );
+    if (!hasToday) {
+      selectedDay.value = plannerStore.plan.meals[0].day;
+    }
+  }
+
+  unsubscribePlanner = eventBus.on('fridge:changed', () => {
+    plannerStore.fetchPlan(true);
+  });
+});
+
+onUnmounted(() => {
+  if (unsubscribePlanner) {
+    unsubscribePlanner();
+  }
 });
 
 watch(() => fridgeStore.activeFridgeId, async (newId) => {
@@ -35,17 +67,28 @@ watch(() => fridgeStore.activeFridgeId, async (newId) => {
   }
 });
 
-const mealsByDay = computed(() => {
-  if (!plannerStore.plan) return {};
-  const map: Record<string, typeof plannerStore.plan.meals> = {};
-  for (const day of days) {
-    map[day] = plannerStore.plan.meals.filter(m => m.day.toLowerCase() === day.toLowerCase());
+// Meals strictly for the selected single day (3 meals: breakfast, lunch, dinner)
+const currentDayMeals = computed(() => {
+  if (!plannerStore.plan?.meals) return [];
+  const target = selectedDay.value.toLowerCase();
+  return plannerStore.plan.meals.filter(m => m.day.toLowerCase() === target);
+});
+
+// Count of meals per day
+const daysWithMealCounts = computed(() => {
+  const counts: Record<string, number> = {};
+  if (!plannerStore.plan?.meals) return counts;
+  for (const m of plannerStore.plan.meals) {
+    const match = days.find(x => x.toLowerCase() === m.day.toLowerCase());
+    if (match) {
+      counts[match] = (counts[match] || 0) + 1;
+    }
   }
-  return map;
+  return counts;
 });
 
 const handleGeneratePlan = async () => {
-  await plannerStore.generatePlan();
+  await plannerStore.generatePlan(selectedDay.value);
 };
 
 const handleRegenerateDay = async (day: string) => {
@@ -55,6 +98,7 @@ const handleRegenerateDay = async (day: string) => {
 
 <template>
   <div class="planner-page fade-in">
+    <!-- Header -->
     <header class="page-header">
       <div class="header-left">
         <FridgeSelector @open-create-modal="showCreateFridgeModal = true" />
@@ -65,55 +109,119 @@ const handleRegenerateDay = async (day: string) => {
       </div>
 
       <div class="header-right">
-        <button class="btn-primary" :disabled="plannerStore.generating" @click="handleGeneratePlan">
+        <button
+          class="btn-primary"
+          :disabled="plannerStore.generating"
+          @click="handleGeneratePlan"
+        >
           <Sparkles :size="18" :class="{ spin: plannerStore.generating }" />
-          <span>{{ plannerStore.generating ? 'Генерація плану...' : 'Створити план харчування' }}</span>
+          <span>{{ plannerStore.generating ? 'Генерація...' : 'Створити план на день' }}</span>
         </button>
       </div>
     </header>
 
+    <!-- Error Banner -->
     <div v-if="plannerStore.error" class="error-banner">
       <AlertCircle :size="18" />
       <span>{{ plannerStore.error }}</span>
     </div>
 
+    <!-- Loading State -->
     <div v-if="plannerStore.loading" class="loading-state glass-card">
       <ChefHat class="spin-icon" :size="36" />
       <p>Завантаження AI плану харчування...</p>
     </div>
 
+    <!-- Empty State (No plan at all) -->
     <div v-else-if="!plannerStore.plan" class="empty-state glass-card">
       <div class="empty-icon-bg">
         <ChefHat :size="36" />
       </div>
       <h3>План харчування ще не створено</h3>
-      <p>Натисніть "Створити план харчування", щоб згенерувати персоналізовані рецепти на основі наявних продуктів.</p>
+      <p>Натисніть «Створити план на день», щоб згенерувати 3 персоналізовані страви на основі продуктів у вашому холодильнику.</p>
       <button class="btn-primary" style="margin-top: 16px;" :disabled="plannerStore.generating" @click="handleGeneratePlan">
         <Sparkles :size="18" />
         <span>Створити AI План</span>
       </button>
     </div>
 
+    <!-- Main Planner Content -->
     <div v-else class="planner-content">
-      <div class="days-container">
-        <template v-for="day in days" :key="day">
-          <div v-if="mealsByDay[day] && mealsByDay[day].length > 0" class="day-section">
-            <div class="day-header">
-              <div class="day-title">
-                <Calendar :size="16" />
-                <h3>{{ dayLabels[day] || day }}</h3>
-              </div>
-              <button class="icon-btn" title="Перегенерувати страви дня" :disabled="plannerStore.generating" @click="handleRegenerateDay(day)">
-                <RefreshCw :size="14" :class="{ spin: plannerStore.generating }" />
-                <span>Оновити день</span>
-              </button>
-            </div>
+      <!-- Horizontal Day Navigation Bar -->
+      <div class="day-tabs-bar">
+        <button
+          v-for="day in days"
+          :key="day"
+          type="button"
+          class="day-tab-btn"
+          :class="{
+            active: selectedDay.toLowerCase() === day.toLowerCase(),
+            'is-today': todayName.toLowerCase() === day.toLowerCase(),
+            'has-meals': (daysWithMealCounts[day] || 0) > 0
+          }"
+          @click="selectedDay = day"
+        >
+          <span class="day-label">{{ dayLabels[day] || day }}</span>
+          <span v-if="todayName.toLowerCase() === day.toLowerCase()" class="today-tag">сьогодні</span>
+          <span v-if="(daysWithMealCounts[day] || 0) > 0" class="meals-count-tag">
+            {{ daysWithMealCounts[day] }} страв
+          </span>
+        </button>
+      </div>
 
-            <div class="meals-grid">
-              <MealCard v-for="(meal, idx) in mealsByDay[day]" :key="idx" :meal="meal" />
+      <!-- Focused Single Day Section (No Stacking) -->
+      <div v-if="currentDayMeals.length > 0" class="day-section fade-in">
+        <div class="day-header">
+          <div class="day-title">
+            <div class="day-icon-circle">
+              <Calendar :size="16" />
+            </div>
+            <div>
+              <h3>{{ dayLabels[selectedDay] || selectedDay }}</h3>
+              <p class="day-subtitle">Збалансоване меню на 3 прийоми їжі</p>
             </div>
           </div>
-        </template>
+          <button
+            class="btn-ghost btn-sm refresh-day-btn"
+            title="Оновити меню на цей день"
+            :disabled="plannerStore.generating"
+            @click="handleRegenerateDay(selectedDay)"
+          >
+            <RefreshCw :size="14" :class="{ spin: plannerStore.generating }" />
+            <span>Оновити день</span>
+          </button>
+        </div>
+
+        <!-- 3 Meals Grid (Breakfast, Lunch, Dinner) -->
+        <div class="meals-grid">
+          <MealCard
+            v-for="(meal, idx) in currentDayMeals"
+            :key="`${selectedDay}-${meal.mealType || idx}`"
+            :meal="meal"
+          />
+        </div>
+
+        <!-- Gap Items Card for 1-Click Shopping List Import -->
+        <div v-if="plannerStore.plan.gapItems && plannerStore.plan.gapItems.length > 0" class="gap-section">
+          <GapItemsCard :gaps="plannerStore.plan.gapItems" />
+        </div>
+      </div>
+
+      <!-- Empty Selected Day prompt -->
+      <div v-else class="day-empty-card glass-card fade-in">
+        <div class="empty-icon-circle">
+          <Utensils :size="24" />
+        </div>
+        <h4>На {{ dayLabels[selectedDay] || selectedDay }} меню ще не згенеровано</h4>
+        <p>Натисніть кнопку нижче, щоб ШІ створив персоналізовані сніданок, обід та вечерю.</p>
+        <button
+          class="btn-primary"
+          :disabled="plannerStore.generating"
+          @click="handleGeneratePlan"
+        >
+          <Sparkles :size="16" :class="{ spin: plannerStore.generating }" />
+          <span>{{ plannerStore.generating ? 'Створюємо...' : `Скласти меню на ${dayLabels[selectedDay] || selectedDay}` }}</span>
+        </button>
       </div>
     </div>
 
@@ -122,11 +230,16 @@ const handleRegenerateDay = async (day: string) => {
 </template>
 
 <style scoped>
+.planner-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -146,10 +259,10 @@ const handleRegenerateDay = async (day: string) => {
   color: var(--status-expired);
   padding: 12px 16px;
   border-radius: var(--radius-md);
-  margin-bottom: 20px;
 }
 
-.loading-state, .empty-state {
+.loading-state,
+.empty-state {
   padding: 40px 20px;
   text-align: center;
   color: var(--text-secondary);
@@ -177,16 +290,183 @@ const handleRegenerateDay = async (day: string) => {
 }
 
 .empty-state h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 6px;
   color: var(--text-primary);
 }
 
 .empty-state p {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  max-width: 360px;
+}
+
+.planner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Day Tabs Bar */
+.day-tabs-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+
+.day-tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+  min-width: 96px;
+}
+
+.day-tab-btn:hover {
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.day-tab-btn.active {
+  background: var(--june-bud-light);
+  border-color: var(--june-bud);
+  color: #2c3809;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(190, 211, 90, 0.25);
+}
+
+.day-label {
+  font-size: 0.82rem;
+}
+
+.today-tag {
+  font-size: 0.65rem;
+  background: var(--primary-subtle);
+  color: var(--primary);
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+}
+
+.meals-count-tag {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.day-tab-btn.active .meals-count-tag {
+  color: #4d5f10;
+}
+
+/* Focused Day Section */
+.day-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.day-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.day-icon-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--aqua-mist-light);
+  color: var(--aqua-mist-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-title h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.day-subtitle {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.refresh-day-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .meals-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gap-section {
+  margin-top: 4px;
+}
+
+.day-empty-card {
+  padding: 36px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.empty-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-empty-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.day-empty-card p {
   font-size: 0.82rem;
   color: var(--text-muted);
-  max-width: 320px;
+  max-width: 360px;
+  margin: 0;
 }
 
 .spin {
@@ -196,71 +476,5 @@ const handleRegenerateDay = async (day: string) => {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-
-.planner-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.days-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.day-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.day-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.day-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.icon-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  padding: 4px 8px;
-  border-radius: var(--radius-xs);
-  transition: var(--transition-fast);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.icon-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-subtle);
-}
-
-.meals-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
-}
-
-@media (max-width: 640px) {
-  .meals-grid {
-    grid-template-columns: 1fr;
-  }
 }
 </style>
