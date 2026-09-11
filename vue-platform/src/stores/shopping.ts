@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { api, type ApiErrorResponse } from '@/api/client';
 import { useProductStore } from './product';
+import { eventBus } from '@/utils/eventBus';
 
 export interface ShoppingItem {
   id: number;
@@ -58,6 +59,7 @@ export const useShoppingStore = defineStore('shopping', () => {
         body: JSON.stringify(input)
       });
       items.value.unshift(created);
+      eventBus.emit('shopping:changed');
       return true;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;
@@ -80,6 +82,7 @@ export const useShoppingStore = defineStore('shopping', () => {
       if (index !== -1) {
         items.value[index] = updated;
       }
+      eventBus.emit('shopping:changed');
       return true;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;
@@ -109,6 +112,7 @@ export const useShoppingStore = defineStore('shopping', () => {
     try {
       await api.fetch(`/shopping/${id}`, { method: 'DELETE' });
       items.value = items.value.filter(i => i.id !== id);
+      eventBus.emit('shopping:changed');
       return true;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;
@@ -130,6 +134,8 @@ export const useShoppingStore = defineStore('shopping', () => {
       items.value = items.value.filter(i => i.id !== id);
       const productStore = useProductStore();
       await productStore.fetchProducts(true);
+      eventBus.emit('shopping:changed');
+      eventBus.emit('fridge:changed');
       return true;
     } catch (err) {
       const apiErr = err as ApiErrorResponse;

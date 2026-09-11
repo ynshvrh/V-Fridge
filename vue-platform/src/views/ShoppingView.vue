@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useShoppingStore } from '@/stores/shopping';
 import { useFridgeStore } from '@/stores/fridge';
 import { useThemeStore } from '@/stores/theme';
+import { eventBus } from '@/utils/eventBus';
 import ShoppingItemRow from '@/components/shopping/ShoppingItemRow.vue';
 import AddShoppingItemModal from '@/components/shopping/AddShoppingItemModal.vue';
 import { ShoppingCart, Plus, CheckCheck, Package } from '@lucide/vue';
@@ -15,9 +16,21 @@ const quickName = ref('');
 const showAddModal = ref(false);
 const isAdding = ref(false);
 
+let unsubscribeShopping: (() => void) | null = null;
+
 onMounted(async () => {
   await fridgeStore.fetchFridges();
   await shoppingStore.fetchShoppingItems();
+
+  unsubscribeShopping = eventBus.on('shopping:changed', () => {
+    shoppingStore.fetchShoppingItems(true);
+  });
+});
+
+onUnmounted(() => {
+  if (unsubscribeShopping) {
+    unsubscribeShopping();
+  }
 });
 
 watch(() => fridgeStore.activeFridgeId, async (newId) => {

@@ -1,21 +1,21 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { type ShoppingItem, useShoppingStore } from '@/stores/shopping';
-import { useThemeStore } from '@/stores/theme';
 import { useCurrentLanguage } from '@/composables/useCurrentLanguage';
 import { formatUnit } from '@/utils/unitStandards';
-import { Check, ShoppingBag, Trash2, Plus, Minus } from '@lucide/vue';
+import { Check, ShoppingBag, Trash2, Plus, Minus, Edit3 } from '@lucide/vue';
+import EditShoppingItemModal from './EditShoppingItemModal.vue';
 
 const props = defineProps<{
   item: ShoppingItem;
 }>();
 
 const shoppingStore = useShoppingStore();
-const themeStore = useThemeStore();
 const { currentLanguage } = useCurrentLanguage();
 
 const isPurchasing = ref(false);
-const isSwipeEnabled = computed(() => themeStore.shoppingMode === 'swipe');
+const showEditModal = ref(false);
+const isSwipeEnabled = computed(() => true);
 
 // Swipe gesture state
 const swipeOffset = ref(0);
@@ -205,7 +205,17 @@ const rowStyle = computed(() => {
       @pointerup="handlePointerUp"
       @pointercancel="handlePointerCancel"
     >
-      <div class="item-details" @click="toggleCheck">
+      <button
+        type="button"
+        class="check-circle-btn"
+        :class="{ checked: item.checked }"
+        :title="item.checked ? 'Позначити як не куплено' : 'Позначити як куплено'"
+        @click.stop="toggleCheck"
+      >
+        <Check v-if="item.checked" :size="12" class="check-icon" />
+      </button>
+
+      <div class="item-details clickable-details" title="Натисніть для редагування" @click.stop="showEditModal = true">
         <span class="item-name" :class="{ strikethrough: item.checked }">{{ item.name }}</span>
         <div class="item-meta">
           <span class="category-chip">{{ item.category }}</span>
@@ -234,15 +244,29 @@ const rowStyle = computed(() => {
         </button>
 
         <button
-          v-if="!isSwipeEnabled"
-          class="delete-btn"
+          class="action-icon-btn edit-btn"
+          title="Редагувати"
+          @click.stop="showEditModal = true"
+        >
+          <Edit3 :size="14" />
+        </button>
+
+        <button
+          class="action-icon-btn delete-btn"
           title="Видалити"
           @click.stop="handleDelete"
         >
-          <Trash2 :size="15" />
+          <Trash2 :size="14" />
         </button>
       </div>
     </div>
+
+    <!-- Edit Shopping Item Modal -->
+    <EditShoppingItemModal
+      v-if="showEditModal"
+      :item="item"
+      @close="showEditModal = false"
+    />
   </div>
 </template>
 
@@ -434,6 +458,66 @@ const rowStyle = computed(() => {
   background: var(--primary);
   color: var(--primary-foreground);
   border-color: var(--primary);
+}
+
+.check-circle-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  color: #ffffff;
+  transition: var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.check-circle-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+}
+
+.check-circle-btn.checked {
+  background: var(--mint-bloom-dark);
+  border-color: var(--mint-bloom-dark);
+}
+
+.clickable-details {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: var(--radius-xs);
+  transition: background-color 0.15s ease;
+}
+
+.clickable-details:hover {
+  background: var(--bg-hover);
+}
+
+.action-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 5px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.action-icon-btn.edit-btn:hover {
+  color: var(--primary);
+  background: var(--primary-subtle);
+}
+
+.action-icon-btn.delete-btn:hover {
+  color: var(--status-expired);
+  background: var(--status-expired-bg);
 }
 
 .delete-btn {
